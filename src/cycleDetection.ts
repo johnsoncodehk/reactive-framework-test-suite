@@ -288,4 +288,39 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
 
     expect(iterations).toBeLessThanOrEqual(300);
   },
+
+  /**
+   *  S(a) → E(e1) → S(b) → C(c) → E(e2) → S(a)  ⟳
+   *
+   * Cycle path goes through an intermediate computed: e1 writes b,
+   * c is derived from b, e2 reads c and writes a. Differs from #64
+   * (direct effect-effect) and #221 (effect-effect chain) — verifies
+   * the bound holds when the cycle passes through a computed.
+   */
+  "#223 cycle through computed stays bounded"(fw: ReactiveFramework) {
+    const a = fw.signal(0);
+    const b = fw.signal(0);
+    const c = fw.computed(() => b.read());
+    let iterations = 0;
+
+    try {
+      fw.effect(() => {
+        iterations++;
+        const v = a.read();
+        if (v < 100) {
+          b.write(v);
+        }
+      });
+      fw.effect(() => {
+        const v = c.read();
+        if (v < 100) {
+          a.write(v + 1);
+        }
+      });
+    } catch {
+      // Expected: iteration limit reached
+    }
+
+    expect(iterations).toBeLessThanOrEqual(300);
+  },
 };
