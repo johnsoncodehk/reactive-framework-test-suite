@@ -326,8 +326,6 @@ const myFramework: ReactiveFramework = {
   // Optional:
   batch(fn) { /* ... */ },
   untracked(fn) { /* ... */ },
-  effectCleanup: true,   // set true if effect supports cleanup return
-  computedThrows: true,  // set true if computed re-throws on read
 };
 \`\`\`
 
