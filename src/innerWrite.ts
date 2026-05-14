@@ -892,4 +892,40 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     s.write(3);
     expect(s.read()).toBe(0);
   },
+
+  /**
+   *  S(a) ─→ E(e1) ═→ S(b) when a===1
+   *  S(a) ─→ C(c) = a + b
+   *  C(c) ─→ E(e2)
+   *
+   * a.write(1) schedules both e1 and e2. e1's inner write to b
+   * makes c stale mid-flush. e2 reads c — must observe the fresh
+   * value (1 + 10 = 11) by the time the flush settles, not the
+   * stale value (1 + 0 = 1). The assertion only checks the LAST
+   * observation, tolerating frameworks that fire e2 multiple times
+   * during the flush.
+   */
+  "#224 effect sees fresh computed after sibling's mid-flush inner write"(
+    fw: ReactiveFramework
+  ) {
+    const a = fw.signal(0);
+    const b = fw.signal(0);
+    const c = fw.computed(() => a.read() + b.read());
+
+    const observed: number[] = [];
+
+    fw.effect(() => {
+      if (a.read() === 1) {
+        b.write(10);
+      }
+    });
+    fw.effect(() => {
+      observed.push(c.read());
+    });
+
+    expect(observed).toEqual([0]);
+
+    a.write(1);
+    expect(observed[observed.length - 1]).toBe(11);
+  },
 };
