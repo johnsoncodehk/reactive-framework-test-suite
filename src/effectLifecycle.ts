@@ -578,4 +578,199 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     b.write(1);
     expect(innerRuns).toBe(2);
   },
+
+  /**
+   *  S(a) → C(c) reads S(a)
+   *  S(a) → E(eff → cleanup reads C(c))
+   *
+   * Cleanup reads a computed whose source has just changed. The
+   * cleanup must observe the up-to-date computed value, not the
+   * stale value captured before the write.
+   */
+  "#229 cleanup reads computed: sees fresh value"(fw: ReactiveFramework) {
+    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
+    const a = fw.signal(0);
+    const c = fw.computed(() => a.read() * 10);
+    const seen: number[] = [];
+
+    fw.effect(() => {
+      a.read();
+      return () => {
+        seen.push(c.read());
+      };
+    });
+
+    a.write(1);
+    expect(seen).toEqual([10]);
+
+    a.write(2);
+    expect(seen).toEqual([10, 20]);
+  },
+
+  /**
+   *  S(a) → E1(eff → cleanup writes S(b))
+   *  S(b) → E2(eff observes S(b))
+   *
+   * E1's cleanup writes to a signal observed by E2, all wrapped in
+   * a batch. After the batch completes, E2 must reflect the value
+   * produced by the cleanup.
+   */
+  "#230 cleanup writes signal inside batch propagates after flush"(
+    fw: ReactiveFramework
+  ) {
+    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
+    if (!fw.batch) throw new SkipTest("no batch");
+    const a = fw.signal(0);
+    const b = fw.signal(0);
+    let e2Value = -1;
+
+    fw.effect(() => {
+      a.read();
+      return () => {
+        b.write(b.read() + 1);
+      };
+    });
+    fw.effect(() => {
+      e2Value = b.read();
+    });
+    expect(e2Value).toBe(0);
+
+    fw.batch(() => {
+      a.write(1);
+    });
+    expect(e2Value).toBe(1);
+  },
+
+  /**
+   *  S(a) → E(eff → cleanup{ untracked{ S(b).read } })
+   *
+   * Cleanup wraps a signal read in untracked. Since cleanup already
+   * runs outside any tracking context (#40), this should also leave
+   * no subscription. Tests that untracked composes correctly with
+   * cleanup rather than producing a spurious dependency.
+   */
+  "#231 untracked inside cleanup: still no tracking"(fw: ReactiveFramework) {
+    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
+    if (!fw.untracked) throw new SkipTest("no untracked");
+    const a = fw.signal(0);
+    const b = fw.signal(100);
+    let runs = 0;
+
+    fw.effect(() => {
+      a.read();
+      runs++;
+      return () => {
+        fw.untracked!(() => {
+          b.read();
+        });
+      };
+    });
+    expect(runs).toBe(1);
+
+    // b read only via untracked inside cleanup — must not retrigger.
+    b.write(200);
+    expect(runs).toBe(1);
+
+    // a is still a real dep.
+    a.write(1);
+    expect(runs).toBe(2);
+  },
+
+  /**
+   *  S(a) → E(eff → cleanup{ S(b).write; read C(c) where C(c) reads S(b) })
+   *
+   * Inside cleanup we write to b, then read computed c which depends
+   * on b. c must reflect the just-written value of b — the write must
+   * propagate to c before the cleanup's read in the same tick.
+   */
+  "#233 cleanup write then read of dependent computed: sees new value"(
+    fw: ReactiveFramework
+  ) {
+    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
+    const a = fw.signal(0);
+    const b = fw.signal(0);
+    const c = fw.computed(() => b.read());
+    const seen: number[] = [];
+
+    fw.effect(() => {
+      a.read();
+      return () => {
+        b.write(99);
+        seen.push(c.read());
+      };
+    });
+    expect(seen).toEqual([]);
+
+    a.write(1);
+    expect(seen).toEqual([99]);
+  },
+
+  /**
+   *  S(a) → E1{ batch{ S(b).write, S(b).write } }
+   *  S(b) → E2
+   *
+   * E1's body opens a batch and writes b twice. E2 (observer of b)
+   * must run exactly once per E1 run, seeing only the final batched
+   * value of b — not each intermediate write.
+   */
+  "#235 batch inside effect body coalesces writes"(fw: ReactiveFramework) {
+    if (!fw.batch) throw new SkipTest("no batch");
+    const a = fw.signal(0);
+    const b = fw.signal(0);
+    let observerRuns = 0;
+    let observerLast = -1;
+
+    fw.effect(() => {
+      a.read();
+      fw.batch!(() => {
+        b.write(b.read() + 10);
+        b.write(b.read() + 1);
+      });
+    });
+    fw.effect(() => {
+      observerLast = b.read();
+      observerRuns++;
+    });
+    // After setup: b = 11; observer ran once with b=11
+    expect(observerLast).toBe(11);
+
+    observerRuns = 0;
+    a.write(1);
+    // E1 re-runs, batch writes b: 11 → 21 → 22
+    // Observer should fire exactly once with b=22
+    expect(observerRuns).toBe(1);
+    expect(observerLast).toBe(22);
+  },
+
+  /**
+   *  S(a) → E(eff → cleanup writes S(a))
+   *
+   * Cleanup writes the effect's own dep, which would normally re-
+   * trigger the same effect. User code bounds the recursion with a
+   * counter; framework must execute this without unbounded looping
+   * or stack overflow.
+   */
+  "#236 cleanup write to own dep: bounded recursion completes"(
+    fw: ReactiveFramework
+  ) {
+    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
+    const a = fw.signal(0);
+    let runs = 0;
+
+    fw.effect(() => {
+      a.read();
+      runs++;
+      return () => {
+        if (runs < 5) {
+          a.write(a.read() + 1);
+        }
+      };
+    });
+    expect(runs).toBe(1);
+
+    a.write(1);
+    // User-bounded by `runs < 5`. Framework must complete without
+    // infinite looping or stack overflow. Final run count is bounded.
+    expect(runs).toBeLessThanOrEqual(20);
+  },
 };

@@ -1,8 +1,8 @@
 # Reactive Framework Test Suite
 
-Cross-library test suite for comparing reactive signal behavior across **15 frameworks** with **166 test cases**.
+Cross-library test suite for comparing reactive signal behavior across **15 frameworks** with **172 test cases**.
 
-> 2072 passed, 254 failed, 164 skipped out of 2490 total runs
+> 2117 passed, 271 failed, 192 skipped out of 2580 total runs
 
 Test cases are collected and adapted from the test suites of all participating frameworks — thanks to every project for their thorough testing work. This suite focuses on **reactive semantics** (propagation, batching, disposal, edge cases), not API completeness. Tests that require an optional capability (e.g. `batch`) are skipped (⬜) for frameworks that don't expose it, rather than marked as failures.
 
@@ -36,21 +36,21 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 
 | Framework              | Pass | Fail | Skip | Total |
 | ---------------------- | ---- | ---- | ---- | ----- |
-| @preact/signals-core   |  164 |    2 |    0 |   166 |
-| alien-signals          |  163 |    3 |    0 |   166 |
-| @reatom/core           |  163 |    3 |    0 |   166 |
-| @vue/reactivity        |  159 |    7 |    0 |   166 |
-| anod                   |  154 |   12 |    0 |   166 |
-| tansu                  |  150 |    5 |   11 |   166 |
-| @solidjs/signals       |  148 |    7 |   11 |   166 |
-| solid-js               |  142 |   24 |    0 |   166 |
-| mobx                   |  138 |   17 |   11 |   166 |
-| signal-polyfill (TC39) |  131 |    8 |   27 |   166 |
-| @angular/core          |  129 |   10 |   27 |   166 |
-| svelte                 |  121 |   12 |   33 |   166 |
-| S.js                   |  121 |   45 |    0 |   166 |
-| @reactively/core       |  100 |   22 |   44 |   166 |
-| pota                   |   89 |   77 |    0 |   166 |
+| alien-signals          |  169 |    3 |    0 |   172 |
+| @preact/signals-core   |  169 |    3 |    0 |   172 |
+| @reatom/core           |  168 |    4 |    0 |   172 |
+| @vue/reactivity        |  165 |    7 |    0 |   172 |
+| anod                   |  158 |   14 |    0 |   172 |
+| tansu                  |  150 |    6 |   16 |   172 |
+| @solidjs/signals       |  149 |    7 |   16 |   172 |
+| solid-js               |  147 |   25 |    0 |   172 |
+| mobx                   |  138 |   18 |   16 |   172 |
+| signal-polyfill (TC39) |  135 |    8 |   29 |   172 |
+| @angular/core          |  132 |   11 |   29 |   172 |
+| S.js                   |  124 |   48 |    0 |   172 |
+| svelte                 |  123 |   13 |   36 |   172 |
+| @reactively/core       |  100 |   22 |   50 |   172 |
+| pota                   |   90 |   82 |    0 |   172 |
 
 ## Results
 
@@ -575,23 +575,23 @@ Legend:
   dispose  effect disposal call
 ```
 
-| Framework              | #35,#143,... ×4 | #36,#108,#217 | #38 | #39,#110 | #40 | #42 | #111 | #141 | #178 | #201 | #202 | #216 | #222 |
-| ---------------------- | --------------- | ------------- | --- | -------- | --- | --- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
-| alien-signals          |               ✅ |             ✅ |   ✅ |        ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
-| @preact/signals-core   |               ✅ |             ✅ |   ✅ |        ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
-| @reactively/core       |               ✅ |             ✅ |   ⬜ |        ⬜ |   ⬜ |   ⬜ |    ⬜ |    ✅ |    ⬜ |    ❌ |    ✅ |    ✅ |    ⬜ |
-| tansu                  |               ✅ |             ✅ |   ⬜ |        ⬜ |   ⬜ |   ✅ |    ⬜ |    ✅ |    ⬜ |    ❌ |    ✅ |    ✅ |    ⬜ |
-| signal-polyfill (TC39) |               ✅ |             ✅ |   ✅ |        ✅ |   ❌ |   ⬜ |    ✅ |    ✅ |    ❌ |    ❌ |    ✅ |    ✅ |    ✅ |
-| @vue/reactivity        |               ✅ |             ✅ |   ✅ |        ✅ |   ✅ |   ✅ |    ✅ |    ❌ |    ✅ |    ❌ |    ✅ |    ✅ |    ✅ |
-| mobx                   |               ✅ |             ✅ |   ⬜ |        ⬜ |   ⬜ |   ✅ |    ⬜ |    ✅ |    ⬜ |    ✅ |    ✅ |    ✅ |    ⬜ |
-| @reatom/core           |               ✅ |             ✅ |   ✅ |        ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |
-| svelte                 |               ✅ |             ✅ |   ✅ |        ✅ |   ✅ |   ⬜ |    ❌ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |    ✅ |
-| solid-js               |               ✅ |             ✅ |   ✅ |        ✅ |   ✅ |   ✅ |    ❌ |    ❌ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |
-| @solidjs/signals       |               ✅ |             ✅ |   ⬜ |        ⬜ |   ⬜ |   ✅ |    ⬜ |    ✅ |    ⬜ |    ✅ |    ✅ |    ✅ |    ⬜ |
-| S.js                   |               ✅ |             ✅ |   ✅ |        ✅ |   ❌ |   ❌ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |    ✅ |    ✅ |
-| pota                   |               ✅ |             ❌ |   ❌ |        ✅ |   ❌ |   ✅ |    ❌ |    ❌ |    ❌ |    ✅ |    ❌ |    ❌ |    ❌ |
-| @angular/core          |               ✅ |             ✅ |   ✅ |        ✅ |   ❌ |   ⬜ |    ❌ |    ✅ |    ❌ |    ❌ |    ❌ |    ✅ |    ✅ |
-| anod                   |               ✅ |             ✅ |   ✅ |        ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |    ✅ |    ✅ |
+| Framework              | #35,#143,... ×4 | #36,#108,#217 | #38 | #39,#110 | #40 | #42 | #111 | #141 | #178 | #201 | #202 | #216 | #222 | #229 | #230 | #231 | #233 | #235 | #236 |
+| ---------------------- | --------------- | ------------- | --- | -------- | --- | --- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
+| alien-signals          |               ✅ |             ✅ |   ✅ |        ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| @preact/signals-core   |               ✅ |             ✅ |   ✅ |        ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |
+| @reactively/core       |               ✅ |             ✅ |   ⬜ |        ⬜ |   ⬜ |   ⬜ |    ⬜ |    ✅ |    ⬜ |    ❌ |    ✅ |    ✅ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |
+| tansu                  |               ✅ |             ✅ |   ⬜ |        ⬜ |   ⬜ |   ✅ |    ⬜ |    ✅ |    ⬜ |    ❌ |    ✅ |    ✅ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ❌ |    ⬜ |
+| signal-polyfill (TC39) |               ✅ |             ✅ |   ✅ |        ✅ |   ❌ |   ⬜ |    ✅ |    ✅ |    ❌ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ⬜ |    ✅ |    ✅ |    ⬜ |    ✅ |
+| @vue/reactivity        |               ✅ |             ✅ |   ✅ |        ✅ |   ✅ |   ✅ |    ✅ |    ❌ |    ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| mobx                   |               ✅ |             ✅ |   ⬜ |        ⬜ |   ⬜ |   ✅ |    ⬜ |    ✅ |    ⬜ |    ✅ |    ✅ |    ✅ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ❌ |    ⬜ |
+| @reatom/core           |               ✅ |             ✅ |   ✅ |        ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |
+| svelte                 |               ✅ |             ✅ |   ✅ |        ✅ |   ✅ |   ⬜ |    ❌ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |    ✅ |    ❌ |    ⬜ |    ⬜ |    ✅ |    ⬜ |    ✅ |
+| solid-js               |               ✅ |             ✅ |   ✅ |        ✅ |   ✅ |   ✅ |    ❌ |    ❌ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |
+| @solidjs/signals       |               ✅ |             ✅ |   ⬜ |        ⬜ |   ⬜ |   ✅ |    ⬜ |    ✅ |    ⬜ |    ✅ |    ✅ |    ✅ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ✅ |    ⬜ |
+| S.js                   |               ✅ |             ✅ |   ✅ |        ✅ |   ❌ |   ❌ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |    ❌ |    ❌ |    ✅ |
+| pota                   |               ✅ |             ❌ |   ❌ |        ✅ |   ❌ |   ✅ |    ❌ |    ❌ |    ❌ |    ✅ |    ❌ |    ❌ |    ❌ |    ❌ |    ❌ |    ❌ |    ❌ |    ❌ |    ✅ |
+| @angular/core          |               ✅ |             ✅ |   ✅ |        ✅ |   ❌ |   ⬜ |    ❌ |    ✅ |    ❌ |    ❌ |    ❌ |    ✅ |    ✅ |    ✅ |    ⬜ |    ✅ |    ✅ |    ⬜ |    ❌ |
+| anod                   |               ✅ |             ✅ |   ✅ |        ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |    ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
@@ -738,6 +738,70 @@ A common debounce-like pattern: an effect's cleanup creates a
 fresh effect that subscribes to a different signal. The newly
 created inner effect must run once on creation and react to
 subsequent writes to its own dependency.
+
+#### #229 cleanup reads computed: sees fresh value
+
+```
+ S(a) → C(c) reads S(a)
+ S(a) → E(eff → cleanup reads C(c))
+```
+
+Cleanup reads a computed whose source has just changed. The
+cleanup must observe the up-to-date computed value, not the
+stale value captured before the write.
+
+#### #230 cleanup writes signal inside batch propagates after flush
+
+```
+ S(a) → E1(eff → cleanup writes S(b))
+ S(b) → E2(eff observes S(b))
+```
+
+E1's cleanup writes to a signal observed by E2, all wrapped in
+a batch. After the batch completes, E2 must reflect the value
+produced by the cleanup.
+
+#### #231 untracked inside cleanup: still no tracking
+
+```
+ S(a) → E(eff → cleanup{ untracked{ S(b).read } })
+```
+
+Cleanup wraps a signal read in untracked. Since cleanup already
+runs outside any tracking context (#40), this should also leave
+no subscription. Tests that untracked composes correctly with
+cleanup rather than producing a spurious dependency.
+
+#### #233 cleanup write then read of dependent computed: sees new value
+
+ S(a) → E(eff → cleanup{ S(b).write; read C(c) where C(c) reads S(b) })
+
+Inside cleanup we write to b, then read computed c which depends
+on b. c must reflect the just-written value of b — the write must
+propagate to c before the cleanup's read in the same tick.
+
+#### #235 batch inside effect body coalesces writes
+
+ S(a) → E1{ batch{ S(b).write, S(b).write } }
+
+```
+ S(b) → E2
+```
+
+E1's body opens a batch and writes b twice. E2 (observer of b)
+must run exactly once per E1 run, seeing only the final batched
+value of b — not each intermediate write.
+
+#### #236 cleanup write to own dep: bounded recursion completes
+
+```
+ S(a) → E(eff → cleanup writes S(a))
+```
+
+Cleanup writes the effect's own dep, which would normally re-
+trigger the same effect. User code bounds the recursion with a
+counter; framework must execute this without unbounded looping
+or stack overflow.
 
 
 </details>
