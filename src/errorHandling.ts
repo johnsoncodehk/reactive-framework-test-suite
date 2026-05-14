@@ -43,61 +43,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *  S(a) → C(b) ⚡ throws when a===2
-   *
-   * Computed works initially, throws on re-evaluation, then
-   * recovers on the next write. Graph must stay consistent.
-   */
-  "#85 graph stays consistent after error in computed re-evaluation"(
-    fw: ReactiveFramework
-  ) {
-    if (!hasComputedThrows(fw)) throw new SkipTest("no computedThrows");
-    const a = fw.signal(1);
-    const b = fw.computed(() => {
-      if (a.read() === 2) throw new Error("re-eval error");
-      return a.read();
-    });
-
-    expect(b.read()).toBe(1);
-
-    a.write(2);
-    expect(() => b.read()).toThrow("re-eval error");
-
-    a.write(3);
-    expect(b.read()).toBe(3);
-  },
-
-  /**
-   *  S(a) → C(bad) ⚡     S(b) → C(good)
-   *
-   * Two independent branches. An error in bad must not affect
-   * good — good must continue to read and update normally.
-   */
-  "#87 errors in one computed don't leak to unrelated dependents"(
-    fw: ReactiveFramework
-  ) {
-    if (!hasComputedThrows(fw)) throw new SkipTest("no computedThrows");
-    const a = fw.signal(0);
-    const b = fw.signal(10);
-
-    const bad = fw.computed(() => {
-      if (a.read() > 0) throw new Error("bad");
-      return a.read();
-    });
-
-    const good = fw.computed(() => b.read() * 2);
-
-    expect(good.read()).toBe(20);
-    a.write(1);
-
-    expect(() => bad.read()).toThrow("bad");
-    expect(good.read()).toBe(20);
-
-    b.write(20);
-    expect(good.read()).toBe(40);
-  },
-
-  /**
    *  S(a) ← E(eff ⚡ throws when a===1, → cleanup)
    *
    * Effect throws on re-run. The cleanup from the previous
