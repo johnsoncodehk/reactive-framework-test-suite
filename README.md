@@ -1,8 +1,8 @@
 # Reactive Framework Test Suite
 
-Cross-library test suite for comparing reactive signal behavior across **15 frameworks** with **156 test cases**.
+Cross-library test suite for comparing reactive signal behavior across **15 frameworks** with **155 test cases**.
 
-> 1937 passed, 249 failed, 154 skipped out of 2340 total runs
+> 1922 passed, 249 failed, 154 skipped out of 2325 total runs
 
 Test cases are collected and adapted from the test suites of all participating frameworks — thanks to every project for their thorough testing work. This suite focuses on **reactive semantics** (propagation, batching, disposal, edge cases), not API completeness. Tests that require an optional capability (e.g. `batch`) are skipped (⬜) for frameworks that don't expose it, rather than marked as failures.
 
@@ -36,21 +36,21 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 
 | Framework              | Pass | Fail | Skip | Total |
 | ---------------------- | ---- | ---- | ---- | ----- |
-| alien-signals          |  156 |    0 |    0 |   156 |
-| @reatom/core           |  155 |    1 |    0 |   156 |
-| @preact/signals-core   |  154 |    2 |    0 |   156 |
-| anod                   |  144 |   12 |    0 |   156 |
-| tansu                  |  142 |    4 |   10 |   156 |
-| @solidjs/signals       |  138 |    8 |   10 |   156 |
-| solid-js               |  133 |   23 |    0 |   156 |
-| mobx                   |  130 |   16 |   10 |   156 |
-| @vue/reactivity        |  127 |   29 |    0 |   156 |
-| signal-polyfill (TC39) |  123 |    8 |   25 |   156 |
-| @angular/core          |  121 |   10 |   25 |   156 |
-| S.js                   |  113 |   43 |    0 |   156 |
-| svelte                 |  112 |   12 |   32 |   156 |
-| @reactively/core       |   99 |   15 |   42 |   156 |
-| pota                   |   90 |   66 |    0 |   156 |
+| alien-signals          |  155 |    0 |    0 |   155 |
+| @reatom/core           |  154 |    1 |    0 |   155 |
+| @preact/signals-core   |  153 |    2 |    0 |   155 |
+| anod                   |  143 |   12 |    0 |   155 |
+| tansu                  |  141 |    4 |   10 |   155 |
+| @solidjs/signals       |  137 |    8 |   10 |   155 |
+| solid-js               |  132 |   23 |    0 |   155 |
+| mobx                   |  129 |   16 |   10 |   155 |
+| @vue/reactivity        |  126 |   29 |    0 |   155 |
+| signal-polyfill (TC39) |  122 |    8 |   25 |   155 |
+| @angular/core          |  120 |   10 |   25 |   155 |
+| S.js                   |  112 |   43 |    0 |   155 |
+| svelte                 |  111 |   12 |   32 |   155 |
+| @reactively/core       |   98 |   15 |   42 |   155 |
+| pota                   |   89 |   66 |    0 |   155 |
 
 ## Results
 
@@ -69,7 +69,7 @@ Legend:
   ─→       dependency edge (downstream reads upstream)
 ```
 
-| Framework              | #1..#6,... ×13 | #7 | #116,#190,#207 | #187,#189,#205 | #188 | #192 | #204 |
+| Framework              | #1..#3,... ×12 | #7 | #116,#190,#207 | #187,#189,#205 | #188 | #192 | #204 |
 | ---------------------- | -------------- | -- | -------------- | -------------- | ---- | ---- | ---- |
 | alien-signals          |              ✅ |  ✅ |              ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
 | @preact/signals-core   |              ✅ |  ✅ |              ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
