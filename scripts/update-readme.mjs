@@ -515,7 +515,12 @@ const myFramework: ReactiveFramework = {
 Wire it up with your test runner (vitest, jest, mocha, etc.):
 
 \`\`\`ts
-import { testSuite, SkipTest } from "reactive-framework-test-suite";
+import { testSuite, SkipTest, setExpect } from "reactive-framework-test-suite";
+import { expect } from "vitest";
+
+// Optional: swap the built-in expect for your runner's
+// for richer error messages and tighter integration.
+setExpect(expect);
 
 for (const { section, cases } of testSuite) {
   describe(section, () => {
