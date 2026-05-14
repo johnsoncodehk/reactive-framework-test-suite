@@ -1,8 +1,8 @@
 # Reactive Framework Test Suite
 
-Cross-library test suite for comparing reactive signal behavior across **14 frameworks** with **198 test cases**.
+Cross-library test suite for comparing reactive signal behavior across **15 frameworks** with **198 test cases**.
 
-> 2244 passed, 293 failed, 235 skipped out of 2772 total runs
+> 2440 passed, 295 failed, 235 skipped out of 2970 total runs
 
 Test cases are collected and adapted from the test suites of all participating frameworks — thanks to every project for their thorough testing work. This suite focuses on **reactive semantics** (propagation, batching, disposal, edge cases), not API completeness. Tests that require an optional capability (e.g. `batch`) are skipped (⬜) for frameworks that don't expose it, rather than marked as failures.
 
@@ -23,6 +23,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | signal-polyfill (TC39) | `signal-polyfill` | 0.2.2 | 2025-01-17 |
 | @vue/reactivity | `@vue/reactivity` | 3.5.34 | 2026-05-06 |
 | mobx | `mobx` | 6.15.3 | 2026-05-07 |
+| @reatom/core | `@reatom/core` | 1001.0.0 | 2026-05-13 |
 | svelte | `svelte` | 5.55.5 | 2026-04-23 |
 | solid-js | `solid-js` | 1.9.12 | 2026-03-24 |
 | @solidjs/signals | `@solidjs/signals` | 0.3.2 | 2025-04-29 |
@@ -36,11 +37,12 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | Framework              | Pass | Fail | Skip | Total |
 | ---------------------- | ---- | ---- | ---- | ----- |
 | alien-signals          |  198 |    0 |    0 |   198 |
+| @reatom/core           |  197 |    1 |    0 |   198 |
 | @preact/signals-core   |  196 |    2 |    0 |   198 |
 | @vue/reactivity        |  190 |    8 |    0 |   198 |
 | anod                   |  184 |   14 |    0 |   198 |
 | tansu                  |  181 |    4 |   13 |   198 |
-| @solidjs/signals       |  176 |    9 |   13 |   198 |
+| @solidjs/signals       |  175 |   10 |   13 |   198 |
 | solid-js               |  170 |   28 |    0 |   198 |
 | mobx                   |  166 |   19 |   13 |   198 |
 | signal-polyfill (TC39) |  160 |    8 |   30 |   198 |
@@ -54,7 +56,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 
 ### Graph Propagation
 
-| Framework              | #1 | #2..#4,... ×5 | #7 | #8,#9,... ×6 | #187 | #188 | #189 | #190..#191 | #192 | #204 | #205 | #206..#208 |
+| Framework              | #1 | #2..#4,... x5 | #7 | #8,#9,... x6 | #187 | #188 | #189 | #190..#191 | #192 | #204 | #205 | #206..#208 |
 | ---------------------- | -- | ------------- | -- | ------------ | ---- | ---- | ---- | ---------- | ---- | ---- | ---- | ---------- |
 | alien-signals          |  ✅ |             ✅ |  ✅ |            ✅ |    ✅ |    ✅ |    ✅ |          ✅ |    ✅ |    ✅ |    ✅ |          ✅ |
 | @preact/signals-core   |  ✅ |             ✅ |  ✅ |            ✅ |    ✅ |    ✅ |    ✅ |          ✅ |    ✅ |    ✅ |    ✅ |          ✅ |
@@ -63,6 +65,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | signal-polyfill (TC39) |  ✅ |             ✅ |  ✅ |            ✅ |    ✅ |    ⬜ |    ✅ |          ✅ |    ✅ |    ⬜ |    ✅ |          ✅ |
 | @vue/reactivity        |  ✅ |             ✅ |  ✅ |            ✅ |    ✅ |    ✅ |    ✅ |          ✅ |    ✅ |    ✅ |    ✅ |          ✅ |
 | mobx                   |  ✅ |             ✅ |  ❌ |            ✅ |    ✅ |    ✅ |    ✅ |          ✅ |    ✅ |    ✅ |    ✅ |          ✅ |
+| @reatom/core           |  ✅ |             ✅ |  ✅ |            ✅ |    ✅ |    ✅ |    ✅ |          ✅ |    ✅ |    ✅ |    ✅ |          ✅ |
 | svelte                 |  ✅ |             ✅ |  ✅ |            ✅ |    ✅ |    ⬜ |    ✅ |          ✅ |    ✅ |    ⬜ |    ✅ |          ✅ |
 | solid-js               |  ✅ |             ✅ |  ✅ |            ✅ |    ❌ |    ❌ |    ❌ |          ✅ |    ✅ |    ✅ |    ❌ |          ✅ |
 | @solidjs/signals       |  ✅ |             ✅ |  ✅ |            ✅ |    ✅ |    ✅ |    ✅ |          ✅ |    ✅ |    ✅ |    ✅ |          ✅ |
@@ -73,7 +76,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 
 ### Dynamic Dependencies
 
-| Framework              | #12..#13 | #14,#16,... ×4 | #193 | #194..#196 | #197 | #198..#199 | #200 |
+| Framework              | #12..#13 | #14,#16,... x4 | #193 | #194..#196 | #197 | #198..#199 | #200 |
 | ---------------------- | -------- | -------------- | ---- | ---------- | ---- | ---------- | ---- |
 | alien-signals          |        ✅ |              ✅ |    ✅ |          ✅ |    ✅ |          ✅ |    ✅ |
 | @preact/signals-core   |        ✅ |              ✅ |    ✅ |          ✅ |    ✅ |          ✅ |    ✅ |
@@ -82,6 +85,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | signal-polyfill (TC39) |        ✅ |              ✅ |    ✅ |          ✅ |    ✅ |          ✅ |    ✅ |
 | @vue/reactivity        |        ✅ |              ✅ |    ✅ |          ✅ |    ✅ |          ✅ |    ✅ |
 | mobx                   |        ❌ |              ✅ |    ✅ |          ✅ |    ✅ |          ✅ |    ✅ |
+| @reatom/core           |        ✅ |              ✅ |    ✅ |          ✅ |    ✅ |          ✅ |    ✅ |
 | svelte                 |        ✅ |              ✅ |    ✅ |          ✅ |    ✅ |          ✅ |    ✅ |
 | solid-js               |        ✅ |              ✅ |    ❌ |          ✅ |    ✅ |          ✅ |    ✅ |
 | @solidjs/signals       |        ✅ |              ✅ |    ✅ |          ✅ |    ✅ |          ✅ |    ✅ |
@@ -92,7 +96,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 
 ### Computed Evaluation
 
-| Framework              | #18 | #19..#21,... ×5 | #24 | #25 | #26,#145 | #147 | #148 | #149 | #115 | #27 |
+| Framework              | #18 | #19..#21,... x5 | #24 | #25 | #26,#145 | #147 | #148 | #149 | #115 | #27 |
 | ---------------------- | --- | --------------- | --- | --- | -------- | ---- | ---- | ---- | ---- | --- |
 | alien-signals          |   ✅ |               ✅ |   ✅ |   ✅ |        ✅ |    ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
 | @preact/signals-core   |   ✅ |               ✅ |   ✅ |   ✅ |        ✅ |    ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
@@ -101,6 +105,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | signal-polyfill (TC39) |   ✅ |               ✅ |   ✅ |   ✅ |        ✅ |    ⬜ |    ✅ |    ⬜ |    ✅ |   ✅ |
 | @vue/reactivity        |   ✅ |               ✅ |   ✅ |   ✅ |        ✅ |    ❌ |    ✅ |    ✅ |    ✅ |   ✅ |
 | mobx                   |   ❌ |               ✅ |   ✅ |   ❌ |        ✅ |    ❌ |    ❌ |    ✅ |    ✅ |   ❌ |
+| @reatom/core           |   ✅ |               ✅ |   ✅ |   ✅ |        ✅ |    ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
 | svelte                 |   ✅ |               ✅ |   ✅ |   ✅ |        ✅ |    ⬜ |    ✅ |    ⬜ |    ✅ |   ✅ |
 | solid-js               |   ✅ |               ✅ |   ✅ |   ✅ |        ✅ |    ❌ |    ✅ |    ✅ |    ✅ |   ✅ |
 | @solidjs/signals       |   ✅ |               ✅ |   ✅ |   ✅ |        ✅ |    ❌ |    ✅ |    ✅ |    ✅ |   ✅ |
@@ -120,6 +125,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | signal-polyfill (TC39) |           ✅ |    ✅ |
 | @vue/reactivity        |           ✅ |    ✅ |
 | mobx                   |           ❌ |    ✅ |
+| @reatom/core           |           ✅ |    ✅ |
 | svelte                 |           ✅ |    ✅ |
 | solid-js               |           ✅ |    ✅ |
 | @solidjs/signals       |           ✅ |    ✅ |
@@ -139,6 +145,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | signal-polyfill (TC39) |        ✅ |        ✅ |   ❌ |   ⬜ |    ✅ |          ✅ |    ✅ |    ✅ |    ✅ |          ✅ |    ✅ |    ❌ |    ✅ |    ❌ |    ✅ |    ✅ |   ✅ |
 | @vue/reactivity        |        ✅ |        ✅ |   ✅ |   ✅ |    ✅ |          ✅ |    ✅ |    ✅ |    ❌ |          ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |    ✅ |   ✅ |
 | mobx                   |        ✅ |        ⬜ |   ⬜ |   ✅ |    ✅ |          ⬜ |    ⬜ |    ⬜ |    ✅ |          ✅ |    ⬜ |    ⬜ |    ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
+| @reatom/core           |        ✅ |        ✅ |   ✅ |   ✅ |    ✅ |          ✅ |    ✅ |    ✅ |    ✅ |          ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
 | svelte                 |        ✅ |        ✅ |   ✅ |   ⬜ |    ✅ |          ✅ |    ❌ |    ✅ |    ✅ |          ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |   ✅ |
 | solid-js               |        ✅ |        ✅ |   ✅ |   ✅ |    ✅ |          ✅ |    ❌ |    ✅ |    ❌ |          ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
 | @solidjs/signals       |        ✅ |        ⬜ |   ⬜ |   ✅ |    ✅ |          ⬜ |    ⬜ |    ⬜ |    ✅ |          ✅ |    ⬜ |    ⬜ |    ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
@@ -158,6 +165,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | signal-polyfill (TC39) |   ✅ |   ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |          ❌ |   ✅ |
 | @vue/reactivity        |   ✅ |   ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |          ❌ |   ✅ |
 | mobx                   |   ✅ |   ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |          ❌ |   ✅ |
+| @reatom/core           |   ✅ |   ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |          ✅ |   ✅ |
 | svelte                 |   ✅ |   ✅ |   ⬜ |   ✅ |   ❌ |    ❌ |    ✅ |    ✅ |          ❌ |   ✅ |
 | solid-js               |   ✅ |   ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |          ❌ |   ✅ |
 | @solidjs/signals       |   ✅ |   ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |          ✅ |   ✅ |
@@ -177,6 +185,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | signal-polyfill (TC39) |   ✅ |   ✅ |   ✅ |   ✅ |   ✅ |   ✅ |   ✅ |         ✅ |    ✅ |          ✅ |          ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |   ✅ |    ✅ |    ⬜ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |
 | @vue/reactivity        |   ✅ |   ✅ |   ✅ |   ✅ |   ✅ |   ✅ |   ✅ |         ✅ |    ✅ |          ✅ |          ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
 | mobx                   |   ✅ |   ⬜ |   ✅ |   ✅ |   ✅ |   ✅ |   ✅ |         ✅ |    ✅ |          ✅ |          ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| @reatom/core           |   ✅ |   ✅ |   ✅ |   ✅ |   ✅ |   ✅ |   ✅ |         ✅ |    ✅ |          ✅ |          ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
 | svelte                 |   ✅ |   ✅ |   ✅ |   ✅ |   ❌ |   ✅ |   ✅ |         ✅ |    ✅ |          ✅ |          ✅ |    ❌ |    ✅ |    ✅ |    ❌ |    ✅ |   ❌ |    ✅ |    ⬜ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |
 | solid-js               |   ✅ |   ✅ |   ✅ |   ✅ |   ✅ |   ✅ |   ✅ |         ✅ |    ✅ |          ✅ |          ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |   ✅ |    ✅ |    ✅ |    ❌ |    ✅ |    ❌ |    ✅ |    ✅ |    ✅ |
 | @solidjs/signals       |   ✅ |   ⬜ |   ✅ |   ✅ |   ✅ |   ✅ |   ✅ |         ✅ |    ✅ |          ✅ |          ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |
@@ -187,22 +196,23 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 
 ### Cycle & Infinite Loop Detection
 
-| Framework              | #58,#59,... ×6 | #151 | #152 | #153 | #64 |
-| ---------------------- | -------------- | ---- | ---- | ---- | --- |
-| alien-signals          |              ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
-| @preact/signals-core   |              ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
-| @reactively/core       |              ✅ |    ⬜ |    ✅ |    ✅ |   ❌ |
-| tansu                  |              ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
-| signal-polyfill (TC39) |              ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
-| @vue/reactivity        |              ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
-| mobx                   |              ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
-| svelte                 |              ✅ |    ⬜ |    ✅ |    ❌ |   ✅ |
-| solid-js               |              ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
-| @solidjs/signals       |              ✅ |    ✅ |    ❌ |    ✅ |   ✅ |
-| S.js                   |              ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
-| @angular/core          |              ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
-| anod                   |              ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
-| r3                     |              ✅ |    ⬜ |    ✅ |    ❌ |   ✅ |
+| Framework              | #58,#59,... x5 | #150 | #151 | #152 | #153 | #64 |
+| ---------------------- | -------------- | ---- | ---- | ---- | ---- | --- |
+| alien-signals          |              ✅ |    ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
+| @preact/signals-core   |              ✅ |    ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
+| @reactively/core       |              ✅ |    ✅ |    ⬜ |    ✅ |    ✅ |   ❌ |
+| tansu                  |              ✅ |    ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
+| signal-polyfill (TC39) |              ✅ |    ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
+| @vue/reactivity        |              ✅ |    ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
+| mobx                   |              ✅ |    ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
+| @reatom/core           |              ✅ |    ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
+| svelte                 |              ✅ |    ✅ |    ⬜ |    ✅ |    ❌ |   ✅ |
+| solid-js               |              ✅ |    ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
+| @solidjs/signals       |              ✅ |    ❌ |    ✅ |    ❌ |    ✅ |   ✅ |
+| S.js                   |              ✅ |    ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
+| @angular/core          |              ✅ |    ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
+| anod                   |              ✅ |    ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
+| r3                     |              ✅ |    ✅ |    ⬜ |    ✅ |    ❌ |   ✅ |
 
 ### Batching / Transaction
 
@@ -215,6 +225,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | signal-polyfill (TC39) |        ⬜ |        ⬜ |   ⬜ |   ⬜ |   ⬜ |   ⬜ |   ⬜ |    ⬜ |    ✅ |          ⬜ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ✅ |    ⬜ |    ⬜ |   ⬜ |
 | @vue/reactivity        |        ✅ |        ✅ |   ✅ |   ✅ |   ✅ |   ✅ |   ❌ |    ✅ |    ✅ |          ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |   ✅ |
 | mobx                   |        ✅ |        ✅ |   ✅ |   ❌ |   ✅ |   ✅ |   ❌ |    ✅ |    ⬜ |          ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |   ✅ |
+| @reatom/core           |        ✅ |        ✅ |   ✅ |   ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |          ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
 | svelte                 |        ⬜ |        ⬜ |   ⬜ |   ⬜ |   ⬜ |   ⬜ |   ⬜ |    ⬜ |    ❌ |          ⬜ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ✅ |    ⬜ |    ⬜ |   ⬜ |
 | solid-js               |        ✅ |        ✅ |   ❌ |   ✅ |   ✅ |   ✅ |   ❌ |    ✅ |    ✅ |          ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |   ✅ |
 | @solidjs/signals       |        ✅ |        ✅ |   ✅ |   ✅ |   ✅ |   ✅ |   ❌ |    ✅ |    ⬜ |          ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |   ✅ |
@@ -225,7 +236,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 
 ### Untracked / Unsampled Reads
 
-| Framework              | #75 | #76 | #117,#118,... ×4 |
+| Framework              | #75 | #76 | #117,#118,... x4 |
 | ---------------------- | --- | --- | ---------------- |
 | alien-signals          |   ✅ |   ✅ |                ✅ |
 | @preact/signals-core   |   ✅ |   ✅ |                ✅ |
@@ -234,6 +245,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | signal-polyfill (TC39) |   ✅ |   ✅ |                ✅ |
 | @vue/reactivity        |   ✅ |   ✅ |                ✅ |
 | mobx                   |   ✅ |   ❌ |                ✅ |
+| @reatom/core           |   ✅ |   ✅ |                ✅ |
 | svelte                 |   ⬜ |   ⬜ |                ⬜ |
 | solid-js               |   ✅ |   ✅ |                ✅ |
 | @solidjs/signals       |   ✅ |   ✅ |                ✅ |
@@ -253,6 +265,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | signal-polyfill (TC39) |           ✅ |   ✅ |   ✅ |        ✅ |    ⬜ |    ✅ |    ✅ |        ✅ |
 | @vue/reactivity        |           ✅ |   ✅ |   ✅ |        ✅ |    ✅ |    ✅ |    ✅ |        ✅ |
 | mobx                   |           ✅ |   ⬜ |   ⬜ |        ✅ |    ✅ |    ✅ |    ✅ |        ✅ |
+| @reatom/core           |           ✅ |   ✅ |   ✅ |        ✅ |    ✅ |    ✅ |    ✅ |        ✅ |
 | svelte                 |           ✅ |   ✅ |   ✅ |        ✅ |    ⬜ |    ✅ |    ✅ |        ✅ |
 | solid-js               |           ❌ |   ✅ |   ✅ |        ❌ |    ❌ |    ❌ |    ✅ |        ❌ |
 | @solidjs/signals       |           ✅ |   ⬜ |   ⬜ |        ✅ |    ✅ |    ✅ |    ❌ |        ✅ |
@@ -263,7 +276,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 
 ### Stale Evaluation Order
 
-| Framework              | #94 | #95 | #96,#158,... ×4 |
+| Framework              | #94 | #95 | #96,#158,... x4 |
 | ---------------------- | --- | --- | --------------- |
 | alien-signals          |   ✅ |   ✅ |               ✅ |
 | @preact/signals-core   |   ✅ |   ✅ |               ✅ |
@@ -272,6 +285,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | signal-polyfill (TC39) |   ✅ |   ✅ |               ✅ |
 | @vue/reactivity        |   ✅ |   ✅ |               ✅ |
 | mobx                   |   ✅ |   ❌ |               ✅ |
+| @reatom/core           |   ✅ |   ✅ |               ✅ |
 | svelte                 |   ✅ |   ✅ |               ✅ |
 | solid-js               |   ✅ |   ✅ |               ✅ |
 | @solidjs/signals       |   ✅ |   ✅ |               ✅ |
@@ -282,7 +296,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 
 ### Memory & GC
 
-| Framework              | #98,#99,... ×5 |
+| Framework              | #98,#99,... x5 |
 | ---------------------- | -------------- |
 | alien-signals          |              ✅ |
 | @preact/signals-core   |              ✅ |
@@ -291,6 +305,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | signal-polyfill (TC39) |              ✅ |
 | @vue/reactivity        |              ✅ |
 | mobx                   |              ✅ |
+| @reatom/core           |              ✅ |
 | svelte                 |              ✅ |
 | solid-js               |              ✅ |
 | @solidjs/signals       |              ✅ |
@@ -312,6 +327,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | signal-polyfill (TC39) |  lazy |    no subscription | single recompute | Object.is |      skips |            ⬜ | post-write | post-write | keeps subscribed |   continues |  caches error | runs 1x, then blocks |           no throw | unbatched (2 runs) |
 | @vue/reactivity        |  lazy |    no subscription | single recompute | Object.is |      skips | returns void | post-write | post-write | keeps subscribed |   continues | returns stale |    runs 1x per write |           no throw | unbatched (2 runs) |
 | mobx                   |  lazy |    no subscription | single recompute |       === | propagates | returns void | post-write | post-write | keeps subscribed |   continues |  re-evaluates |    runs 2x per write |           no throw |            batched |
+| @reatom/core           |  lazy |    no subscription | single recompute | Object.is |      skips | returns void | post-write | post-write |     unsubscribes |   continues |  caches error |    runs 2x per write |     cycle detected |            batched |
 | svelte                 |  lazy |    no subscription | single recompute |       === |      skips |            ⬜ | post-write |     throws |     unsubscribes | halts flush |  re-evaluates |    runs 2x per write |     cycle detected |            batched |
 | solid-js               | eager | subscribes eagerly |     2 recomputes |       === |      skips | returns void | post-write | post-write |     unsubscribes | halts flush |         error |    runs 2x per write | manual bail (200+) |            batched |
 | @solidjs/signals       |  lazy |    no subscription | single recompute |       === |      skips | returns void | post-write | post-write | keeps subscribed | halts flush |  caches error | runs 1x, then blocks |           no throw |            batched |
@@ -319,6 +335,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | @angular/core          |  lazy |    no subscription | single recompute | Object.is |      skips |            ⬜ | post-write | post-write | keeps subscribed | halts flush |  caches error |    runs 2x per write | manual bail (200+) | unbatched (2 runs) |
 | anod                   | eager |    no subscription | single recompute |       === |      skips | returns void | post-write | post-write |     unsubscribes |   continues |  caches error |    runs 2x per write | manual bail (200+) |            batched |
 | r3                     |  lazy |              error |            error |     error |      error |            ⬜ |     throws |     throws |     unsubscribes | halts flush | returns stale |            no re-run |           no throw |              error |
+
 
 ## Usage
 
@@ -378,3 +395,4 @@ for (const { section, cases } of testSuite) {
 npm install
 npm test
 ```
+

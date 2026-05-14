@@ -8,6 +8,7 @@ import { tansuFramework } from "./tansu.js";
 import { tc39SignalsFramework } from "./tc39Signals.js";
 import { vueReactivityFramework } from "./vueReactivity.js";
 import { mobxFramework } from "./mobx.js";
+import { reatomFramework } from "./reatom.js";
 
 export const frameworks: ReactiveFramework[] = [
   alienSignalsFramework,
@@ -17,6 +18,7 @@ export const frameworks: ReactiveFramework[] = [
   tc39SignalsFramework,
   vueReactivityFramework,
   mobxFramework,
+  reatomFramework,
 ];
 
 try {

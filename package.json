@@ -33,6 +33,7 @@
     "@angular/core": "^20.0.0",
     "@preact/signals-core": "^1.8.0",
     "@reactively/core": "^0.0.8",
+    "@reatom/core": "^1001.0.0",
     "@solidjs/signals": "^0.3.0",
     "@vue/reactivity": "^3.5.0",
     "alien-signals": "^3.2.0",
