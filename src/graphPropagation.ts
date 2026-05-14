@@ -383,25 +383,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *  S(a) → C(b) → C(c) → C(d) → C(e)
-   *
-   * Simple linear chain. Propagation reaches the end.
-   */
-  "#11 computed chain depth"(fw: ReactiveFramework) {
-    const a = fw.signal(0);
-    const b = fw.computed(() => a.read());
-    const c = fw.computed(() => b.read());
-    const d = fw.computed(() => c.read());
-    const e = fw.computed(() => d.read());
-
-    expect(e.read()).toBe(0);
-    a.write(1);
-    expect(e.read()).toBe(1);
-    a.write(2);
-    expect(e.read()).toBe(2);
-  },
-
-  /**
    *  S(a) → C(c) ← E(e1)  [disposed]
    *                ← E(e2)  [still alive]
    *

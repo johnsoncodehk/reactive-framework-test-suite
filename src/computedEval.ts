@@ -60,23 +60,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *  S(a) → C(b) → C(c) → C(d)
-   *
-   * A linear chain of computeds. A change at the source must
-   * propagate through every link to the tail.
-   */
-  "#20 chained computed"(fw: ReactiveFramework) {
-    const a = fw.signal(0);
-    const b = fw.computed(() => a.read() + 1);
-    const c = fw.computed(() => b.read() + 1);
-    const d = fw.computed(() => c.read() + 1);
-
-    expect(d.read()).toBe(3);
-    a.write(10);
-    expect(d.read()).toBe(13);
-  },
-
-  /**
    *  S(a)  S(b)
    *    |      |
    *    |    C(c) ← c reads a

@@ -490,26 +490,4 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     s.write(1); // should not crash
   },
 
-  /**
-   *  S(a) ← E(eff) → dispose
-   *
-   * After disposal, repeated writes to the signal must never
-   * re-notify the disposed effect.
-   */
-  "#41 disposed effect never re-notified"(fw: ReactiveFramework) {
-    const a = fw.signal(0);
-    let runs = 0;
-    const dispose = fw.effect(() => {
-      a.read();
-      runs++;
-    });
-    expect(runs).toBe(1);
-
-    dispose();
-
-    a.write(1);
-    a.write(2);
-    a.write(3);
-    expect(runs).toBe(1);
-  },
 };

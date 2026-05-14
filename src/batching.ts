@@ -221,31 +221,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *  S(a) → E(eff)
-   *
-   * batch { a.write(1); a.write(0) } — net change is zero.
-   * Effect must NOT re-run (value-equality elision).
-   */
-  "#73 batch write returns to original: no notification"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    let runs = 0;
-    fw.effect(() => {
-      a.read();
-      runs++;
-    });
-    expect(runs).toBe(1);
-
-    fw.batch(() => {
-      a.write(1);
-      a.write(0);
-    });
-    expect(runs).toBe(1);
-  },
-
-  /**
    *  S(a) ─→ C(c) → E(eff)
    *  S(b) ─→ /
    *

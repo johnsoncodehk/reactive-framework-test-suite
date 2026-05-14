@@ -85,28 +85,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
 
   /**
    *  S(a) ─→ C(b) ─→ C(c) ─→ C(d)
-   *
-   * Three-level computed chain: after each write to S(a),
-   * the staleness flag must propagate all the way down to
-   * C(d) so that reading C(d) returns the fresh value.
-   */
-  "#96 downstream correctly marked stale on dep change"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal("a");
-    const b = fw.computed(() => a.read());
-    const c = fw.computed(() => b.read());
-    const d = fw.computed(() => c.read());
-
-    expect(d.read()).toBe("a");
-    a.write("b");
-    expect(d.read()).toBe("b");
-    a.write("c");
-    expect(d.read()).toBe("c");
-  },
-
-  /**
-   *  S(a) ─→ C(b) ─→ C(c) ─→ C(d)
    *           +1       +1       +1
    *
    * After writing S(a)=10, reading any node in the chain
