@@ -3,7 +3,7 @@ import type { ReactiveFramework } from "../../src/framework.js";
 // module load. Import from the reactive submodule to keep this Node-friendly.
 // @ts-ignore — types only resolve from the main entry
 import * as pota from "pota/src/lib/reactivity/primitives/solid.js";
-const { createSignal, memo, effect, batch, root, cleanup, untrack } = pota as any;
+const { signal: createSignal, memo, renderEffect, batch, root, cleanup, untrack } = pota as any;
 
 export const potaFramework: ReactiveFramework = {
   name: "pota",
@@ -15,13 +15,17 @@ export const potaFramework: ReactiveFramework = {
     return { read: memo(fn) };
   },
   effect(fn) {
-    effect(() => {
-      const cl = fn();
-      if (typeof cl === "function") {
-        cleanup(cl);
-      }
+    let dispose!: () => void;
+    root((d: () => void) => {
+      dispose = d;
+      renderEffect(() => {
+        const cl = fn();
+        if (typeof cl === "function") {
+          cleanup(cl);
+        }
+      });
     });
-    return () => {};
+    return dispose;
   },
   run(fn) {
     root((dispose: () => void) => {

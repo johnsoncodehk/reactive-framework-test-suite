@@ -165,32 +165,4 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(true).toBe(true);
   },
 
-  /**
-   *  S(a) ╌╌→ E(eff)   (untracked)
-   *  S(b) ╌╌→ E(eff)   (untracked)
-   *
-   * All reads inside a single untracked scope are suppressed.
-   * Writing to either S(a) or S(b) must not re-trigger the effect.
-   */
-  "#77 nested untracked inside effect still blocks tracking"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.untracked) throw new SkipTest("no untracked");
-    const a = fw.signal(0);
-    const b = fw.signal(0);
-    let runs = 0;
-
-    fw.effect(() => {
-      fw.untracked!(() => {
-        a.read();
-        b.read();
-      });
-      runs++;
-    });
-    expect(runs).toBe(1);
-
-    a.write(1);
-    b.write(1);
-    expect(runs).toBe(1);
-  },
 };

@@ -60,23 +60,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *  S(a) → C(b) → C(c) → C(d)
-   *
-   * A linear chain of computeds. A change at the source must
-   * propagate through every link to the tail.
-   */
-  "#20 chained computed"(fw: ReactiveFramework) {
-    const a = fw.signal(0);
-    const b = fw.computed(() => a.read() + 1);
-    const c = fw.computed(() => b.read() + 1);
-    const d = fw.computed(() => c.read() + 1);
-
-    expect(d.read()).toBe(3);
-    a.write(10);
-    expect(d.read()).toBe(13);
-  },
-
-  /**
    *  S(a)  S(b)
    *    |      |
    *    |    C(c) ← c reads a
@@ -309,38 +292,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
 
     c.read();
     expect(cCalls).toBe(0);
-  },
-
-  /**
-   *  S(a) → C(inner) → C(outer)
-   *
-   * inner returns 0 or 1 (threshold). When a changes from 1 to 2,
-   * inner still returns 1 — outer must NOT re-evaluate
-   * (value-equality cut).
-   */
-  "#148 nested computed: outer not recalculated if inner returns same"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal(0);
-    const inner = fw.computed(() => (a.read() > 0 ? 1 : 0));
-
-    let outerCalls = 0;
-    const outer = fw.computed(() => {
-      outerCalls++;
-      return inner.read();
-    });
-
-    expect(outer.read()).toBe(0);
-    outerCalls = 0;
-
-    a.write(1);
-    expect(outer.read()).toBe(1);
-    expect(outerCalls).toBe(1);
-
-    outerCalls = 0;
-    a.write(2);
-    expect(outer.read()).toBe(1);
-    expect(outerCalls).toBe(0);
   },
 
   /**

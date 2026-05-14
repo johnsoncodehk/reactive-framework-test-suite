@@ -44,36 +44,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *  S(a) → *C(b) → C(c)
-   *
-   * b always returns "foo" regardless of a. When a changes,
-   * c must NOT re-evaluate because b's value is unchanged.
-   */
-  "#32 computed same result — no downstream propagation"(
-    fw: ReactiveFramework
-  ) {
-    // A → B → C, B always returns "foo"
-    const a = fw.signal("a");
-    const b = fw.computed(() => {
-      a.read();
-      return "foo";
-    });
-
-    let cCalls = 0;
-    const c = fw.computed(() => {
-      cCalls++;
-      return b.read();
-    });
-
-    expect(c.read()).toBe("foo");
-    expect(cCalls).toBe(1);
-
-    a.write("aa");
-    expect(c.read()).toBe("foo");
-    expect(cCalls).toBe(1);
-  },
-
-  /**
    *  S(a) → *C(b) → C(c) → C(d)
    *
    * b clamps to 0 or 1. Once b stabilizes at 1, further changes

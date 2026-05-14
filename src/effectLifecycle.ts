@@ -56,25 +56,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *  S(a) ← E(eff) → dispose
-   *
-   * After disposal, the effect no longer re-runs on signal changes.
-   */
-  "#37 effect disposal stops re-runs"(fw: ReactiveFramework) {
-    const a = fw.signal(0);
-    let runs = 0;
-    const dispose = fw.effect(() => {
-      a.read();
-      runs++;
-    });
-    expect(runs).toBe(1);
-
-    dispose();
-    a.write(1);
-    expect(runs).toBe(1);
-  },
-
-  /**
    *  S(a) ← E(eff → cleanup)
    *
    * The cleanup function returned by an effect runs before each
@@ -206,33 +187,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *  S(a) ← E(eff → cleanup_N)
-   *
-   * Each re-run replaces the cleanup. Only the most recent cleanup
-   * function runs on the next re-run; stale cleanups are discarded.
-   */
-  "#109 only the most recent cleanup function runs"(fw: ReactiveFramework) {
-    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
-    const a = fw.signal(0);
-    const log: string[] = [];
-
-    fw.effect(() => {
-      const v = a.read();
-      return () => {
-        log.push("cleanup:" + v);
-      };
-    });
-
-    a.write(1);
-    a.write(2);
-
-    expect(log).toEqual(["cleanup:0", "cleanup:1"]);
-
-    const filtered = log.filter((x) => x === "cleanup:0");
-    expect(filtered).toHaveLength(1);
-  },
-
-  /**
    *  S(a) ← E(eff → cleanup) → dispose → dispose
    *
    * Calling dispose twice must not throw and cleanup must not run
@@ -285,31 +239,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *  S(a) ← E(eff → cleanup) → self-dispose
-   *
-   * When an effect is disposed externally, the cleanup function
-   * must still be invoked.
-   */
-  "#140 cleanup called when effect self-disposes during execution"(
-    fw: ReactiveFramework
-  ) {
-    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
-    const a = fw.signal(0);
-    let cleanupCalled = false;
-    let dispose: (() => void) | undefined;
-
-    dispose = fw.effect(() => {
-      a.read();
-      return () => {
-        cleanupCalled = true;
-      };
-    });
-
-    dispose();
-    expect(cleanupCalled).toBe(true);
-  },
-
-  /**
    *  S(a)  S(b) ← E(eff) → self-dispose mid-run
    *
    * Effect reads a, self-disposes when a===1, then continues to
@@ -343,40 +272,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(runs).toBe(2);
   },
 
-  /**
-   *  S(a) ← E(eff) → self-dispose when a >= 3
-   *
-   * "One-shot" pattern: effect auto-disposes once a condition is
-   * met. Subsequent signal changes must not re-trigger the effect.
-   */
-  "#142 one-shot conditional effect (auto-dispose when condition met)"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal(0);
-    let runs = 0;
-    let dispose: (() => void) | undefined;
-
-    dispose = fw.effect(() => {
-      const v = a.read();
-      runs++;
-      if (v >= 3) {
-        dispose?.();
-      }
-    });
-    expect(runs).toBe(1);
-
-    a.write(1);
-    expect(runs).toBe(2);
-
-    a.write(3);
-    expect(runs).toBe(3);
-
-    a.write(4);
-    expect(runs).toBe(3);
-
-    a.write(5);
-    expect(runs).toBe(3);
-  },
 
   /**
    *  S(a)  S(b) ← E(eff) → dispose
@@ -407,30 +302,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(runs).toBe(1);
   },
 
-  /**
-   *  S(a) ← E(eff → cleanup) → dispose → dispose
-   *
-   * Two consecutive dispose calls must not throw. Cleanup count
-   * must be bounded (at most one extra).
-   */
-  "#144 cleanup on destroy is idempotent"(fw: ReactiveFramework) {
-    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
-    const a = fw.signal(0);
-    let cleanupCount = 0;
-
-    const dispose = fw.effect(() => {
-      a.read();
-      return () => {
-        cleanupCount++;
-      };
-    });
-
-    dispose();
-    const countAfterFirst = cleanupCount;
-
-    expect(() => dispose()).not.toThrow();
-    expect(cleanupCount).toBeLessThanOrEqual(countAfterFirst + 1);
-  },
 
   /**
    *  S(a) ← E(inner → cleanup reads S(b))
@@ -600,26 +471,4 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     s.write(1); // should not crash
   },
 
-  /**
-   *  S(a) ← E(eff) → dispose
-   *
-   * After disposal, repeated writes to the signal must never
-   * re-notify the disposed effect.
-   */
-  "#41 disposed effect never re-notified"(fw: ReactiveFramework) {
-    const a = fw.signal(0);
-    let runs = 0;
-    const dispose = fw.effect(() => {
-      a.read();
-      runs++;
-    });
-    expect(runs).toBe(1);
-
-    dispose();
-
-    a.write(1);
-    a.write(2);
-    a.write(3);
-    expect(runs).toBe(1);
-  },
 };

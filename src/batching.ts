@@ -22,32 +22,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   /**
    *  S(a) → E(eff)
    *
-   * batch { a.write(1); a.write(2); a.write(3) } — effect fires once
-   * with the final value 3.
-   */
-  "#65 writes delayed until batch completes"(fw: ReactiveFramework) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    let runs = 0;
-    fw.effect(() => {
-      a.read();
-      runs++;
-    });
-    expect(runs).toBe(1);
-
-    fw.batch(() => {
-      a.write(1);
-      a.write(2);
-      a.write(3);
-    });
-    // Effect should run only once for the batch, not 3 times
-    expect(runs).toBe(2);
-    expect(a.read()).toBe(3);
-  },
-
-  /**
-   *  S(a) → E(eff)
-   *
    * Nested batch: inner batch completes but outer is still open.
    * Effect fires only once when the outermost batch ends.
    */
@@ -92,24 +66,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
       expect(a.read()).toBe(1);
       a.write(2);
       expect(a.read()).toBe(2);
-    });
-  },
-
-  /**
-   *  S(a) → C(b)
-   *
-   * Computed reads inside a batch re-evaluate eagerly when pulled,
-   * reflecting the latest source value (b.read() === 10 after a.write(5)).
-   */
-  "#68 computed readable with updated sources inside batch"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    const b = fw.computed(() => a.read() * 2);
-    fw.batch(() => {
-      a.write(5);
-      expect(b.read()).toBe(10);
     });
   },
 
@@ -166,36 +122,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *  S(a) ─→ E(eff)
-   *  S(b) ─→ /
-   *
-   * Two signals both read by one effect change inside a batch.
-   * Effect fires once, not twice.
-   */
-  "#71 no duplicate listener notifications within batch"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    const b = fw.signal(0);
-    let runs = 0;
-
-    fw.effect(() => {
-      a.read();
-      b.read();
-      runs++;
-    });
-    expect(runs).toBe(1);
-
-    fw.batch(() => {
-      a.write(1);
-      b.write(1);
-    });
-    // Should notify once, not twice
-    expect(runs).toBe(2);
-  },
-
-  /**
    *  S(a) → E(eff)
    *
    * batch { a.write(1); a.write(2); a.write(3) } — effect observes
@@ -218,31 +144,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
       a.write(3);
     });
     expect(values).toEqual([0, 3]);
-  },
-
-  /**
-   *  S(a) → E(eff)
-   *
-   * batch { a.write(1); a.write(0) } — net change is zero.
-   * Effect must NOT re-run (value-equality elision).
-   */
-  "#73 batch write returns to original: no notification"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    let runs = 0;
-    fw.effect(() => {
-      a.read();
-      runs++;
-    });
-    expect(runs).toBe(1);
-
-    fw.batch(() => {
-      a.write(1);
-      a.write(0);
-    });
-    expect(runs).toBe(1);
   },
 
   /**

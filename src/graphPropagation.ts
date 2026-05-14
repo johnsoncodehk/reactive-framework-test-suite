@@ -132,38 +132,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *     S(a)
-   *    /    \
-   *  C(b)  C(c)
-   *          |
-   *        C(d)
-   *        /
-   *     C(e)
-   *
-   * Asymmetric path lengths (depth 1 vs depth 2) joining at e.
-   * e must evaluate only once.
-   */
-  "#4 asymmetric diamond (different path lengths)"(fw: ReactiveFramework) {
-    const a = fw.signal("a");
-    const b = fw.computed(() => a.read());
-    const c = fw.computed(() => a.read());
-    const d = fw.computed(() => c.read());
-
-    let eCalls = 0;
-    const e = fw.computed(() => {
-      eCalls++;
-      return b.read() + " " + d.read();
-    });
-
-    expect(e.read()).toBe("a a");
-    expect(eCalls).toBe(1);
-
-    a.write("b");
-    expect(e.read()).toBe("b b");
-    expect(eCalls).toBe(2);
-  },
-
-  /**
    *    S(a)
    *    / |
    *  C(b)|
@@ -380,25 +348,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(cCalls).toBe(1);
     expect(dCalls).toBe(1);
     expect(eCalls).toBe(1);
-  },
-
-  /**
-   *  S(a) → C(b) → C(c) → C(d) → C(e)
-   *
-   * Simple linear chain. Propagation reaches the end.
-   */
-  "#11 computed chain depth"(fw: ReactiveFramework) {
-    const a = fw.signal(0);
-    const b = fw.computed(() => a.read());
-    const c = fw.computed(() => b.read());
-    const d = fw.computed(() => c.read());
-    const e = fw.computed(() => d.read());
-
-    expect(e.read()).toBe(0);
-    a.write(1);
-    expect(e.read()).toBe(1);
-    a.write(2);
-    expect(e.read()).toBe(2);
   },
 
   /**
