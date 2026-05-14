@@ -36,7 +36,7 @@
     "@reatom/core": "^1001.0.0",
     "@solidjs/signals": "^0.3.0",
     "@vue/reactivity": "^3.5.0",
-    "alien-signals": "^3.2.0",
+    "alien-signals": "^3.2.1",
     "anod": "^0.9.1",
     "mobx": "^6.13.0",
     "pota": "^0.7.0",
