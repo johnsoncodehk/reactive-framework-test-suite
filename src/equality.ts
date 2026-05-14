@@ -114,4 +114,35 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(runs).toBe(1);
   },
 
+  /**
+   *  S(a) → *C(b) → C(c)
+   *
+   * b always returns the same object reference regardless of a.
+   * Existing equality tests (#28/#34) use primitive values; this
+   * verifies the same value-cut behaviour for non-primitive output.
+   * c must NOT re-evaluate because b's reference is unchanged.
+   */
+  "#220 computed same object reference — no downstream propagation"(
+    fw: ReactiveFramework
+  ) {
+    const obj = { x: 1 };
+    const a = fw.signal(0);
+    const b = fw.computed(() => {
+      a.read();
+      return obj;
+    });
+
+    let cCalls = 0;
+    const c = fw.computed(() => {
+      cCalls++;
+      return b.read();
+    });
+
+    expect(c.read()).toBe(obj);
+    cCalls = 0;
+
+    a.write(1);
+    expect(c.read()).toBe(obj);
+    expect(cCalls).toBe(0);
+  },
 };
