@@ -2,7 +2,7 @@
 
 Cross-library test suite for comparing reactive signal behavior across **15 frameworks** with **166 test cases**.
 
-> 2054 passed, 270 failed, 166 skipped out of 2490 total runs
+> 2056 passed, 268 failed, 166 skipped out of 2490 total runs
 
 Test cases are collected and adapted from the test suites of all participating frameworks — thanks to every project for their thorough testing work. This suite focuses on **reactive semantics** (propagation, batching, disposal, edge cases), not API completeness. Tests that require an optional capability (e.g. `batch`) are skipped (⬜) for frameworks that don't expose it, rather than marked as failures.
 
@@ -41,7 +41,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | @reatom/core           |  164 |    2 |    0 |   166 |
 | anod                   |  154 |   12 |    0 |   166 |
 | tansu                  |  150 |    5 |   11 |   166 |
-| @solidjs/signals       |  146 |    9 |   11 |   166 |
+| @solidjs/signals       |  148 |    7 |   11 |   166 |
 | solid-js               |  142 |   24 |    0 |   166 |
 | mobx                   |  138 |   17 |   11 |   166 |
 | @vue/reactivity        |  135 |   31 |    0 |   166 |
@@ -1132,23 +1132,23 @@ Legend:
   ↔ / ⟳   cyclic dependency
 ```
 
-| Framework              | #61 | #63 | #150,#152 | #151 | #153 | #64,#221,#223 |
-| ---------------------- | --- | --- | --------- | ---- | ---- | ------------- |
-| alien-signals          |   ✅ |   ✅ |         ✅ |    ✅ |    ✅ |             ✅ |
-| @preact/signals-core   |   ✅ |   ✅ |         ✅ |    ✅ |    ✅ |             ✅ |
-| @reactively/core       |   ✅ |   ✅ |         ✅ |    ⬜ |    ✅ |             ❌ |
-| tansu                  |   ✅ |   ✅ |         ✅ |    ✅ |    ✅ |             ✅ |
-| signal-polyfill (TC39) |   ✅ |   ✅ |         ✅ |    ✅ |    ✅ |             ✅ |
-| @vue/reactivity        |   ✅ |   ✅ |         ✅ |    ✅ |    ✅ |             ✅ |
-| mobx                   |   ✅ |   ✅ |         ✅ |    ✅ |    ✅ |             ✅ |
-| @reatom/core           |   ✅ |   ✅ |         ✅ |    ✅ |    ✅ |             ✅ |
-| svelte                 |   ✅ |   ✅ |         ✅ |    ⬜ |    ❌ |             ✅ |
-| solid-js               |   ✅ |   ✅ |         ✅ |    ✅ |    ✅ |             ✅ |
-| @solidjs/signals       |   ✅ |   ✅ |         ❌ |    ✅ |    ✅ |             ✅ |
-| S.js                   |   ✅ |   ✅ |         ✅ |    ✅ |    ✅ |             ✅ |
-| pota                   |   ✅ |   ❌ |         ✅ |    ✅ |    ✅ |             ✅ |
-| @angular/core          |   ✅ |   ✅ |         ✅ |    ✅ |    ✅ |             ✅ |
-| anod                   |   ✅ |   ✅ |         ✅ |    ✅ |    ✅ |             ✅ |
+| Framework              | #61,#150,#152 | #63 | #151 | #153 | #64,#221,#223 |
+| ---------------------- | ------------- | --- | ---- | ---- | ------------- |
+| alien-signals          |             ✅ |   ✅ |    ✅ |    ✅ |             ✅ |
+| @preact/signals-core   |             ✅ |   ✅ |    ✅ |    ✅ |             ✅ |
+| @reactively/core       |             ✅ |   ✅ |    ⬜ |    ✅ |             ❌ |
+| tansu                  |             ✅ |   ✅ |    ✅ |    ✅ |             ✅ |
+| signal-polyfill (TC39) |             ✅ |   ✅ |    ✅ |    ✅ |             ✅ |
+| @vue/reactivity        |             ✅ |   ✅ |    ✅ |    ✅ |             ✅ |
+| mobx                   |             ✅ |   ✅ |    ✅ |    ✅ |             ✅ |
+| @reatom/core           |             ✅ |   ✅ |    ✅ |    ✅ |             ✅ |
+| svelte                 |             ✅ |   ✅ |    ⬜ |    ❌ |             ✅ |
+| solid-js               |             ✅ |   ✅ |    ✅ |    ✅ |             ✅ |
+| @solidjs/signals       |             ✅ |   ✅ |    ✅ |    ✅ |             ✅ |
+| S.js                   |             ✅ |   ✅ |    ✅ |    ✅ |             ✅ |
+| pota                   |             ✅ |   ❌ |    ✅ |    ✅ |             ✅ |
+| @angular/core          |             ✅ |   ✅ |    ✅ |    ✅ |             ✅ |
+| anod                   |             ✅ |   ✅ |    ✅ |    ✅ |             ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
@@ -1166,20 +1166,6 @@ Legend:
 Effect is safe when cond=false. Setting cond=true creates a
 dynamic read-write cycle on a. Framework must detect it.
 
-#### #150 dynamic cycle: computed pair becomes cyclic on condition change
-
-```
- S(cond)
-    |
-  C(b) ──→ C(a)
-    ↑        |
-    └────────┘  ⟳  (when cond=true)
-```
-
-When cond=false, b returns 0 and no cycle exists.
-Setting cond=true makes b read a, forming a↔b cycle.
-Framework should throw or handle the late-onset cycle.
-
 #### #151 self-reference via untracked: cycle still detected
 
 ```
@@ -1189,17 +1175,6 @@ Framework should throw or handle the late-onset cycle.
 A computed reads itself inside an untracked scope.
 Even without a tracked dependency edge, re-entering the
 same computation is still a cycle.
-
-#### #152 conditional computed becomes recursive on flag change
-
-```
- S(flag)
-    |
-  C(c) ⟳  (when flag=true)
-```
-
-When flag=false, c returns 0 (no cycle). Setting flag=true
-makes c read itself, creating a conditional self-cycle.
 
 #### #153 computed self-dep recovery after catching cycle error
 
