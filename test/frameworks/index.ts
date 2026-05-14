@@ -1,13 +1,20 @@
 import type { ReactiveFramework } from "../../src/framework.js";
 
 import { alienSignalsFramework } from "./alienSignals.js";
+import { angularSignalsFramework } from "./angularSignals.js";
+import { anodFramework } from "./anod.js";
+import { mobxFramework } from "./mobx.js";
+import { potaFramework } from "./pota.js";
 import { preactSignalsFramework } from "./preactSignals.js";
 import { reactivelyFramework } from "./reactively.js";
+import { reatomFramework } from "./reatom.js";
+import { sjsFramework } from "./sjs.js";
+import { solidFramework } from "./solid.js";
+import { svelteFramework } from "./svelte.js";
 import { tansuFramework } from "./tansu.js";
 import { tc39SignalsFramework } from "./tc39Signals.js";
 import { vueReactivityFramework } from "./vueReactivity.js";
-import { mobxFramework } from "./mobx.js";
-import { reatomFramework } from "./reatom.js";
+import { xReactivityFramework } from "./xReactivity.js";
 
 export const frameworks: ReactiveFramework[] = [
   alienSignalsFramework,
@@ -18,40 +25,11 @@ export const frameworks: ReactiveFramework[] = [
   vueReactivityFramework,
   mobxFramework,
   reatomFramework,
+  svelteFramework,
+  solidFramework,
+  xReactivityFramework,
+  sjsFramework,
+  potaFramework,
+  angularSignalsFramework,
+  anodFramework,
 ];
-
-try {
-  const { svelteFramework } = await import("./svelte.js");
-  frameworks.push(svelteFramework);
-} catch {}
-
-try {
-  const { solidFramework } = await import("./solid.js");
-  frameworks.push(solidFramework);
-} catch {}
-
-try {
-  const { xReactivityFramework } = await import("./xReactivity.js");
-  frameworks.push(xReactivityFramework);
-} catch {}
-
-try {
-  const { sjsFramework } = await import("./sjs.js");
-  frameworks.push(sjsFramework);
-} catch {}
-
-try {
-  const { potaFramework } = await import("./pota.js");
-  frameworks.push(potaFramework);
-} catch {}
-
-try {
-  const { angularSignalsFramework } = await import("./angularSignals.js");
-  frameworks.push(angularSignalsFramework);
-} catch {}
-
-try {
-  const { anodFramework } = await import("./anod.js");
-  frameworks.push(anodFramework);
-} catch {}
-

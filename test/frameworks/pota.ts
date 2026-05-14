@@ -1,4 +1,7 @@
 import type { ReactiveFramework } from "../../src/framework.js";
+// Pota's main entry loads CustomElement.js which references HTMLElement at
+// module load. Import from the reactive submodule to keep this Node-friendly.
+// @ts-ignore — types only resolve from the main entry
 import {
   createSignal,
   memo,
@@ -7,8 +10,7 @@ import {
   root,
   cleanup,
   untrack,
-  // @ts-ignore — pota types incomplete in Node
-} from "pota";
+} from "pota/src/lib/reactivity/primitives/solid.js";
 
 export const potaFramework: ReactiveFramework = {
   name: "pota",
