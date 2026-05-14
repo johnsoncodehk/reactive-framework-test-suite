@@ -471,4 +471,111 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     s.write(1); // should not crash
   },
 
+  /**
+   *  S(a) ← E(eff1)
+   *       ← E(eff2)
+   *       ← E(eff3)
+   *
+   * Three effects subscribe to the same signal. On signal change
+   * they must fire in subscription (creation) order.
+   */
+  "#216 effects fire in creation order on shared signal"(
+    fw: ReactiveFramework
+  ) {
+    const a = fw.signal(0);
+    const order: number[] = [];
+
+    fw.effect(() => {
+      a.read();
+      order.push(1);
+    });
+    fw.effect(() => {
+      a.read();
+      order.push(2);
+    });
+    fw.effect(() => {
+      a.read();
+      order.push(3);
+    });
+    order.length = 0;
+
+    a.write(1);
+    expect(order).toEqual([1, 2, 3]);
+
+    order.length = 0;
+    a.write(2);
+    expect(order).toEqual([1, 2, 3]);
+  },
+
+  /**
+   *  S(a) ← E1 → dispose
+   *       ← E2  (created after E1 disposed)
+   *
+   * After an effect is disposed, creating a new effect on the
+   * same signal must work normally — fresh subscription, normal
+   * re-runs. Confirms dispose doesn't poison the signal's
+   * subscriber set.
+   */
+  "#217 new effect after dispose works normally"(fw: ReactiveFramework) {
+    const a = fw.signal(0);
+    let e1Runs = 0;
+    let e2Runs = 0;
+
+    const dispose1 = fw.effect(() => {
+      a.read();
+      e1Runs++;
+    });
+    expect(e1Runs).toBe(1);
+
+    dispose1();
+    a.write(1);
+    expect(e1Runs).toBe(1);
+
+    fw.effect(() => {
+      a.read();
+      e2Runs++;
+    });
+    expect(e2Runs).toBe(1);
+
+    a.write(2);
+    expect(e2Runs).toBe(2);
+    expect(e1Runs).toBe(1);
+  },
+
+  /**
+   *  S(a) ← E_outer (→ cleanup creates E_inner ← S(b))
+   *
+   * A common debounce-like pattern: an effect's cleanup creates a
+   * fresh effect that subscribes to a different signal. The newly
+   * created inner effect must run once on creation and react to
+   * subsequent writes to its own dependency.
+   */
+  "#222 effect created inside cleanup tracks its own deps"(
+    fw: ReactiveFramework
+  ) {
+    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
+    const a = fw.signal(0);
+    const b = fw.signal(0);
+    let innerRuns = 0;
+
+    fw.effect(() => {
+      a.read();
+      return () => {
+        fw.effect(() => {
+          b.read();
+          innerRuns++;
+        });
+      };
+    });
+    expect(innerRuns).toBe(0);
+
+    // Trigger cleanup once — the cleanup-created effect should
+    // run initially.
+    a.write(1);
+    expect(innerRuns).toBe(1);
+
+    // The cleanup-created effect must track b independently.
+    b.write(1);
+    expect(innerRuns).toBe(2);
+  },
 };

@@ -246,4 +246,46 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     // Should be bounded
     expect(iterations).toBeLessThanOrEqual(300);
   },
+
+  /**
+   *  S(a) → E(e1) → S(b) → E(e2) → S(c) → E(e3) → S(a)  ⟳
+   *
+   * Three effects forming a longer ping-pong cycle (e1 reads a writes
+   * b; e2 reads b writes c; e3 reads c writes a). #64 tests a 2-effect
+   * cycle; this variant verifies the framework's bounding holds for
+   * longer cycles too — frameworks that detect direct (length-2) loops
+   * may miss longer paths.
+   */
+  "#221 three-effect cycle stays bounded"(fw: ReactiveFramework) {
+    const a = fw.signal(0);
+    const b = fw.signal(0);
+    const c = fw.signal(0);
+    let iterations = 0;
+
+    try {
+      fw.effect(() => {
+        iterations++;
+        const v = a.read();
+        if (v < 100) {
+          b.write(v);
+        }
+      });
+      fw.effect(() => {
+        const v = b.read();
+        if (v < 100) {
+          c.write(v);
+        }
+      });
+      fw.effect(() => {
+        const v = c.read();
+        if (v < 100) {
+          a.write(v + 1);
+        }
+      });
+    } catch {
+      // Expected: iteration limit reached
+    }
+
+    expect(iterations).toBeLessThanOrEqual(300);
+  },
 };
