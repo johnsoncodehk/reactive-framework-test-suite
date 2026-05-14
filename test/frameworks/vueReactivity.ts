@@ -7,8 +7,22 @@ import {
   resetTracking,
   onEffectCleanup,
 } from "@vue/reactivity";
-// @ts-ignore — startBatch/endBatch are exported by the bundler entry but not the public types
-import { startBatch, endBatch } from "@vue/reactivity/dist/reactivity.esm-bundler.js";
+
+// @vue/reactivity has no public batch API — startBatch/endBatch exist
+// internally but aren't exported. Implement batching here by intercepting
+// each effect's scheduler: queue triggers while batch depth > 0, flush
+// on the outermost batch end.
+let batchDepth = 0;
+const queued = new Set<ReactiveEffect>();
+
+function flush() {
+  if (queued.size === 0) return;
+  const effects = [...queued];
+  queued.clear();
+  for (const e of effects) {
+    if (e.dirty) e.run();
+  }
+}
 
 export const vueReactivityFramework: ReactiveFramework = {
   name: "@vue/reactivity",
@@ -32,6 +46,13 @@ export const vueReactivityFramework: ReactiveFramework = {
         onEffectCleanup(cleanup);
       }
     });
+    e.scheduler = () => {
+      if (batchDepth > 0) {
+        queued.add(e);
+      } else if (e.dirty) {
+        e.run();
+      }
+    };
     e.run();
     return () => e.stop();
   },
@@ -47,11 +68,14 @@ export const vueReactivityFramework: ReactiveFramework = {
     }
   },
   batch(fn) {
-    startBatch();
+    batchDepth++;
     try {
       fn();
     } finally {
-      endBatch();
+      batchDepth--;
+      if (batchDepth === 0) {
+        flush();
+      }
     }
   },
 };
