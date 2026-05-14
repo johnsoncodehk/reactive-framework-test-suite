@@ -165,4 +165,70 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(true).toBe(true);
   },
 
+  /**
+   *  S(a) ─→ E(eff)
+   *  S(b) ╌╌→ E(eff)   (untracked)
+   *
+   * Effect tracks a and reads b inside `untracked`. Writes are
+   * delivered via batch — untracked reads must still not create
+   * a dependency, so writing only b inside a batch must not
+   * trigger the effect.
+   */
+  "#218 untracked read survives across batched writes"(
+    fw: ReactiveFramework
+  ) {
+    if (!fw.untracked || !fw.batch) throw new SkipTest("no untracked or batch");
+    const a = fw.signal(0);
+    const b = fw.signal(0);
+    let runs = 0;
+
+    fw.effect(() => {
+      a.read();
+      fw.untracked!(() => b.read());
+      runs++;
+    });
+    expect(runs).toBe(1);
+
+    fw.batch(() => {
+      b.write(1);
+    });
+    expect(runs).toBe(1);
+
+    fw.batch(() => {
+      b.write(2);
+      a.write(1);
+    });
+    expect(runs).toBe(2);
+  },
+
+  /**
+   *  untracked { batch { S(a).write × 3 } } → E(eff)
+   *
+   * A batch initiated inside `untracked` must still coalesce
+   * writes and deliver a single notification to a tracked
+   * effect outside the untracked scope.
+   */
+  "#219 batch inside untracked still coalesces writes"(
+    fw: ReactiveFramework
+  ) {
+    if (!fw.untracked || !fw.batch) throw new SkipTest("no untracked or batch");
+    const a = fw.signal(0);
+    let runs = 0;
+
+    fw.effect(() => {
+      a.read();
+      runs++;
+    });
+    expect(runs).toBe(1);
+
+    fw.untracked!(() => {
+      fw.batch!(() => {
+        a.write(1);
+        a.write(2);
+        a.write(3);
+      });
+    });
+    expect(runs).toBe(2);
+    expect(a.read()).toBe(3);
+  },
 };

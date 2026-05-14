@@ -125,4 +125,46 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(d.read()).toBe(5);
   },
 
+  /**
+   *  S(a) ─→ C(b) ─→ E(eff1)
+   *               ─→ E(eff2)
+   *       dispose eff1
+   *  S(a) ─→ C(b) ──X E(eff1)
+   *               ─→ E(eff2)
+   *
+   * Two effects share a computed. Disposing one must keep the
+   * other's subscription intact — writes still trigger eff2 but
+   * never trigger the disposed eff1.
+   */
+  "#215 partial dispose: sibling effect still notified"(
+    fw: ReactiveFramework
+  ) {
+    const a = fw.signal(0);
+    const b = fw.computed(() => a.read() * 2);
+    let e1Runs = 0;
+    let e2Runs = 0;
+
+    const dispose1 = fw.effect(() => {
+      b.read();
+      e1Runs++;
+    });
+    fw.effect(() => {
+      b.read();
+      e2Runs++;
+    });
+    expect(e1Runs).toBe(1);
+    expect(e2Runs).toBe(1);
+
+    dispose1();
+    e1Runs = 0;
+    e2Runs = 0;
+
+    a.write(1);
+    expect(e1Runs).toBe(0);
+    expect(e2Runs).toBe(1);
+
+    a.write(2);
+    expect(e1Runs).toBe(0);
+    expect(e2Runs).toBe(2);
+  },
 };
