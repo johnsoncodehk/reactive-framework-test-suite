@@ -1,8 +1,8 @@
 # Reactive Framework Test Suite
 
-Cross-library test suite for comparing reactive signal behavior across **15 frameworks** with **163 test cases**.
+Cross-library test suite for comparing reactive signal behavior across **15 frameworks** with **164 test cases**.
 
-> 2036 passed, 245 failed, 164 skipped out of 2445 total runs
+> 2048 passed, 248 failed, 164 skipped out of 2460 total runs
 
 Test cases are collected and adapted from the test suites of all participating frameworks — thanks to every project for their thorough testing work. This suite focuses on **reactive semantics** (propagation, batching, disposal, edge cases), not API completeness. Tests that require an optional capability (e.g. `batch`) are skipped (⬜) for frameworks that don't expose it, rather than marked as failures.
 
@@ -36,21 +36,21 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 
 | Framework              | Pass | Fail | Skip | Total |
 | ---------------------- | ---- | ---- | ---- | ----- |
-| alien-signals          |  163 |    0 |    0 |   163 |
-| @preact/signals-core   |  161 |    2 |    0 |   163 |
-| @reatom/core           |  160 |    3 |    0 |   163 |
-| @vue/reactivity        |  156 |    7 |    0 |   163 |
-| anod                   |  151 |   12 |    0 |   163 |
-| tansu                  |  147 |    5 |   11 |   163 |
-| @solidjs/signals       |  145 |    7 |   11 |   163 |
-| solid-js               |  139 |   24 |    0 |   163 |
-| mobx                   |  135 |   17 |   11 |   163 |
-| signal-polyfill (TC39) |  128 |    8 |   27 |   163 |
-| @angular/core          |  126 |   10 |   27 |   163 |
-| svelte                 |  118 |   12 |   33 |   163 |
-| S.js                   |  118 |   45 |    0 |   163 |
-| @reactively/core       |  100 |   19 |   44 |   163 |
-| pota                   |   89 |   74 |    0 |   163 |
+| alien-signals          |  163 |    1 |    0 |   164 |
+| @preact/signals-core   |  162 |    2 |    0 |   164 |
+| @reatom/core           |  161 |    3 |    0 |   164 |
+| @vue/reactivity        |  157 |    7 |    0 |   164 |
+| anod                   |  152 |   12 |    0 |   164 |
+| tansu                  |  148 |    5 |   11 |   164 |
+| @solidjs/signals       |  146 |    7 |   11 |   164 |
+| solid-js               |  140 |   24 |    0 |   164 |
+| mobx                   |  136 |   17 |   11 |   164 |
+| signal-polyfill (TC39) |  129 |    8 |   27 |   164 |
+| @angular/core          |  127 |   10 |   27 |   164 |
+| svelte                 |  119 |   12 |   33 |   164 |
+| S.js                   |  119 |   45 |    0 |   164 |
+| @reactively/core       |  100 |   20 |   44 |   164 |
+| pota                   |   89 |   75 |    0 |   164 |
 
 ## Results
 
@@ -760,23 +760,23 @@ Legend:
   ✕        disposed / cleaned up
 ```
 
-| Framework              | #43,#48 | #45 | #46 | #47 | #163 | #164 | #170 | #209 | #210 |
-| ---------------------- | ------- | --- | --- | --- | ---- | ---- | ---- | ---- | ---- |
-| alien-signals          |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
-| @preact/signals-core   |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |
-| @reactively/core       |       ❌ |   ⬜ |   ✅ |   ✅ |    ❌ |    ❌ |    ❌ |    ❌ |    ❌ |
-| tansu                  |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |
-| signal-polyfill (TC39) |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |
-| @vue/reactivity        |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |
-| mobx                   |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |
-| @reatom/core           |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
-| svelte                 |       ✅ |   ⬜ |   ✅ |   ❌ |    ❌ |    ✅ |    ✅ |    ❌ |    ❌ |
-| solid-js               |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |
-| @solidjs/signals       |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
-| S.js                   |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ❌ |    ❌ |    ❌ |
-| pota                   |       ✅ |   ✅ |   ❌ |   ✅ |    ❌ |    ❌ |    ✅ |    ✅ |    ❌ |
-| @angular/core          |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |
-| anod                   |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| Framework              | #43,#48 | #45 | #46 | #47 | #163 | #164 | #170 | #209 | #210 | #226 |
+| ---------------------- | ------- | --- | --- | --- | ---- | ---- | ---- | ---- | ---- | ---- |
+| alien-signals          |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |
+| @preact/signals-core   |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |    ✅ |
+| @reactively/core       |       ❌ |   ⬜ |   ✅ |   ✅ |    ❌ |    ❌ |    ❌ |    ❌ |    ❌ |    ❌ |
+| tansu                  |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |    ✅ |
+| signal-polyfill (TC39) |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |    ✅ |
+| @vue/reactivity        |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |    ✅ |
+| mobx                   |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |    ✅ |
+| @reatom/core           |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| svelte                 |       ✅ |   ⬜ |   ✅ |   ❌ |    ❌ |    ✅ |    ✅ |    ❌ |    ❌ |    ✅ |
+| solid-js               |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |    ✅ |
+| @solidjs/signals       |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| S.js                   |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ❌ |    ❌ |    ❌ |    ✅ |
+| pota                   |       ✅ |   ✅ |   ❌ |   ✅ |    ❌ |    ❌ |    ✅ |    ✅ |    ❌ |    ❌ |
+| @angular/core          |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |    ✅ |
+| anod                   |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
@@ -881,6 +881,21 @@ the new inner effects should respond to b and c changes.
 
 Inner effect captures a closure variable from the outer effect.
 The observed value must reflect the outer's current execution.
+
+#### #226 outer keeps responding to own deps after inner re-runs
+
+```
+ S(a) ─→ E_outer{ E_inner ─→ S(b) }
+```
+
+Outer reads a and creates an inner effect that reads b.
+After b changes (which re-runs only the inner), the outer
+must still respond to subsequent writes to its own dep a.
+
+Regression observed in alien-signals 3.2.0 (works in 3.1.2):
+after the inner re-runs once on its own, the outer's link
+to a is dropped and a.write no longer triggers it.
+See https://github.com/stackblitz/alien-signals/issues/115
 
 
 </details>

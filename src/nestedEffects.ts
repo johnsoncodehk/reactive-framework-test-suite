@@ -311,4 +311,45 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
 
     expect(observed).toContain(0);
   },
+
+  /**
+   *  S(a) ─→ E_outer{ E_inner ─→ S(b) }
+   *
+   * Outer reads a and creates an inner effect that reads b.
+   * After b changes (which re-runs only the inner), the outer
+   * must still respond to subsequent writes to its own dep a.
+   *
+   * Regression observed in alien-signals 3.2.0 (works in 3.1.2):
+   * after the inner re-runs once on its own, the outer's link
+   * to a is dropped and a.write no longer triggers it.
+   * See https://github.com/stackblitz/alien-signals/issues/115
+   */
+  "#226 outer keeps responding to own deps after inner re-runs"(
+    fw: ReactiveFramework
+  ) {
+    const a = fw.signal(0);
+    const b = fw.signal(0);
+    let outerRuns = 0;
+    let innerRuns = 0;
+
+    fw.effect(() => {
+      a.read();
+      outerRuns++;
+      fw.effect(() => {
+        b.read();
+        innerRuns++;
+      });
+    });
+    expect(outerRuns).toBe(1);
+    expect(innerRuns).toBe(1);
+
+    // Trigger inner via b — outer must NOT re-run (b is not its dep)
+    b.write(1);
+    expect(outerRuns).toBe(1);
+    expect(innerRuns).toBeGreaterThanOrEqual(2);
+
+    // Trigger outer via a — must re-run despite inner having re-run earlier
+    a.write(1);
+    expect(outerRuns).toBe(2);
+  },
 };
