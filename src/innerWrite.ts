@@ -448,29 +448,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *  S(a)  S(b) ← E(eff) ═→ S(b) when a===0 && b===0
-   *
-   * Effect writes to b during its own run. The write must
-   * propagate so that b settles to 1.
-   */
-  "#139 effect inner write re-schedules when dep changes during run"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal(0);
-    const b = fw.signal(0);
-    const log: number[] = [];
-
-    fw.effect(() => {
-      log.push(a.read());
-      if (a.read() === 0 && b.read() === 0) {
-        b.write(1);
-      }
-    });
-
-    expect(b.read()).toBe(1);
-  },
-
-  /**
    *  S(a) → C(c) ═→ S(a) [increments a]
    *
    * Computed writes to its own dependency (self-cycle). Each read

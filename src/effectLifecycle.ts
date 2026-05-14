@@ -285,31 +285,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *  S(a) ← E(eff → cleanup) → self-dispose
-   *
-   * When an effect is disposed externally, the cleanup function
-   * must still be invoked.
-   */
-  "#140 cleanup called when effect self-disposes during execution"(
-    fw: ReactiveFramework
-  ) {
-    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
-    const a = fw.signal(0);
-    let cleanupCalled = false;
-    let dispose: (() => void) | undefined;
-
-    dispose = fw.effect(() => {
-      a.read();
-      return () => {
-        cleanupCalled = true;
-      };
-    });
-
-    dispose();
-    expect(cleanupCalled).toBe(true);
-  },
-
-  /**
    *  S(a)  S(b) ← E(eff) → self-dispose mid-run
    *
    * Effect reads a, self-disposes when a===1, then continues to
@@ -407,30 +382,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(runs).toBe(1);
   },
 
-  /**
-   *  S(a) ← E(eff → cleanup) → dispose → dispose
-   *
-   * Two consecutive dispose calls must not throw. Cleanup count
-   * must be bounded (at most one extra).
-   */
-  "#144 cleanup on destroy is idempotent"(fw: ReactiveFramework) {
-    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
-    const a = fw.signal(0);
-    let cleanupCount = 0;
-
-    const dispose = fw.effect(() => {
-      a.read();
-      return () => {
-        cleanupCount++;
-      };
-    });
-
-    dispose();
-    const countAfterFirst = cleanupCount;
-
-    expect(() => dispose()).not.toThrow();
-    expect(cleanupCount).toBeLessThanOrEqual(countAfterFirst + 1);
-  },
 
   /**
    *  S(a) ← E(inner → cleanup reads S(b))

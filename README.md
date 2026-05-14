@@ -1,8 +1,8 @@
 # Reactive Framework Test Suite
 
-Cross-library test suite for comparing reactive signal behavior across **14 frameworks** with **182 test cases**.
+Cross-library test suite for comparing reactive signal behavior across **15 frameworks** with **175 test cases**.
 
-> 2158 passed, 206 failed, 184 skipped out of 2548 total runs
+> 2073 passed, 356 failed, 196 skipped out of 2625 total runs
 
 Test cases are collected and adapted from the test suites of all participating frameworks — thanks to every project for their thorough testing work. This suite focuses on **reactive semantics** (propagation, batching, disposal, edge cases), not API completeness. Tests that require an optional capability (e.g. `batch`) are skipped (⬜) for frameworks that don't expose it, rather than marked as failures.
 
@@ -28,6 +28,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | solid-js | `solid-js` | 1.9.12 | 2026-03-24 |
 | @solidjs/signals | `@solidjs/signals` | 0.3.2 | 2025-04-29 |
 | S.js | `s-js` | 0.4.9 | 2018-07-28 |
+| pota | `pota` | 0.7.82 | 2024-02-01 |
 | @angular/core | `@angular/core` | 20.3.20 | 2026-05-06 |
 | anod | `anod` | 0.9.1 | 2026-04-27 |
 
@@ -35,20 +36,21 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 
 | Framework              | Pass | Fail | Skip | Total |
 | ---------------------- | ---- | ---- | ---- | ----- |
-| alien-signals          |  182 |    0 |    0 |   182 |
-| @reatom/core           |  181 |    1 |    0 |   182 |
-| @preact/signals-core   |  180 |    2 |    0 |   182 |
-| anod                   |  168 |   14 |    0 |   182 |
-| tansu                  |  165 |    4 |   13 |   182 |
-| @solidjs/signals       |  159 |   10 |   13 |   182 |
-| solid-js               |  156 |   26 |    0 |   182 |
-| mobx                   |  150 |   19 |   13 |   182 |
-| @vue/reactivity        |  149 |   33 |    0 |   182 |
-| signal-polyfill (TC39) |  145 |    8 |   29 |   182 |
-| @angular/core          |  143 |   10 |   29 |   182 |
-| svelte                 |  132 |   13 |   37 |   182 |
-| S.js                   |  132 |   50 |    0 |   182 |
-| @reactively/core       |  116 |   16 |   50 |   182 |
+| alien-signals          |  175 |    0 |    0 |   175 |
+| @reatom/core           |  174 |    1 |    0 |   175 |
+| @preact/signals-core   |  173 |    2 |    0 |   175 |
+| anod                   |  161 |   14 |    0 |   175 |
+| tansu                  |  160 |    4 |   11 |   175 |
+| @solidjs/signals       |  154 |   10 |   11 |   175 |
+| solid-js               |  149 |   26 |    0 |   175 |
+| mobx                   |  146 |   18 |   11 |   175 |
+| @vue/reactivity        |  142 |   33 |    0 |   175 |
+| signal-polyfill (TC39) |  138 |    8 |   29 |   175 |
+| @angular/core          |  136 |   10 |   29 |   175 |
+| svelte                 |  126 |   12 |   37 |   175 |
+| S.js                   |  126 |   49 |    0 |   175 |
+| @reactively/core       |  111 |   16 |   48 |   175 |
+| pota                   |    2 |  153 |   20 |   175 |
 
 ## Results
 
@@ -81,11 +83,97 @@ Legend:
 | solid-js               |              ✅ |  ✅ |              ❌ |    ❌ |    ✅ |    ✅ |
 | @solidjs/signals       |              ✅ |  ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
 | S.js                   |              ✅ |  ❌ |              ❌ |    ❌ |    ❌ |    ✅ |
+| pota                   |              ❌ |  ❌ |              ❌ |    ❌ |    ❌ |    ❌ |
 | @angular/core          |              ✅ |  ✅ |              ✅ |    ⬜ |    ✅ |    ⬜ |
 | anod                   |              ✅ |  ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
+
+#### #1 diamond
+
+```
+    S(a)
+   /    \
+ C(b)  C(c)
+   \    /
+    C(d)
+```
+
+Classic diamond. d must evaluate only once per update.
+
+#### #2 diamond + tail
+
+```
+    S(a)
+   /    \
+ C(b)  C(c)
+   \    /
+    C(d)
+     |
+    C(e)
+```
+
+Diamond with a tail. e must evaluate only once.
+
+#### #3 jagged diamond + tails
+
+```
+      S(a)
+     /    \
+   C(b)  C(c)
+    |      |
+    |    C(d)
+     \    /
+      C(e)
+     /    \
+   C(f)  C(g)
+```
+
+Asymmetric diamond (different depths) with fan-out at the bottom.
+e, f, g each evaluate only once.
+
+#### #4 asymmetric diamond (different path lengths)
+
+```
+    S(a)
+   /    \
+ C(b)  C(c)
+         |
+       C(d)
+       /
+    C(e)
+```
+
+Asymmetric path lengths (depth 1 vs depth 2) joining at e.
+e must evaluate only once.
+
+#### #5 drop A→B→A updates
+
+```
+   S(a)
+   / |
+ C(b)|
+   \ |
+   C(c)
+     |
+   C(d)
+```
+
+Skip-connection: c reads both a and b (a's child).
+d must evaluate only once despite two paths from a to c.
+
+#### #6 one unchanged dep does not block update from changed dep
+
+```
+     S(a)
+    /    \
+  C(b)  *C(c)  ← c always returns "c"
+    \    /
+     C(d)
+```
+
+One branch unchanged. d must still update from b.
 
 #### #7 unchanged computed values stop propagation to downstream
 
@@ -98,6 +186,74 @@ Legend:
 ```
 
 Both branches unchanged. d must NOT re-evaluate (propagation cut).
+
+#### #8 topological order
+
+```
+    S(a)
+   /    \
+ C(b)  C(c)
+   \    /
+    C(d)
+```
+
+Diamond — verify evaluation order: d runs after both b and c.
+
+#### #9 linear convergence
+
+```
+ S(a) → C(b)
+   \    /
+    C(c)
+   /
+ S(a) → C(d)  [same a]
+```
+
+ a→b, {a,b}→c, {a,c}→d
+
+Increasing fan-in at each level. Each node evaluates once.
+
+#### #10 exponential convergence
+
+ a→b, {b,a}→c, {c,b}→d, {d,c}→e
+
+```
+ S(a) ─→ C(b) ─→ C(c) ─→ C(d) ─→ C(e)
+   \─────→ /  \─────→ /  \─────→ /
+```
+
+Each level reads previous two. Naive impl is O(2^n).
+Each node must evaluate exactly once.
+
+#### #11 computed chain depth
+
+```
+ S(a) → C(b) → C(c) → C(d) → C(e)
+```
+
+Simple linear chain. Propagation reaches the end.
+
+#### #116 other listeners still notified after one disposes
+
+```
+ S(a) → C(c) ← E(e1)  [disposed]
+               ← E(e2)  [still alive]
+```
+
+Two effects share one computed. After e1 disposes,
+e2 must still receive updates.
+
+#### #157 three-way diamond: sub updates when two of three deps unmark
+
+```
+      S(a)
+     / |  \
+  C(b) *C(c) *C(d)  ← c, d always return constants
+     \ |  /
+      C(e)
+```
+
+Three-way diamond, two branches constant. e must still update from b.
 
 #### #187 effect disposal deactivates upstream computed
 
@@ -139,6 +295,28 @@ c must NOT recompute (unreachable).
 
 Three signals change. d recomputes once, e recomputes once.
 When a≤0, d becomes unreachable → should NOT recompute.
+
+#### #190 computed notifies newly-subscribed effect after prior read
+
+```
+ S(a) → C(b) → C(c)
+                 |
+                E(eff)  ← subscribes after c.read()
+```
+
+Computed is read directly first, then an effect subscribes.
+Effect must still be notified on subsequent changes.
+
+#### #191 effect sees latest computed value when subscribing after source change
+
+```
+ S(s) → C(c)
+          |
+        E(eff)  ← subscribes after s already changed
+```
+
+Source changes before effect subscribes.
+Effect must see the latest value, not stale.
 
 #### #192 effect not re-run when computed dep value unchanged
 
@@ -182,6 +360,46 @@ Both change — c and effect must evaluate only once each.
 Two signals cross-feed two computeds joining at e.
 Both signals change — c, d, e each evaluate once.
 
+#### #206 stacked diamonds
+
+```
+      S(a)
+     /    \
+   C(b)  C(c)
+     \    /
+      C(d)
+     /    \
+   C(e)  C(f)
+     \    /
+      C(g)
+```
+
+Two diamonds stacked. Each node evaluates once.
+
+#### #207 wide fan-out: all effects fire once
+
+```
+            S(a)
+      / / |  |  \ \
+    C0 C1 C2 C3 C4 C5
+     |  |  |  |  |  |
+    E0 E1 E2 E3 E4 E5
+```
+
+Wide fan-out: one signal, many computed+effect pairs.
+All effects fire exactly once.
+
+#### #208 deep asymmetric join (depth 3 vs 1)
+
+```
+ S(a) → C(b) → C(c) → C(d)
+                        /
+ S(a) → C(e) ─────────
+```
+
+ depth-3 path and depth-1 path join at f.
+ f must evaluate only once despite large depth difference.
+
 
 </details>
 
@@ -217,6 +435,7 @@ Legend:
 | solid-js               |        ✅ |              ✅ |    ❌ |    ✅ |    ✅ |
 | @solidjs/signals       |        ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
 | S.js                   |        ✅ |              ✅ |    ❌ |    ❌ |    ✅ |
+| pota                   |        ❌ |              ❌ |    ❌ |    ❌ |    ❌ |
 | @angular/core          |        ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
 | anod                   |        ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
 
@@ -246,6 +465,57 @@ After switching cond from true to false, the old dep (a)
 must be deactivated: writing to a must not trigger c.
 The new dep (b) must be active.
 
+#### #14 new deps updated before dependee
+
+```
+ S(a) ─→ C(c)
+ S(cond) ─→ C(d)
+ C(c)   ?─→ C(d)   (when cond = true)
+ S(b)   ?─→ C(d)   (when cond = false)
+```
+
+cond and a change simultaneously. After the switch, d reads c
+which depends on the updated a. The newly-acquired dep (c) must
+be up-to-date before d evaluates.
+
+#### #16 lazy branch
+
+```
+ S(a) ─→ C(b)
+ S(a) ─→ C(c)
+ C(b) ?─→ C(c)   (when a <= 0)
+```
+
+c reads a directly; when a > 0 it returns a, otherwise it
+falls through to b (which also reads a). Toggling a between
+positive and zero switches which branch is taken.
+
+#### #165 computed dep cleanup doesn't delete sibling subscription
+
+```
+ S(toggle) ─→ C(p)
+ S(state) ?─→ C(p)   (when toggle = true)
+ S(state)  ─→ C(pp)
+              E(eff) ← reads p
+```
+
+p and pp both subscribe to state. When toggle flips to false,
+p drops its subscription to state. This cleanup must not
+accidentally remove pp's independent subscription to state.
+
+#### #166 after dep removed via branch switch, re-subscribing works
+
+```
+ S(flag) ─→ C(c)
+ S(src) ?─→ C(c)   (when flag = true)
+             |
+            E(eff)
+```
+
+flag=true: c reads src. flag flips to false: c drops src.
+src changes while inactive. flag flips back to true:
+c must re-subscribe to src and see its updated value.
+
 #### #193 sequential dirty check: branch switch skips unreachable computed
 
 ```
@@ -258,6 +528,41 @@ When a becomes null, b becomes null, and d skips the c branch.
 c must NOT re-evaluate because d no longer reaches it,
 even though c's dep (b) changed.
 
+#### #194 chained computed dirty reallocation via effect
+
+```
+ S(items) ─→ C(isLoaded) ─→ C(msg)
+                               |
+                             E(eff)
+```
+
+items toggles between undefined and arrays. isLoaded is a
+boolean gate; msg maps it to a string. Repeated writes must
+propagate correctly through the chain to the effect.
+
+#### #195 chained computed dirty reallocation via manual read
+
+```
+ S(items) ─→ C(isLoaded) ─→ C(msg)
+```
+
+Same chain as #194 but driven by manual reads instead of an
+effect. Intermediate reads of isLoaded are interleaved between
+writes and final reads of msg. The chain must stay consistent.
+
+#### #196 maybe-dirty diamond: first dep unmarked, second still triggers
+
+```
+ S(src1) ─→ C(c1)
+ S(src1) ─→ C(c2) ← S(src2)
+    C(c1) ─→ C(c3) ← C(c2)
+```
+
+Diamond through src1. When src1 changes 0→2, c1 changes but
+c2 stays the same (src1%2 is still 0). c3 must still
+re-evaluate because c1 changed. When src2 then changes,
+c3 must re-evaluate again.
+
 #### #197 chained value-equality stops propagation across multiple writes
 
 ```
@@ -269,6 +574,28 @@ even though c's dep (b) changed.
 Multiple writes to src (all even) leave c1's output at 0.
 c1 re-evaluates, but value-equality must stop propagation:
 c2 and the effect must not re-run.
+
+#### #198 effect discovers new branch deps
+
+```
+ S(cond) ─→ E(eff)
+ S(a)   ?─→ E(eff)   (when cond = true)
+```
+
+Initially cond=false so a is not tracked. After cond flips
+to true, the effect discovers a as a new dep. Subsequent
+writes to a must trigger the effect.
+
+#### #199 effect ignores inactive branch dep
+
+```
+ S(cond) ─→ E(eff)
+ S(a)   ?─→ E(eff)   (when cond = true)
+```
+
+Initially cond=true so a is tracked. After cond flips to
+false, a becomes inactive. Subsequent writes to a must NOT
+trigger the effect.
 
 #### #200 independent dep tracking across effects with dynamic deps
 
@@ -310,22 +637,23 @@ Legend:
   ─→       dependency edge (downstream reads upstream)
 ```
 
-| Framework              | #18,#25 | #19..#24,#26,... ×9 | #147 | #148,#27 | #149 |
-| ---------------------- | ------- | ------------------- | ---- | -------- | ---- |
-| alien-signals          |       ✅ |                   ✅ |    ✅ |        ✅ |    ✅ |
-| @preact/signals-core   |       ✅ |                   ✅ |    ✅ |        ✅ |    ✅ |
-| @reactively/core       |       ✅ |                   ✅ |    ⬜ |        ✅ |    ⬜ |
-| tansu                  |       ✅ |                   ✅ |    ✅ |        ✅ |    ✅ |
-| signal-polyfill (TC39) |       ✅ |                   ✅ |    ⬜ |        ✅ |    ⬜ |
-| @vue/reactivity        |       ✅ |                   ✅ |    ❌ |        ✅ |    ❌ |
-| mobx                   |       ❌ |                   ✅ |    ❌ |        ❌ |    ✅ |
-| @reatom/core           |       ✅ |                   ✅ |    ✅ |        ✅ |    ✅ |
-| svelte                 |       ✅ |                   ✅ |    ⬜ |        ✅ |    ⬜ |
-| solid-js               |       ✅ |                   ✅ |    ❌ |        ✅ |    ✅ |
-| @solidjs/signals       |       ✅ |                   ✅ |    ❌ |        ✅ |    ✅ |
-| S.js                   |       ✅ |                   ✅ |    ❌ |        ❌ |    ✅ |
-| @angular/core          |       ✅ |                   ✅ |    ⬜ |        ✅ |    ⬜ |
-| anod                   |       ✅ |                   ✅ |    ❌ |        ✅ |    ✅ |
+| Framework              | #18 | #19..#24,#26,... ×9 | #25 | #147 | #149 | #27 |
+| ---------------------- | --- | ------------------- | --- | ---- | ---- | --- |
+| alien-signals          |   ✅ |                   ✅ |   ✅ |    ✅ |    ✅ |   ✅ |
+| @preact/signals-core   |   ✅ |                   ✅ |   ✅ |    ✅ |    ✅ |   ✅ |
+| @reactively/core       |   ✅ |                   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
+| tansu                  |   ✅ |                   ✅ |   ✅ |    ✅ |    ✅ |   ✅ |
+| signal-polyfill (TC39) |   ✅ |                   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
+| @vue/reactivity        |   ✅ |                   ✅ |   ✅ |    ❌ |    ❌ |   ✅ |
+| mobx                   |   ❌ |                   ✅ |   ❌ |    ❌ |    ✅ |   ❌ |
+| @reatom/core           |   ✅ |                   ✅ |   ✅ |    ✅ |    ✅ |   ✅ |
+| svelte                 |   ✅ |                   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
+| solid-js               |   ✅ |                   ✅ |   ✅ |    ❌ |    ✅ |   ✅ |
+| @solidjs/signals       |   ✅ |                   ✅ |   ✅ |    ❌ |    ✅ |   ✅ |
+| S.js                   |   ✅ |                   ✅ |   ✅ |    ❌ |    ✅ |   ❌ |
+| pota                   |   ❌ |                   ❌ |   ✅ |    ❌ |    ❌ |   ❌ |
+| @angular/core          |   ✅ |                   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
+| anod                   |   ✅ |                   ✅ |   ✅ |    ❌ |    ✅ |   ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
@@ -339,6 +667,68 @@ Legend:
 Reading a computed twice without changing its dep must not
 re-evaluate the compute function (result is cached).
 
+#### #19 returns updated value after dep change
+
+```
+ S(a) → C(b)
+```
+
+After the source signal changes, the computed must return the
+new derived value on the next read.
+
+#### #20 chained computed
+
+```
+ S(a) → C(b) → C(c) → C(d)
+```
+
+A linear chain of computeds. A change at the source must
+propagate through every link to the tail.
+
+#### #21 chained computed dirty reallocation after trigger
+
+```
+ S(a)  S(b)
+   |      |
+   |    C(c) ← c reads a
+    \  /
+    C(d)     ← d reads b when a===0, else reads c
+```
+
+Dynamic dep switch: when a changes from 0 to 1, d drops b and
+picks up c. Subsequent writes to b must not affect d.
+
+#### #22 chained computed avoids redundant re-compute
+
+```
+ S(a) → C(b) → C(c) → C(d)
+```
+
+Linear chain with call counters. After one source change,
+each computed in the chain must re-evaluate exactly once.
+
+#### #23 sync access of invalidated chained computed runs effect
+
+```
+ S(a) → C(b) → C(c)
+                 |
+               E(eff)
+```
+
+An effect subscribes to the tail of a chain. A synchronous
+read of c after writing a must trigger the effect.
+
+#### #24 dependency evaluation order consistent with last access
+
+```
+      S(a)
+     /    \
+   C(b)  C(c)
+```
+
+Two computeds share one source. After a write, both must
+re-evaluate (order is implementation-defined but both must run).
+
 #### #25 no re-compute if zero dependencies
 
 ```
@@ -348,6 +738,27 @@ re-evaluate the compute function (result is cached).
 A computed with no signal dependencies. After the initial
 evaluation it must never re-compute.
 
+#### #26 computed remains live after losing all subscribers
+
+```
+ S(a) → C(b)
+          |
+        E(eff) → dispose
+```
+
+A computed is subscribed by an effect, then the effect disposes.
+The computed must still return correct values on direct read.
+
+#### #145 undefined is a valid computed value (not uninitialized)
+
+```
+ S(a) → C(c)
+```
+
+Computed returns undefined when a===0, else returns a.
+undefined must be treated as a legitimate cached value,
+not confused with an uninitialized state.
+
 #### #147 computed not recomputed in batch if dep reverts
 
 ```
@@ -356,16 +767,6 @@ evaluation it must never re-compute.
 
 Inside a batch, a is written to 5 then back to 0.
 The net change is zero, so c must not re-evaluate.
-
-#### #148 nested computed: outer not recalculated if inner returns same
-
-```
- S(a) → C(inner) → C(outer)
-```
-
-inner returns 0 or 1 (threshold). When a changes from 1 to 2,
-inner still returns 1 — outer must NOT re-evaluate
-(value-equality cut).
 
 #### #149 batch preserves correct evaluation order
 
@@ -377,6 +778,17 @@ inner still returns 1 — outer must NOT re-evaluate
 
 Inside a batch that writes a, the subsequent propagation must
 evaluate b before c (topological order preserved).
+
+#### #115 signal creation inside computed is allowed
+
+```
+ S(a) → C(c)
+          |
+        S(inner)  ← created inside c's compute function
+```
+
+Creating a new signal inside a computed body must not throw.
+The computed derives its value through the inner signal.
 
 #### #27 downstream not re-evaluated unless value changed
 
@@ -421,6 +833,7 @@ Legend:
 | solid-js               |           ✅ |    ✅ |
 | @solidjs/signals       |           ✅ |    ✅ |
 | S.js                   |           ❌ |    ❌ |
+| pota                   |           ❌ |    ❌ |
 | @angular/core          |           ✅ |    ✅ |
 | anod                   |           ✅ |    ✅ |
 
@@ -485,7 +898,7 @@ Legend:
   dispose  effect disposal call
 ```
 
-| Framework              | #35..#37,... ×9 | #38..#39,... ×6 | #40 | #42 | #111 | #141 | #178 | #201 | #202 |
+| Framework              | #35..#37,... ×9 | #38..#39,... ×4 | #40 | #42 | #111 | #141 | #178 | #201 | #202 |
 | ---------------------- | --------------- | --------------- | --- | --- | ---- | ---- | ---- | ---- | ---- |
 | alien-signals          |               ✅ |               ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
 | @preact/signals-core   |               ✅ |               ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
@@ -499,11 +912,36 @@ Legend:
 | solid-js               |               ✅ |               ✅ |   ✅ |   ✅ |    ❌ |    ❌ |    ✅ |    ✅ |    ✅ |
 | @solidjs/signals       |               ✅ |               ⬜ |   ⬜ |   ✅ |    ⬜ |    ✅ |    ⬜ |    ✅ |    ✅ |
 | S.js                   |               ✅ |               ✅ |   ❌ |   ❌ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |
+| pota                   |               ❌ |               ⬜ |   ⬜ |   ❌ |    ⬜ |    ❌ |    ⬜ |    ❌ |    ❌ |
 | @angular/core          |               ✅ |               ✅ |   ❌ |   ⬜ |    ❌ |    ✅ |    ❌ |    ❌ |    ❌ |
 | anod                   |               ✅ |               ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
+
+#### #35 effect runs callback immediately on creation
+
+```
+ S(a) ← E(eff)
+```
+
+Effect callback executes synchronously upon creation.
+
+#### #36 effect re-runs when dependency changes
+
+```
+ S(a) ← E(eff)
+```
+
+Effect re-runs each time its signal dependency changes.
+
+#### #37 effect disposal stops re-runs
+
+```
+ S(a) ← E(eff) → dispose
+```
+
+After disposal, the effect no longer re-runs on signal changes.
 
 #### #38 effect cleanup fn called before each re-run
 
@@ -540,6 +978,15 @@ inside cleanup must NOT create a dependency on that signal.
 An effect disposed inside a batch that also writes to its
 dependency must NOT execute when the batch flushes.
 
+#### #108 effect self-dispose during execution is safe
+
+```
+ S(a) ← E(eff) → self-dispose on 2nd run
+```
+
+An effect that calls its own dispose function during execution
+must not crash and must stop future re-runs.
+
 #### #109 only the most recent cleanup function runs
 
 ```
@@ -567,15 +1014,6 @@ more than twice total (once per dispose at most).
 Cleanup itself calls dispose. The effect must not re-run after
 the cleanup-triggered disposal.
 
-#### #140 cleanup called when effect self-disposes during execution
-
-```
- S(a) ← E(eff → cleanup) → self-dispose
-```
-
-When an effect is disposed externally, the cleanup function
-must still be invoked.
-
 #### #141 dispose during execution then continue: no re-run
 
 ```
@@ -585,14 +1023,21 @@ must still be invoked.
 Effect reads a, self-disposes when a===1, then continues to
 read b. After disposal, neither a nor b changes trigger re-run.
 
-#### #144 cleanup on destroy is idempotent
+#### #142 one-shot conditional effect (auto-dispose when condition met)
+
+ S(a) ← E(eff) → self-dispose when a >= 3
+
+"One-shot" pattern: effect auto-disposes once a condition is
+met. Subsequent signal changes must not re-trigger the effect.
+
+#### #143 destroyed effect not re-scheduled on later updates
 
 ```
- S(a) ← E(eff → cleanup) → dispose → dispose
+ S(a)  S(b) ← E(eff) → dispose
 ```
 
-Two consecutive dispose calls must not throw. Cleanup count
-must be bounded (at most one extra).
+After disposal, multiple writes to both dependencies must
+never re-schedule the effect.
 
 #### #178 dispose cleanup reads don't leak to parent tracking context
 
@@ -603,6 +1048,15 @@ must be bounded (at most one extra).
 
 Inner effect's cleanup reads b. When outer disposes inner,
 b must NOT become a dependency of the outer effect.
+
+#### #214 parent disposes and recreates child: downstream sees correct value
+
+```
+ S(a) ← E(eff creates C(c) reading a)
+```
+
+Effect creates an inner computed each run. After re-run the
+new computed must read the latest signal value.
 
 #### #201 computed-triggered disposal: effect skipped and no subscription leak
 
@@ -625,6 +1079,30 @@ re-run and must leave no subscription leak.
 
 Computed a disposes e1 during evaluation. Sibling effect e2
 must still receive the updated value.
+
+#### #203 computed disposal with unchanged-value sibling computed
+
+```
+ S(s) → *C(a)  [always returns 0]
+```
+
+ S(s) →  C(a2) [disposes eff when s truthy]
+
+```
+   {a, a2} → C(b) ← E(eff)
+```
+
+a2 disposes the effect during propagation while sibling a
+returns an unchanged value. Must not crash.
+
+#### #41 disposed effect never re-notified
+
+```
+ S(a) ← E(eff) → dispose
+```
+
+After disposal, repeated writes to the signal must never
+re-notify the disposed effect.
 
 
 </details>
@@ -661,6 +1139,7 @@ Legend:
 | solid-js               |               ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |          ❌ |
 | @solidjs/signals       |               ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |          ✅ |
 | S.js                   |               ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ❌ |          ❌ |
+| pota                   |               ❌ |   ❌ |   ❌ |   ❌ |    ❌ |    ❌ |          ❌ |
 | @angular/core          |               ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |          ❌ |
 | anod                   |               ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |          ✅ |
 
@@ -695,6 +1174,15 @@ disposed. Otherwise inner effects accumulate exponentially.
 Inner effect is created inside an untracked block.
 Outer effect must not subscribe to a's deps via untracked.
 Inner effect still reads a directly and may re-run.
+
+#### #46 duplicate subscribers don't cause duplicate notifications
+
+```
+ S(a) ─→ E(eff)   [reads a twice]
+```
+
+Effect reads the same signal twice in one execution.
+Must still fire only once per change, not once per read.
 
 #### #47 effect recursion handled on first execution
 
@@ -790,22 +1278,23 @@ Legend:
   ═→       inner write (node writes to a signal during evaluation)
 ```
 
-| Framework              | #50,#186 | #51 | #52..#53,... ×17 | #54,#139 | #179 | #57 | #182 | #183,#185 | #213 | #212 |
-| ---------------------- | -------- | --- | ---------------- | -------- | ---- | --- | ---- | --------- | ---- | ---- |
-| alien-signals          |        ✅ |   ✅ |                ✅ |        ✅ |    ✅ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
-| @preact/signals-core   |        ✅ |   ✅ |                ✅ |        ✅ |    ✅ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
-| @reactively/core       |        ❌ |   ⬜ |                ✅ |        ✅ |    ❌ |   ✅ |    ⬜ |         ✅ |    ✅ |    ✅ |
-| tansu                  |        ✅ |   ⬜ |                ✅ |        ✅ |    ❌ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
-| signal-polyfill (TC39) |        ✅ |   ✅ |                ✅ |        ✅ |    ❌ |   ✅ |    ⬜ |         ✅ |    ❌ |    ❌ |
-| @vue/reactivity        |        ✅ |   ✅ |                ✅ |        ✅ |    ✅ |   ✅ |    ❌ |         ✅ |    ✅ |    ✅ |
-| mobx                   |        ✅ |   ⬜ |                ✅ |        ✅ |    ✅ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
-| @reatom/core           |        ✅ |   ✅ |                ✅ |        ✅ |    ❌ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
-| svelte                 |        ✅ |   ✅ |                ✅ |        ❌ |    ❌ |   ❌ |    ⬜ |         ✅ |    ❌ |    ✅ |
-| solid-js               |        ✅ |   ✅ |                ✅ |        ✅ |    ❌ |   ✅ |    ✅ |         ❌ |    ✅ |    ✅ |
-| @solidjs/signals       |        ✅ |   ⬜ |                ✅ |        ✅ |    ❌ |   ✅ |    ✅ |         ✅ |    ❌ |    ❌ |
-| S.js                   |        ✅ |   ❌ |                ✅ |        ✅ |    ❌ |   ✅ |    ❌ |         ❌ |    ✅ |    ✅ |
-| @angular/core          |        ✅ |   ✅ |                ✅ |        ✅ |    ❌ |   ❌ |    ⬜ |         ✅ |    ✅ |    ✅ |
-| anod                   |        ✅ |   ✅ |                ✅ |        ✅ |    ❌ |   ✅ |    ❌ |         ✅ |    ✅ |    ✅ |
+| Framework              | #50,#186 | #51 | #52..#53,... ×17 | #54 | #179 | #57 | #182 | #183 | #185 | #213 | #212 |
+| ---------------------- | -------- | --- | ---------------- | --- | ---- | --- | ---- | ---- | ---- | ---- | ---- |
+| alien-signals          |        ✅ |   ✅ |                ✅ |   ✅ |    ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| @preact/signals-core   |        ✅ |   ✅ |                ✅ |   ✅ |    ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| @reactively/core       |        ❌ |   ⬜ |                ✅ |   ✅ |    ❌ |   ✅ |    ⬜ |    ✅ |    ✅ |    ✅ |    ✅ |
+| tansu                  |        ✅ |   ⬜ |                ✅ |   ✅ |    ❌ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| signal-polyfill (TC39) |        ✅ |   ✅ |                ✅ |   ✅ |    ❌ |   ✅ |    ⬜ |    ✅ |    ✅ |    ❌ |    ❌ |
+| @vue/reactivity        |        ✅ |   ✅ |                ✅ |   ✅ |    ✅ |   ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |
+| mobx                   |        ✅ |   ⬜ |                ✅ |   ✅ |    ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| @reatom/core           |        ✅ |   ✅ |                ✅ |   ✅ |    ❌ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| svelte                 |        ✅ |   ✅ |                ✅ |   ❌ |    ❌ |   ❌ |    ⬜ |    ✅ |    ✅ |    ❌ |    ✅ |
+| solid-js               |        ✅ |   ✅ |                ✅ |   ✅ |    ❌ |   ✅ |    ✅ |    ❌ |    ❌ |    ✅ |    ✅ |
+| @solidjs/signals       |        ✅ |   ⬜ |                ✅ |   ✅ |    ❌ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |
+| S.js                   |        ✅ |   ❌ |                ✅ |   ✅ |    ❌ |   ✅ |    ❌ |    ❌ |    ❌ |    ✅ |    ✅ |
+| pota                   |        ❌ |   ⬜ |                ❌ |   ❌ |    ❌ |   ❌ |    ❌ |    ❌ |    ⬜ |    ❌ |    ❌ |
+| @angular/core          |        ✅ |   ✅ |                ✅ |   ✅ |    ❌ |   ❌ |    ⬜ |    ✅ |    ✅ |    ✅ |    ✅ |
+| anod                   |        ✅ |   ✅ |                ✅ |   ✅ |    ❌ |   ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
@@ -828,6 +1317,24 @@ derived value after each change to a.
 Cleanup writes to the effect's own dependency. This must not
 cause an infinite retrigger loop.
 
+#### #52 computed writing to signal
+
+```
+ S(a) → C(c) ═→ S(sideChannel)
+```
+
+Computed writes to a side-channel signal. Framework may
+either allow it or throw (both are valid behaviors).
+
+#### #53 inner write: only final value observed
+
+```
+ S(a) ← E(eff)
+```
+
+Multiple synchronous writes to a signal. The effect must
+ultimately observe the final written value.
+
 #### #54 inner mutations propagate until changes settle
 
 ```
@@ -837,14 +1344,124 @@ cause an infinite retrigger loop.
 Effect conditionally writes to b. The inner write must
 propagate so that b settles to a's value.
 
-#### #139 effect inner write re-schedules when dep changes during run
+#### #55 effect re-scheduled when writing signal before reading
 
 ```
- S(a)  S(b) ← E(eff) ═→ S(b) when a===0 && b===0
+ S(a) ← E(eff)
 ```
 
-Effect writes to b during its own run. The write must
-propagate so that b settles to 1.
+Signal written externally, then effect observes the new value.
+Effect must be re-scheduled and see the latest value.
+
+#### #56 effect re-scheduled after reading from derived then writing
+
+```
+ S(a) → C(b) ← E(eff)
+```
+
+Effect reads from a computed derived from a. Writing to a
+must re-schedule the effect through the computed chain.
+
+#### #112 computed side-effect doesn't affect sibling computeds
+
+```
+ S(src) → C(writer) ═→ S(sideChannel) → C(reader)
+```
+
+Computed writer writes to a side-channel signal. A sibling
+computed reader of that signal must see the written value.
+Framework may also forbid computed side effects (also valid).
+
+#### #114 inner write final value unchanged: no downstream notification
+
+```
+ S(a) ← E(eff) ═→ S(a) resets to 0 when a===1
+ S(a) → C(c) ← E(downstream)
+```
+
+Effect writes a back to its original value. The net change
+is zero, so downstream must not be notified (or at most once).
+
+#### #133 listener writes back: second listener skipped if no net change
+
+```
+ S(a) ← E(eff1) ═→ S(a) resets to 0 when a===1
+ S(a) ← E(eff2)
+```
+
+First effect writes a back to 0. Second effect must see the
+final settled value (0), not the intermediate value (1).
+
+#### #134 listener writes back: second listener gets final value
+
+```
+ S(a) ← E(eff1) ═→ S(a) writes 10 when a===1
+ S(a) ← E(eff2)
+```
+
+First effect changes a from 1 to 10. Second effect must
+observe the final value (10).
+
+#### #135 chained computed inner write: downstream only sees settled
+
+```
+ S(src) → C(c1) ═→ S(target) → C(c2)
+```
+
+Computed c1 writes to target. Downstream computed c2 reads
+target and must see the settled value after c1 evaluates.
+Framework may forbid computed side effects (also valid).
+
+#### #136 computed inner write unchanged: no downstream notification
+
+```
+ S(src) → C(c) ═→ S(side) [always writes 0]
+ S(side) ← E(eff)
+```
+
+Computed always writes the same value to side. The downstream
+effect must not be notified because the value never changes.
+Framework may forbid computed side effects (also valid).
+
+#### #137 computed inner write changed: downstream notified
+
+```
+ S(src) → C(c) ═→ S(side) [writes src*100]
+```
+
+Computed writes a changing value to side. After src changes,
+side must reflect the new derived value.
+Framework may forbid computed side effects (also valid).
+
+#### #138 independent computeds sharing source, one inner-writes
+
+```
+ S(src) → C(writer) ═→ S(shared) → C(reader)
+```
+
+Two computeds share a source. Writer inner-writes to shared;
+reader derives from shared. Reader must see the updated value.
+Framework may forbid computed side effects (also valid).
+
+#### #172 computed writing to own dep: never caches
+
+```
+ S(a) → C(c) ═→ S(a) [increments a]
+```
+
+Computed writes to its own dependency (self-cycle). Each read
+must re-evaluate (value is never stable). Framework may also
+detect the cycle and throw (both behaviors are valid).
+
+#### #180 inner write through computed chain resets signal
+
+```
+ S(s) → C(c) ← E(eff) ═→ S(s) writes false when c is true
+```
+
+Effect resets s through a computed chain. Tests whether the
+computed cache is updated after the inner write (determines
+if future propagation is correct).
 
 #### #179 computed self-increment: intra-run read-after-write values correct
 
@@ -855,6 +1472,16 @@ propagate so that b settles to 1.
 Computed increments its own source each read. The returned
 value and the signal must reflect the post-write state.
 
+#### #113 inner write convergence: converges or cycle-detects
+
+```
+ S(counter) ← E(eff) ═→ S(counter) [increments until target]
+```
+
+Effect increments a counter toward a target. Must either
+converge (counter reaches target) or detect the cycle.
+Partial progress without convergence or detection is invalid.
+
 #### #57 computed side effect triggers downstream
 
 ```
@@ -864,6 +1491,17 @@ value and the signal must reflect the post-write state.
 
 Computed writes to a side-effect signal. An effect watching
 that signal must observe the written value after c evaluates.
+
+#### #181 computed writes multiple signals: downstream sees consistent pair
+
+```
+ S(src) → C(writer) ═→ S(b), S(c)
+ {S(b), S(c)} → C(pair)
+```
+
+Computed writes to two signals atomically. Downstream must
+see a consistent pair of values.
+Framework may forbid computed side effects (also valid).
 
 #### #182 computed side effect + batch: writes visible after flush
 
@@ -887,6 +1525,17 @@ Framework may forbid computed side effects (also valid).
 When flag switches off, writer is no longer evaluated, so its
 side-effect write must stop. Subsequent src changes must not
 update side.
+Framework may forbid computed side effects (also valid).
+
+#### #184 nested computeds: outer reads inner, both have side effects
+
+```
+ S(src) → C(inner) ═→ S(innerSide)
+          C(inner) → C(outer) ═→ S(outerSide)
+```
+
+Nested computeds both perform side-effect writes. Each side
+signal must reflect the correct derived value.
 Framework may forbid computed side effects (also valid).
 
 #### #185 computed side effect write visible despite later throw
@@ -949,25 +1598,48 @@ Legend:
   ↔ / ⟳   cyclic dependency
 ```
 
-| Framework              | #58..#61,#63 | #150,#152 | #151 | #153 | #64 |
-| ---------------------- | ------------ | --------- | ---- | ---- | --- |
-| alien-signals          |            ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
-| @preact/signals-core   |            ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
-| @reactively/core       |            ✅ |         ✅ |    ⬜ |    ✅ |   ❌ |
-| tansu                  |            ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
-| signal-polyfill (TC39) |            ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
-| @vue/reactivity        |            ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
-| mobx                   |            ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
-| @reatom/core           |            ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
-| svelte                 |            ✅ |         ✅ |    ⬜ |    ❌ |   ✅ |
-| solid-js               |            ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
-| @solidjs/signals       |            ✅ |         ❌ |    ✅ |    ✅ |   ✅ |
-| S.js                   |            ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
-| @angular/core          |            ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
-| anod                   |            ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
+| Framework              | #61,#63 | #150,#152 | #151 | #153 | #64 |
+| ---------------------- | ------- | --------- | ---- | ---- | --- |
+| alien-signals          |       ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
+| @preact/signals-core   |       ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
+| @reactively/core       |       ✅ |         ✅ |    ⬜ |    ✅ |   ❌ |
+| tansu                  |       ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
+| signal-polyfill (TC39) |       ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
+| @vue/reactivity        |       ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
+| mobx                   |       ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
+| @reatom/core           |       ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
+| svelte                 |       ✅ |         ✅ |    ⬜ |    ❌ |   ✅ |
+| solid-js               |       ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
+| @solidjs/signals       |       ✅ |         ❌ |    ✅ |    ✅ |   ✅ |
+| S.js                   |       ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
+| pota                   |       ❌ |         ❌ |    ✅ |    ❌ |   ❌ |
+| @angular/core          |       ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
+| anod                   |       ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
+
+#### #61 indirect cycle through effects
+
+```
+ S(a) → E(eff) → S(a)  ⟳
+```
+
+An effect reads a signal then writes back to it, creating an
+indirect write-read loop. Iteration count must stay bounded.
+
+#### #63 cycle from modifying a branch (dynamic cycle creation)
+
+```
+ S(cond)  S(a)
+    |      |
+    E(eff)─┘
+      |
+      └─→ a.write(a.read()+1)  ⟳  (when cond=true)
+```
+
+Effect is safe when cond=false. Setting cond=true creates a
+dynamic read-write cycle on a. Framework must detect it.
 
 #### #150 dynamic cycle: computed pair becomes cyclic on condition change
 
@@ -1059,6 +1731,7 @@ Legend:
 | solid-js               |                   ✅ |               ✅ |   ❌ |   ✅ |          ✅ |             ❌ |    ✅ |    ✅ |
 | @solidjs/signals       |                   ✅ |               ✅ |   ✅ |   ✅ |          ✅ |             ❌ |    ⬜ |    ✅ |
 | S.js                   |                   ❌ |               ❌ |   ❌ |   ✅ |          ✅ |             ❌ |    ✅ |    ✅ |
+| pota                   |                   ❌ |               ❌ |   ❌ |   ❌ |          ❌ |             ❌ |    ⬜ |    ❌ |
 | @angular/core          |                   ⬜ |               ⬜ |   ⬜ |   ⬜ |          ⬜ |             ⬜ |    ✅ |    ✅ |
 | anod                   |                   ✅ |               ❌ |   ❌ |   ✅ |          ✅ |             ❌ |    ✅ |    ✅ |
 
@@ -1325,6 +1998,7 @@ Legend:
 | solid-js               |          ✅ |   ✅ |
 | @solidjs/signals       |          ✅ |   ✅ |
 | S.js                   |          ✅ |   ✅ |
+| pota                   |          ❌ |   ❌ |
 | @angular/core          |          ✅ |   ✅ |
 | anod                   |          ✅ |   ✅ |
 
@@ -1429,6 +2103,7 @@ Legend:
 | solid-js               |                   ❌ |        ✅ |    ❌ |    ✅ |
 | @solidjs/signals       |                   ✅ |        ⬜ |    ✅ |    ❌ |
 | S.js                   |                   ❌ |        ✅ |    ❌ |    ✅ |
+| pota                   |                   ⬜ |        ⬜ |    ❌ |    ❌ |
 | @angular/core          |                   ✅ |        ✅ |    ⬜ |    ❌ |
 | anod                   |                   ✅ |        ✅ |    ❌ |    ✅ |
 
@@ -1576,11 +2251,23 @@ Legend:
 | solid-js               |              ✅ |   ✅ |
 | @solidjs/signals       |              ✅ |   ✅ |
 | S.js                   |              ✅ |   ✅ |
+| pota                   |              ❌ |   ❌ |
 | @angular/core          |              ✅ |   ✅ |
 | anod                   |              ✅ |   ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
+
+#### #94 stale invocation does not trigger pending computations
+
+```
+ S(a) ─→ C(b) ─→ C(d)
+ S(a) ─→ C(c) ─→ C(d)
+```
+
+Diamond dependency: both C(b) and C(c) depend on S(a),
+and C(d) depends on both. After a single write to S(a),
+C(b) should re-evaluate exactly once and C(d) exactly once.
 
 #### #95 stale computations evaluated before their dependees
 
@@ -1591,6 +2278,52 @@ Legend:
 Linear chain: after S(a) changes, C(b) must be
 re-evaluated before C(c) so that C(c) never sees a
 stale intermediate value.
+
+#### #96 downstream correctly marked stale on dep change
+
+```
+ S(a) ─→ C(b) ─→ C(c) ─→ C(d)
+```
+
+Three-level computed chain: after each write to S(a),
+the staleness flag must propagate all the way down to
+C(d) so that reading C(d) returns the fresh value.
+
+#### #158 stale chained computed accessed after update: values fresh
+
+```
+ S(a) ─→ C(b) ─→ C(c) ─→ C(d)
+          +1       +1       +1
+```
+
+After writing S(a)=10, reading any node in the chain
+(b, c, d) must return the fully updated value — no
+stale intermediate results.
+
+#### #159 pending computation created after dirty signal still updates
+
+```
+ S(a) ─→ C(b)
+    (write a=5)
+ S(a) ─→ C(b) ─→ C(c)   (c created after write)
+```
+
+A computed created after its upstream signal has already
+been written must still pick up the dirty value on first
+read and remain reactive to further writes.
+
+#### #97 flags indirectly updated during dirty-checking
+
+```
+ S(a) ─→ C(b) ─→ C(c)
+   │               │
+   └───────────────→ C(d) = a + c
+```
+
+C(d) depends on both S(a) directly and C(c) transitively.
+During dirty-checking of C(d), the framework must first
+refresh the indirect path (b → c) so that C(d) sees
+consistent values from both branches.
 
 
 </details>
@@ -1625,11 +2358,12 @@ Legend:
 | solid-js               |               ✅ |
 | @solidjs/signals       |               ✅ |
 | S.js                   |               ✅ |
+| pota                   |               ❌ |
 | @angular/core          |               ✅ |
 | anod                   |               ✅ |
 
 <details>
-<summary>Test descriptions</summary>
+<summary>Tests with failures or skips</summary>
 
 #### #98 subscriptions cleared when all subscribers removed
 
@@ -1725,6 +2459,7 @@ Legend:
 | solid-js               | eager | subscribes eagerly | 2 recomputes     | ===       | skips      | returns void | post-write | post-write | unsubscribes     | halts flush | error         | runs 2x per write    | manual bail (200+) | batched            |
 | @solidjs/signals       | lazy  | no subscription    | single recompute | ===       | skips      | returns void | post-write | post-write | keeps subscribed | halts flush | caches error  | runs 1x, then blocks | no throw           | batched            |
 | S.js                   | eager | subscribes eagerly | 2 recomputes     | ===       | propagates | returns void | post-write | throws     | keeps subscribed | halts flush | error         | runs 2x per write    | manual bail (200+) | batched            |
+| pota                   | error | error              | error            | error     | error      | returns void | error      | error      | error            | error       | error         | error                | error              | error              |
 | @angular/core          | lazy  | no subscription    | single recompute | Object.is | skips      | ⬜            | post-write | post-write | keeps subscribed | halts flush | caches error  | runs 2x per write    | manual bail (200+) | unbatched (2 runs) |
 | anod                   | eager | no subscription    | single recompute | ===       | skips      | returns void | post-write | post-write | unsubscribes     | continues   | caches error  | runs 2x per write    | manual bail (200+) | batched            |
 
