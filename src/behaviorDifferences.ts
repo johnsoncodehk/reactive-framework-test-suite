@@ -1,5 +1,5 @@
 import type { ReactiveFramework } from "./framework.js";
-import { SkipTest } from "./framework.js";
+import { SkipTest, hasEffectCleanup } from "./framework.js";
 
 /**
  * Behavioral Differences
@@ -456,5 +456,38 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     runs = 0;
     a.write(10);
     return runs <= 1 ? "batched" : `unbatched (${runs} runs)`;
+  },
+
+  /**
+   *  E_outer{ E_inner1, E_inner2, E_inner3 } → dispose
+   *
+   * Probes the cleanup order of sibling effects when their owner
+   * disposes. Frameworks with parent-child cascade tend to use
+   * either LIFO (reverse creation) or FIFO (creation order). A
+   * flat-effect framework (no cascade) reports "no cascade".
+   */
+  "#244 sibling cleanup order on dispose"(fw: ReactiveFramework) {
+    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
+    const order: number[] = [];
+
+    const dispose = fw.effect(() => {
+      fw.effect(() => {
+        return () => order.push(1);
+      });
+      fw.effect(() => {
+        return () => order.push(2);
+      });
+      fw.effect(() => {
+        return () => order.push(3);
+      });
+    });
+
+    dispose();
+    if (order.length === 0) return "no cascade";
+    if (order.length < 3) return `partial cascade (${order.join(",")})`;
+    const asStr = order.join(",");
+    if (asStr === "3,2,1") return "LIFO";
+    if (asStr === "1,2,3") return "FIFO";
+    return `other (${asStr})`;
   },
 };
