@@ -928,4 +928,46 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     a.write(1);
     expect(observed[observed.length - 1]).toBe(11);
   },
+
+  /**
+   *  S(a) ─→ E(e1) ═→ S(b1) when a===1
+   *  S(a) ─→ E(e2) ═→ S(b2) when a===1
+   *  S(b1), S(b2) ─→ C(c) = b1 + b2
+   *  C(c) ─→ E(e3)
+   *
+   * Two effects each inner-write a different signal during the
+   * same flush. Both feed into a single computed read by a third
+   * effect. The LAST value e3 observes must be 30 (b1=10 + b2=20),
+   * not a partial state where only one inner write is reflected.
+   * Like #224, only checks the final settled observation.
+   */
+  "#225 mid-flush fan-in: e3 sees both sibling effects' inner writes"(
+    fw: ReactiveFramework
+  ) {
+    const a = fw.signal(0);
+    const b1 = fw.signal(0);
+    const b2 = fw.signal(0);
+    const c = fw.computed(() => b1.read() + b2.read());
+
+    const observed: number[] = [];
+
+    fw.effect(() => {
+      if (a.read() === 1) {
+        b1.write(10);
+      }
+    });
+    fw.effect(() => {
+      if (a.read() === 1) {
+        b2.write(20);
+      }
+    });
+    fw.effect(() => {
+      observed.push(c.read());
+    });
+
+    expect(observed).toEqual([0]);
+
+    a.write(1);
+    expect(observed[observed.length - 1]).toBe(30);
+  },
 };
