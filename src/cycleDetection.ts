@@ -79,113 +79,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *  S(cond)
-   *     |
-   *   C(b) ──→ C(a)
-   *     ↑        |
-   *     └────────┘  ⟳  (when cond=true)
-   *
-   * When cond=false, b returns 0 and no cycle exists.
-   * Setting cond=true makes b read a, forming a↔b cycle.
-   * Framework should throw or handle the late-onset cycle.
-   */
-  "#150 dynamic cycle: computed pair becomes cyclic on condition change"(
-    fw: ReactiveFramework
-  ) {
-    const cond = fw.signal(false);
-    let threw = false;
-
-    try {
-      let aRef: any;
-      const b = fw.computed(() => {
-        if (cond.read()) return aRef?.read();
-        return 0;
-      });
-      const a = fw.computed(() => b.read());
-      aRef = a;
-
-      expect(a.read()).toBe(0);
-
-      cond.write(true);
-      a.read();
-    } catch {
-      threw = true;
-    }
-
-    expect(true).toBe(true);
-  },
-
-  /**
-   *  C(c) ──untracked──→ C(c)  ⟳
-   *
-   * A computed reads itself inside an untracked scope.
-   * Even without a tracked dependency edge, re-entering the
-   * same computation is still a cycle.
-   */
-  "#151 self-reference via untracked: cycle still detected"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.untracked) throw new SkipTest("no untracked");
-    let threw = false;
-    try {
-      const c = fw.computed((): number => {
-        return fw.untracked!(() => {
-          try {
-            return (c as any).read() + 1;
-          } catch {
-            return 0;
-          }
-        });
-      });
-      c.read();
-    } catch {
-      threw = true;
-    }
-    expect(true).toBe(true);
-  },
-
-  /**
-   *  S(flag)
-   *     |
-   *   C(c) ⟳  (when flag=true)
-   *
-   * When flag=false, c returns 0 (no cycle). Setting flag=true
-   * makes c read itself, creating a conditional self-cycle.
-   */
-  "#152 conditional computed becomes recursive on flag change"(
-    fw: ReactiveFramework
-  ) {
-    const flag = fw.signal(false);
-    let threw = false;
-
-    try {
-      const c = fw.computed((): number => {
-        if (flag.read()) {
-          try {
-            return (c as any).read() + 1;
-          } catch {
-            return 99;
-          }
-        }
-        return 0;
-      });
-
-      expect(c.read()).toBe(0);
-      flag.write(true);
-      c.read();
-    } catch {
-      threw = true;
-    }
-    expect(true).toBe(true);
-  },
-
-  /**
    *  S(a) → C(c) ⟳  (when a=0, c reads itself)
    *           |
    *         a.write(1) → C(c) reads a normally
    *
    * When a=0, c tries to read itself (cycle) and catches the error.
-   * After setting a=1, c should recover and return a's value.
+   * After setting a=1, c must recover and return a's value.
    */
   "#153 computed self-dep recovery after catching cycle error"(
     fw: ReactiveFramework
@@ -208,9 +107,7 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     } catch {}
 
     a.write(1);
-    try {
-      expect(c.read()).toBe(1);
-    } catch {}
+    expect(c.read()).toBe(1);
   },
 
   /**
