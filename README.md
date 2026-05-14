@@ -2,7 +2,7 @@
 
 Cross-library test suite for comparing reactive signal behavior across **15 frameworks** with **163 test cases**.
 
-> 2012 passed, 269 failed, 164 skipped out of 2445 total runs
+> 2036 passed, 245 failed, 164 skipped out of 2445 total runs
 
 Test cases are collected and adapted from the test suites of all participating frameworks — thanks to every project for their thorough testing work. This suite focuses on **reactive semantics** (propagation, batching, disposal, edge cases), not API completeness. Tests that require an optional capability (e.g. `batch`) are skipped (⬜) for frameworks that don't expose it, rather than marked as failures.
 
@@ -39,12 +39,12 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | alien-signals          |  163 |    0 |    0 |   163 |
 | @preact/signals-core   |  161 |    2 |    0 |   163 |
 | @reatom/core           |  160 |    3 |    0 |   163 |
+| @vue/reactivity        |  156 |    7 |    0 |   163 |
 | anod                   |  151 |   12 |    0 |   163 |
 | tansu                  |  147 |    5 |   11 |   163 |
 | @solidjs/signals       |  145 |    7 |   11 |   163 |
 | solid-js               |  139 |   24 |    0 |   163 |
 | mobx                   |  135 |   17 |   11 |   163 |
-| @vue/reactivity        |  132 |   31 |    0 |   163 |
 | signal-polyfill (TC39) |  128 |    8 |   27 |   163 |
 | @angular/core          |  126 |   10 |   27 |   163 |
 | svelte                 |  118 |   12 |   33 |   163 |
@@ -76,7 +76,7 @@ Legend:
 | @reactively/core       |              ✅ |  ✅ |              ✅ |              ✅ |    ⬜ |    ✅ |    ⬜ |
 | tansu                  |              ✅ |  ✅ |              ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
 | signal-polyfill (TC39) |              ✅ |  ✅ |              ✅ |              ✅ |    ⬜ |    ✅ |    ⬜ |
-| @vue/reactivity        |              ✅ |  ✅ |              ✅ |              ✅ |    ❌ |    ✅ |    ❌ |
+| @vue/reactivity        |              ✅ |  ✅ |              ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
 | mobx                   |              ✅ |  ❌ |              ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
 | @reatom/core           |              ✅ |  ✅ |              ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
 | svelte                 |              ✅ |  ✅ |              ✅ |              ✅ |    ⬜ |    ✅ |    ⬜ |
@@ -402,7 +402,7 @@ Legend:
 | @reactively/core       |       ✅ |                   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
 | tansu                  |       ✅ |                   ✅ |   ✅ |    ✅ |    ✅ |   ✅ |
 | signal-polyfill (TC39) |       ✅ |                   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
-| @vue/reactivity        |       ✅ |                   ✅ |   ✅ |    ❌ |    ❌ |   ✅ |
+| @vue/reactivity        |       ✅ |                   ✅ |   ✅ |    ❌ |    ✅ |   ✅ |
 | mobx                   |       ❌ |                   ✅ |   ✅ |    ❌ |    ✅ |   ❌ |
 | @reatom/core           |       ✅ |                   ✅ |   ✅ |    ✅ |    ✅ |   ✅ |
 | svelte                 |       ✅ |                   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
@@ -582,7 +582,7 @@ Legend:
 | @reactively/core       |               ✅ |             ✅ |   ⬜ |        ⬜ |   ⬜ |   ⬜ |    ⬜ |    ✅ |    ⬜ |    ❌ |    ✅ |    ✅ |    ⬜ |
 | tansu                  |               ✅ |             ✅ |   ⬜ |        ⬜ |   ⬜ |   ✅ |    ⬜ |    ✅ |    ⬜ |    ❌ |    ✅ |    ✅ |    ⬜ |
 | signal-polyfill (TC39) |               ✅ |             ✅ |   ✅ |        ✅ |   ❌ |   ⬜ |    ✅ |    ✅ |    ❌ |    ❌ |    ✅ |    ✅ |    ✅ |
-| @vue/reactivity        |               ✅ |             ✅ |   ✅ |        ✅ |   ✅ |   ❌ |    ✅ |    ❌ |    ✅ |    ❌ |    ✅ |    ✅ |    ✅ |
+| @vue/reactivity        |               ✅ |             ✅ |   ✅ |        ✅ |   ✅ |   ✅ |    ✅ |    ❌ |    ✅ |    ❌ |    ✅ |    ✅ |    ✅ |
 | mobx                   |               ✅ |             ✅ |   ⬜ |        ⬜ |   ⬜ |   ✅ |    ⬜ |    ✅ |    ⬜ |    ✅ |    ✅ |    ✅ |    ⬜ |
 | @reatom/core           |               ✅ |             ✅ |   ✅ |        ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |
 | svelte                 |               ✅ |             ✅ |   ✅ |        ✅ |   ✅ |   ⬜ |    ❌ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |    ✅ |
@@ -910,7 +910,7 @@ Legend:
 | @reactively/core       |               ❌ |   ⬜ |                ✅ |              ✅ |   ✅ |    ❌ |   ✅ |    ⬜ |         ✅ |    ✅ |    ✅ |
 | tansu                  |               ✅ |   ⬜ |                ✅ |              ✅ |   ✅ |    ❌ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
 | signal-polyfill (TC39) |               ✅ |   ✅ |                ✅ |              ✅ |   ✅ |    ❌ |   ✅ |    ⬜ |         ✅ |    ❌ |    ❌ |
-| @vue/reactivity        |               ✅ |   ✅ |                ✅ |              ✅ |   ✅ |    ✅ |   ✅ |    ❌ |         ✅ |    ✅ |    ✅ |
+| @vue/reactivity        |               ✅ |   ✅ |                ✅ |              ✅ |   ✅ |    ✅ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
 | mobx                   |               ✅ |   ⬜ |                ✅ |              ✅ |   ✅ |    ✅ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
 | @reatom/core           |               ✅ |   ✅ |                ✅ |              ✅ |   ✅ |    ❌ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
 | svelte                 |               ✅ |   ✅ |                ✅ |              ✅ |   ❌ |    ❌ |   ❌ |    ⬜ |         ✅ |    ❌ |    ✅ |
@@ -1237,7 +1237,7 @@ Legend:
 | @reactively/core       |       ⬜ |             ⬜ |   ⬜ |   ⬜ |              ⬜ |    ⬜ |                 ⬜ |    ⬜ |    ⬜ |    ❌ |    ⬜ |    ⬜ |
 | tansu                  |       ✅ |             ✅ |   ✅ |   ✅ |              ✅ |    ⬜ |                 ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
 | signal-polyfill (TC39) |       ⬜ |             ⬜ |   ⬜ |   ⬜ |              ⬜ |    ✅ |                 ⬜ |    ⬜ |    ⬜ |    ✅ |    ⬜ |    ⬜ |
-| @vue/reactivity        |       ❌ |             ❌ |   ❌ |   ❌ |              ❌ |    ✅ |                 ❌ |    ❌ |    ❌ |    ✅ |    ❌ |    ❌ |
+| @vue/reactivity        |       ✅ |             ✅ |   ✅ |   ✅ |              ✅ |    ✅ |                 ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ❌ |
 | mobx                   |       ✅ |             ✅ |   ✅ |   ❌ |              ✅ |    ⬜ |                 ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ❌ |
 | @reatom/core           |       ✅ |             ✅ |   ✅ |   ✅ |              ✅ |    ✅ |                 ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
 | svelte                 |       ⬜ |             ⬜ |   ⬜ |   ⬜ |              ⬜ |    ❌ |                 ⬜ |    ⬜ |    ⬜ |    ✅ |    ⬜ |    ⬜ |
@@ -1467,7 +1467,7 @@ Legend:
 | @reactively/core       |        ⬜ |   ⬜ |          ⬜ |    ⬜ |    ⬜ |
 | tansu                  |        ✅ |   ✅ |          ✅ |    ✅ |    ✅ |
 | signal-polyfill (TC39) |        ✅ |   ✅ |          ✅ |    ⬜ |    ⬜ |
-| @vue/reactivity        |        ✅ |   ✅ |          ✅ |    ❌ |    ❌ |
+| @vue/reactivity        |        ✅ |   ✅ |          ✅ |    ✅ |    ✅ |
 | mobx                   |        ✅ |   ❌ |          ✅ |    ✅ |    ✅ |
 | @reatom/core           |        ✅ |   ✅ |          ✅ |    ✅ |    ✅ |
 | svelte                 |        ⬜ |   ⬜ |          ⬜ |    ⬜ |    ⬜ |
@@ -1582,7 +1582,7 @@ Legend:
 | @reactively/core       |            ✅ |        ⬜ |            ✅ |    ⬜ |    ❌ |
 | tansu                  |            ✅ |        ⬜ |            ✅ |    ✅ |    ✅ |
 | signal-polyfill (TC39) |            ✅ |        ✅ |            ✅ |    ⬜ |    ✅ |
-| @vue/reactivity        |            ✅ |        ✅ |            ✅ |    ❌ |    ✅ |
+| @vue/reactivity        |            ✅ |        ✅ |            ✅ |    ✅ |    ✅ |
 | mobx                   |            ✅ |        ⬜ |            ✅ |    ✅ |    ✅ |
 | @reatom/core           |            ✅ |        ✅ |            ✅ |    ✅ |    ✅ |
 | svelte                 |            ✅ |        ✅ |            ✅ |    ⬜ |    ✅ |
@@ -1843,7 +1843,7 @@ Legend:
 | @reactively/core       | lazy  | no subscription    | single recompute | ===       | skips      | ⬜            | throws     | throws     | keeps subscribed | halts flush | re-evaluates  | runs 2x per write    | manual bail (200+) | error              |
 | tansu                  | lazy  | no subscription    | single recompute | Object.is | propagates | returns void | post-write | post-write | keeps subscribed | continues   | caches error  | runs 2x per write    | manual bail (200+) | batched            |
 | signal-polyfill (TC39) | lazy  | no subscription    | single recompute | Object.is | skips      | ⬜            | post-write | post-write | keeps subscribed | continues   | caches error  | runs 1x, then blocks | no throw           | unbatched (2 runs) |
-| @vue/reactivity        | lazy  | no subscription    | single recompute | Object.is | skips      | error        | post-write | post-write | keeps subscribed | continues   | returns stale | runs 1x per write    | no throw           | unbatched (2 runs) |
+| @vue/reactivity        | lazy  | no subscription    | single recompute | Object.is | skips      | returns void | post-write | post-write | keeps subscribed | continues   | returns stale | runs 1x per write    | no throw           | unbatched (2 runs) |
 | mobx                   | lazy  | no subscription    | single recompute | ===       | propagates | returns void | post-write | post-write | keeps subscribed | continues   | re-evaluates  | runs 2x per write    | no throw           | batched            |
 | @reatom/core           | lazy  | no subscription    | single recompute | Object.is | skips      | returns void | post-write | post-write | unsubscribes     | continues   | caches error  | runs 2x per write    | cycle detected     | batched            |
 | svelte                 | lazy  | no subscription    | single recompute | ===       | skips      | ⬜            | post-write | throws     | unsubscribes     | halts flush | re-evaluates  | runs 2x per write    | cycle detected     | batched            |
