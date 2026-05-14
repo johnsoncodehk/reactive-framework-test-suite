@@ -2,7 +2,7 @@
 
 Cross-library test suite for comparing reactive signal behavior across **15 frameworks** with **175 test cases**.
 
-> 2073 passed, 356 failed, 196 skipped out of 2625 total runs
+> 2174 passed, 275 failed, 176 skipped out of 2625 total runs
 
 Test cases are collected and adapted from the test suites of all participating frameworks — thanks to every project for their thorough testing work. This suite focuses on **reactive semantics** (propagation, batching, disposal, edge cases), not API completeness. Tests that require an optional capability (e.g. `batch`) are skipped (⬜) for frameworks that don't expose it, rather than marked as failures.
 
@@ -41,7 +41,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | @preact/signals-core   |  173 |    2 |    0 |   175 |
 | anod                   |  161 |   14 |    0 |   175 |
 | tansu                  |  160 |    4 |   11 |   175 |
-| @solidjs/signals       |  154 |   10 |   11 |   175 |
+| @solidjs/signals       |  155 |    9 |   11 |   175 |
 | solid-js               |  149 |   26 |    0 |   175 |
 | mobx                   |  146 |   18 |   11 |   175 |
 | @vue/reactivity        |  142 |   33 |    0 |   175 |
@@ -50,7 +50,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | svelte                 |  126 |   12 |   37 |   175 |
 | S.js                   |  126 |   49 |    0 |   175 |
 | @reactively/core       |  111 |   16 |   48 |   175 |
-| pota                   |    2 |  153 |   20 |   175 |
+| pota                   |  102 |   73 |    0 |   175 |
 
 ## Results
 
@@ -69,111 +69,26 @@ Legend:
   ─→       dependency edge (downstream reads upstream)
 ```
 
-| Framework              | #1..#6,... ×17 | #7 | #187,#189,#205 | #188 | #192 | #204 |
-| ---------------------- | -------------- | -- | -------------- | ---- | ---- | ---- |
-| alien-signals          |              ✅ |  ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
-| @preact/signals-core   |              ✅ |  ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
-| @reactively/core       |              ✅ |  ✅ |              ✅ |    ⬜ |    ✅ |    ⬜ |
-| tansu                  |              ✅ |  ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
-| signal-polyfill (TC39) |              ✅ |  ✅ |              ✅ |    ⬜ |    ✅ |    ⬜ |
-| @vue/reactivity        |              ✅ |  ✅ |              ✅ |    ❌ |    ✅ |    ❌ |
-| mobx                   |              ✅ |  ❌ |              ✅ |    ✅ |    ✅ |    ✅ |
-| @reatom/core           |              ✅ |  ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
-| svelte                 |              ✅ |  ✅ |              ✅ |    ⬜ |    ✅ |    ⬜ |
-| solid-js               |              ✅ |  ✅ |              ❌ |    ❌ |    ✅ |    ✅ |
-| @solidjs/signals       |              ✅ |  ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
-| S.js                   |              ✅ |  ❌ |              ❌ |    ❌ |    ❌ |    ✅ |
-| pota                   |              ❌ |  ❌ |              ❌ |    ❌ |    ❌ |    ❌ |
-| @angular/core          |              ✅ |  ✅ |              ✅ |    ⬜ |    ✅ |    ⬜ |
-| anod                   |              ✅ |  ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
+| Framework              | #1..#6,... ×14 | #7 | #116,#190,#207 | #187,#189,#205 | #188 | #192 | #204 |
+| ---------------------- | -------------- | -- | -------------- | -------------- | ---- | ---- | ---- |
+| alien-signals          |              ✅ |  ✅ |              ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
+| @preact/signals-core   |              ✅ |  ✅ |              ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
+| @reactively/core       |              ✅ |  ✅ |              ✅ |              ✅ |    ⬜ |    ✅ |    ⬜ |
+| tansu                  |              ✅ |  ✅ |              ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
+| signal-polyfill (TC39) |              ✅ |  ✅ |              ✅ |              ✅ |    ⬜ |    ✅ |    ⬜ |
+| @vue/reactivity        |              ✅ |  ✅ |              ✅ |              ✅ |    ❌ |    ✅ |    ❌ |
+| mobx                   |              ✅ |  ❌ |              ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
+| @reatom/core           |              ✅ |  ✅ |              ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
+| svelte                 |              ✅ |  ✅ |              ✅ |              ✅ |    ⬜ |    ✅ |    ⬜ |
+| solid-js               |              ✅ |  ✅ |              ✅ |              ❌ |    ❌ |    ✅ |    ✅ |
+| @solidjs/signals       |              ✅ |  ✅ |              ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
+| S.js                   |              ✅ |  ❌ |              ✅ |              ❌ |    ❌ |    ❌ |    ✅ |
+| pota                   |              ✅ |  ✅ |              ❌ |              ❌ |    ❌ |    ✅ |    ❌ |
+| @angular/core          |              ✅ |  ✅ |              ✅ |              ✅ |    ⬜ |    ✅ |    ⬜ |
+| anod                   |              ✅ |  ✅ |              ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
-
-#### #1 diamond
-
-```
-    S(a)
-   /    \
- C(b)  C(c)
-   \    /
-    C(d)
-```
-
-Classic diamond. d must evaluate only once per update.
-
-#### #2 diamond + tail
-
-```
-    S(a)
-   /    \
- C(b)  C(c)
-   \    /
-    C(d)
-     |
-    C(e)
-```
-
-Diamond with a tail. e must evaluate only once.
-
-#### #3 jagged diamond + tails
-
-```
-      S(a)
-     /    \
-   C(b)  C(c)
-    |      |
-    |    C(d)
-     \    /
-      C(e)
-     /    \
-   C(f)  C(g)
-```
-
-Asymmetric diamond (different depths) with fan-out at the bottom.
-e, f, g each evaluate only once.
-
-#### #4 asymmetric diamond (different path lengths)
-
-```
-    S(a)
-   /    \
- C(b)  C(c)
-         |
-       C(d)
-       /
-    C(e)
-```
-
-Asymmetric path lengths (depth 1 vs depth 2) joining at e.
-e must evaluate only once.
-
-#### #5 drop A→B→A updates
-
-```
-   S(a)
-   / |
- C(b)|
-   \ |
-   C(c)
-     |
-   C(d)
-```
-
-Skip-connection: c reads both a and b (a's child).
-d must evaluate only once despite two paths from a to c.
-
-#### #6 one unchanged dep does not block update from changed dep
-
-```
-     S(a)
-    /    \
-  C(b)  *C(c)  ← c always returns "c"
-    \    /
-     C(d)
-```
-
-One branch unchanged. d must still update from b.
 
 #### #7 unchanged computed values stop propagation to downstream
 
@@ -187,52 +102,6 @@ One branch unchanged. d must still update from b.
 
 Both branches unchanged. d must NOT re-evaluate (propagation cut).
 
-#### #8 topological order
-
-```
-    S(a)
-   /    \
- C(b)  C(c)
-   \    /
-    C(d)
-```
-
-Diamond — verify evaluation order: d runs after both b and c.
-
-#### #9 linear convergence
-
-```
- S(a) → C(b)
-   \    /
-    C(c)
-   /
- S(a) → C(d)  [same a]
-```
-
- a→b, {a,b}→c, {a,c}→d
-
-Increasing fan-in at each level. Each node evaluates once.
-
-#### #10 exponential convergence
-
- a→b, {b,a}→c, {c,b}→d, {d,c}→e
-
-```
- S(a) ─→ C(b) ─→ C(c) ─→ C(d) ─→ C(e)
-   \─────→ /  \─────→ /  \─────→ /
-```
-
-Each level reads previous two. Naive impl is O(2^n).
-Each node must evaluate exactly once.
-
-#### #11 computed chain depth
-
-```
- S(a) → C(b) → C(c) → C(d) → C(e)
-```
-
-Simple linear chain. Propagation reaches the end.
-
 #### #116 other listeners still notified after one disposes
 
 ```
@@ -242,18 +111,6 @@ Simple linear chain. Propagation reaches the end.
 
 Two effects share one computed. After e1 disposes,
 e2 must still receive updates.
-
-#### #157 three-way diamond: sub updates when two of three deps unmark
-
-```
-      S(a)
-     / |  \
-  C(b) *C(c) *C(d)  ← c, d always return constants
-     \ |  /
-      C(e)
-```
-
-Three-way diamond, two branches constant. e must still update from b.
 
 #### #187 effect disposal deactivates upstream computed
 
@@ -307,17 +164,6 @@ When a≤0, d becomes unreachable → should NOT recompute.
 Computed is read directly first, then an effect subscribes.
 Effect must still be notified on subsequent changes.
 
-#### #191 effect sees latest computed value when subscribing after source change
-
-```
- S(s) → C(c)
-          |
-        E(eff)  ← subscribes after s already changed
-```
-
-Source changes before effect subscribes.
-Effect must see the latest value, not stale.
-
 #### #192 effect not re-run when computed dep value unchanged
 
 ```
@@ -360,22 +206,6 @@ Both change — c and effect must evaluate only once each.
 Two signals cross-feed two computeds joining at e.
 Both signals change — c, d, e each evaluate once.
 
-#### #206 stacked diamonds
-
-```
-      S(a)
-     /    \
-   C(b)  C(c)
-     \    /
-      C(d)
-     /    \
-   C(e)  C(f)
-     \    /
-      C(g)
-```
-
-Two diamonds stacked. Each node evaluates once.
-
 #### #207 wide fan-out: all effects fire once
 
 ```
@@ -388,17 +218,6 @@ Two diamonds stacked. Each node evaluates once.
 
 Wide fan-out: one signal, many computed+effect pairs.
 All effects fire exactly once.
-
-#### #208 deep asymmetric join (depth 3 vs 1)
-
-```
- S(a) → C(b) → C(c) → C(d)
-                        /
- S(a) → C(e) ─────────
-```
-
- depth-3 path and depth-1 path join at f.
- f must evaluate only once despite large depth difference.
 
 
 </details>
@@ -421,23 +240,23 @@ Legend:
   ?─→      conditional (dynamic) dependency edge
 ```
 
-| Framework              | #12..#13 | #14,#16,... ×9 | #193 | #197 | #200 |
-| ---------------------- | -------- | -------------- | ---- | ---- | ---- |
-| alien-signals          |        ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
-| @preact/signals-core   |        ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
-| @reactively/core       |        ✅ |              ✅ |    ✅ |    ✅ |    ❌ |
-| tansu                  |        ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
-| signal-polyfill (TC39) |        ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
-| @vue/reactivity        |        ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
-| mobx                   |        ❌ |              ✅ |    ✅ |    ✅ |    ✅ |
-| @reatom/core           |        ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
-| svelte                 |        ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
-| solid-js               |        ✅ |              ✅ |    ❌ |    ✅ |    ✅ |
-| @solidjs/signals       |        ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
-| S.js                   |        ✅ |              ✅ |    ❌ |    ❌ |    ✅ |
-| pota                   |        ❌ |              ❌ |    ❌ |    ❌ |    ❌ |
-| @angular/core          |        ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
-| anod                   |        ✅ |              ✅ |    ✅ |    ✅ |    ✅ |
+| Framework              | #12..#13 | #14,#16,#165,... ×5 | #166,#194,... ×4 | #193 | #197 | #200 |
+| ---------------------- | -------- | ------------------- | ---------------- | ---- | ---- | ---- |
+| alien-signals          |        ✅ |                   ✅ |                ✅ |    ✅ |    ✅ |    ✅ |
+| @preact/signals-core   |        ✅ |                   ✅ |                ✅ |    ✅ |    ✅ |    ✅ |
+| @reactively/core       |        ✅ |                   ✅ |                ✅ |    ✅ |    ✅ |    ❌ |
+| tansu                  |        ✅ |                   ✅ |                ✅ |    ✅ |    ✅ |    ✅ |
+| signal-polyfill (TC39) |        ✅ |                   ✅ |                ✅ |    ✅ |    ✅ |    ✅ |
+| @vue/reactivity        |        ✅ |                   ✅ |                ✅ |    ✅ |    ✅ |    ✅ |
+| mobx                   |        ❌ |                   ✅ |                ✅ |    ✅ |    ✅ |    ✅ |
+| @reatom/core           |        ✅ |                   ✅ |                ✅ |    ✅ |    ✅ |    ✅ |
+| svelte                 |        ✅ |                   ✅ |                ✅ |    ✅ |    ✅ |    ✅ |
+| solid-js               |        ✅ |                   ✅ |                ✅ |    ❌ |    ✅ |    ✅ |
+| @solidjs/signals       |        ✅ |                   ✅ |                ✅ |    ✅ |    ✅ |    ✅ |
+| S.js                   |        ✅ |                   ✅ |                ✅ |    ❌ |    ❌ |    ✅ |
+| pota                   |        ✅ |                   ✅ |                ❌ |    ❌ |    ✅ |    ❌ |
+| @angular/core          |        ✅ |                   ✅ |                ✅ |    ✅ |    ✅ |    ✅ |
+| anod                   |        ✅ |                   ✅ |                ✅ |    ✅ |    ✅ |    ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
@@ -464,44 +283,6 @@ Writing to the inactive dep must not cause c to re-evaluate.
 After switching cond from true to false, the old dep (a)
 must be deactivated: writing to a must not trigger c.
 The new dep (b) must be active.
-
-#### #14 new deps updated before dependee
-
-```
- S(a) ─→ C(c)
- S(cond) ─→ C(d)
- C(c)   ?─→ C(d)   (when cond = true)
- S(b)   ?─→ C(d)   (when cond = false)
-```
-
-cond and a change simultaneously. After the switch, d reads c
-which depends on the updated a. The newly-acquired dep (c) must
-be up-to-date before d evaluates.
-
-#### #16 lazy branch
-
-```
- S(a) ─→ C(b)
- S(a) ─→ C(c)
- C(b) ?─→ C(c)   (when a <= 0)
-```
-
-c reads a directly; when a > 0 it returns a, otherwise it
-falls through to b (which also reads a). Toggling a between
-positive and zero switches which branch is taken.
-
-#### #165 computed dep cleanup doesn't delete sibling subscription
-
-```
- S(toggle) ─→ C(p)
- S(state) ?─→ C(p)   (when toggle = true)
- S(state)  ─→ C(pp)
-              E(eff) ← reads p
-```
-
-p and pp both subscribe to state. When toggle flips to false,
-p drops its subscription to state. This cleanup must not
-accidentally remove pp's independent subscription to state.
 
 #### #166 after dep removed via branch switch, re-subscribing works
 
@@ -539,29 +320,6 @@ even though c's dep (b) changed.
 items toggles between undefined and arrays. isLoaded is a
 boolean gate; msg maps it to a string. Repeated writes must
 propagate correctly through the chain to the effect.
-
-#### #195 chained computed dirty reallocation via manual read
-
-```
- S(items) ─→ C(isLoaded) ─→ C(msg)
-```
-
-Same chain as #194 but driven by manual reads instead of an
-effect. Intermediate reads of isLoaded are interleaved between
-writes and final reads of msg. The chain must stay consistent.
-
-#### #196 maybe-dirty diamond: first dep unmarked, second still triggers
-
-```
- S(src1) ─→ C(c1)
- S(src1) ─→ C(c2) ← S(src2)
-    C(c1) ─→ C(c3) ← C(c2)
-```
-
-Diamond through src1. When src1 changes 0→2, c1 changes but
-c2 stays the same (src1%2 is still 0). c3 must still
-re-evaluate because c1 changed. When src2 then changes,
-c3 must re-evaluate again.
 
 #### #197 chained value-equality stops propagation across multiple writes
 
@@ -637,23 +395,23 @@ Legend:
   ─→       dependency edge (downstream reads upstream)
 ```
 
-| Framework              | #18 | #19..#24,#26,... ×9 | #25 | #147 | #149 | #27 |
-| ---------------------- | --- | ------------------- | --- | ---- | ---- | --- |
-| alien-signals          |   ✅ |                   ✅ |   ✅ |    ✅ |    ✅ |   ✅ |
-| @preact/signals-core   |   ✅ |                   ✅ |   ✅ |    ✅ |    ✅ |   ✅ |
-| @reactively/core       |   ✅ |                   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
-| tansu                  |   ✅ |                   ✅ |   ✅ |    ✅ |    ✅ |   ✅ |
-| signal-polyfill (TC39) |   ✅ |                   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
-| @vue/reactivity        |   ✅ |                   ✅ |   ✅ |    ❌ |    ❌ |   ✅ |
-| mobx                   |   ❌ |                   ✅ |   ❌ |    ❌ |    ✅ |   ❌ |
-| @reatom/core           |   ✅ |                   ✅ |   ✅ |    ✅ |    ✅ |   ✅ |
-| svelte                 |   ✅ |                   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
-| solid-js               |   ✅ |                   ✅ |   ✅ |    ❌ |    ✅ |   ✅ |
-| @solidjs/signals       |   ✅ |                   ✅ |   ✅ |    ❌ |    ✅ |   ✅ |
-| S.js                   |   ✅ |                   ✅ |   ✅ |    ❌ |    ✅ |   ❌ |
-| pota                   |   ❌ |                   ❌ |   ✅ |    ❌ |    ❌ |   ❌ |
-| @angular/core          |   ✅ |                   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
-| anod                   |   ✅ |                   ✅ |   ✅ |    ❌ |    ✅ |   ✅ |
+| Framework              | #18,#25 | #19..#22,#24,... ×8 | #23 | #147 | #149 | #27 |
+| ---------------------- | ------- | ------------------- | --- | ---- | ---- | --- |
+| alien-signals          |       ✅ |                   ✅ |   ✅ |    ✅ |    ✅ |   ✅ |
+| @preact/signals-core   |       ✅ |                   ✅ |   ✅ |    ✅ |    ✅ |   ✅ |
+| @reactively/core       |       ✅ |                   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
+| tansu                  |       ✅ |                   ✅ |   ✅ |    ✅ |    ✅ |   ✅ |
+| signal-polyfill (TC39) |       ✅ |                   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
+| @vue/reactivity        |       ✅ |                   ✅ |   ✅ |    ❌ |    ❌ |   ✅ |
+| mobx                   |       ❌ |                   ✅ |   ✅ |    ❌ |    ✅ |   ❌ |
+| @reatom/core           |       ✅ |                   ✅ |   ✅ |    ✅ |    ✅ |   ✅ |
+| svelte                 |       ✅ |                   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
+| solid-js               |       ✅ |                   ✅ |   ✅ |    ❌ |    ✅ |   ✅ |
+| @solidjs/signals       |       ✅ |                   ✅ |   ✅ |    ❌ |    ✅ |   ✅ |
+| S.js                   |       ✅ |                   ✅ |   ✅ |    ❌ |    ✅ |   ❌ |
+| pota                   |       ✅ |                   ✅ |   ❌ |    ❌ |    ✅ |   ✅ |
+| @angular/core          |       ✅ |                   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
+| anod                   |       ✅ |                   ✅ |   ✅ |    ❌ |    ✅ |   ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
@@ -667,46 +425,6 @@ Legend:
 Reading a computed twice without changing its dep must not
 re-evaluate the compute function (result is cached).
 
-#### #19 returns updated value after dep change
-
-```
- S(a) → C(b)
-```
-
-After the source signal changes, the computed must return the
-new derived value on the next read.
-
-#### #20 chained computed
-
-```
- S(a) → C(b) → C(c) → C(d)
-```
-
-A linear chain of computeds. A change at the source must
-propagate through every link to the tail.
-
-#### #21 chained computed dirty reallocation after trigger
-
-```
- S(a)  S(b)
-   |      |
-   |    C(c) ← c reads a
-    \  /
-    C(d)     ← d reads b when a===0, else reads c
-```
-
-Dynamic dep switch: when a changes from 0 to 1, d drops b and
-picks up c. Subsequent writes to b must not affect d.
-
-#### #22 chained computed avoids redundant re-compute
-
-```
- S(a) → C(b) → C(c) → C(d)
-```
-
-Linear chain with call counters. After one source change,
-each computed in the chain must re-evaluate exactly once.
-
 #### #23 sync access of invalidated chained computed runs effect
 
 ```
@@ -718,17 +436,6 @@ each computed in the chain must re-evaluate exactly once.
 An effect subscribes to the tail of a chain. A synchronous
 read of c after writing a must trigger the effect.
 
-#### #24 dependency evaluation order consistent with last access
-
-```
-      S(a)
-     /    \
-   C(b)  C(c)
-```
-
-Two computeds share one source. After a write, both must
-re-evaluate (order is implementation-defined but both must run).
-
 #### #25 no re-compute if zero dependencies
 
 ```
@@ -737,27 +444,6 @@ re-evaluate (order is implementation-defined but both must run).
 
 A computed with no signal dependencies. After the initial
 evaluation it must never re-compute.
-
-#### #26 computed remains live after losing all subscribers
-
-```
- S(a) → C(b)
-          |
-        E(eff) → dispose
-```
-
-A computed is subscribed by an effect, then the effect disposes.
-The computed must still return correct values on direct read.
-
-#### #145 undefined is a valid computed value (not uninitialized)
-
-```
- S(a) → C(c)
-```
-
-Computed returns undefined when a===0, else returns a.
-undefined must be treated as a legitimate cached value,
-not confused with an uninitialized state.
 
 #### #147 computed not recomputed in batch if dep reverts
 
@@ -778,17 +464,6 @@ The net change is zero, so c must not re-evaluate.
 
 Inside a batch that writes a, the subsequent propagation must
 evaluate b before c (topological order preserved).
-
-#### #115 signal creation inside computed is allowed
-
-```
- S(a) → C(c)
-          |
-        S(inner)  ← created inside c's compute function
-```
-
-Creating a new signal inside a computed body must not throw.
-The computed derives its value through the inner signal.
 
 #### #27 downstream not re-evaluated unless value changed
 
@@ -833,7 +508,7 @@ Legend:
 | solid-js               |           ✅ |    ✅ |
 | @solidjs/signals       |           ✅ |    ✅ |
 | S.js                   |           ❌ |    ❌ |
-| pota                   |           ❌ |    ❌ |
+| pota                   |           ✅ |    ✅ |
 | @angular/core          |           ✅ |    ✅ |
 | anod                   |           ✅ |    ✅ |
 
@@ -898,34 +573,26 @@ Legend:
   dispose  effect disposal call
 ```
 
-| Framework              | #35..#37,... ×9 | #38..#39,... ×4 | #40 | #42 | #111 | #141 | #178 | #201 | #202 |
-| ---------------------- | --------------- | --------------- | --- | --- | ---- | ---- | ---- | ---- | ---- |
-| alien-signals          |               ✅ |               ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
-| @preact/signals-core   |               ✅ |               ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
-| @reactively/core       |               ✅ |               ⬜ |   ⬜ |   ⬜ |    ⬜ |    ✅ |    ⬜ |    ❌ |    ✅ |
-| tansu                  |               ✅ |               ⬜ |   ⬜ |   ✅ |    ⬜ |    ✅ |    ⬜ |    ❌ |    ✅ |
-| signal-polyfill (TC39) |               ✅ |               ✅ |   ❌ |   ⬜ |    ✅ |    ✅ |    ❌ |    ❌ |    ✅ |
-| @vue/reactivity        |               ✅ |               ✅ |   ✅ |   ❌ |    ✅ |    ❌ |    ✅ |    ❌ |    ✅ |
-| mobx                   |               ✅ |               ⬜ |   ⬜ |   ✅ |    ⬜ |    ✅ |    ⬜ |    ✅ |    ✅ |
-| @reatom/core           |               ✅ |               ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
-| svelte                 |               ✅ |               ✅ |   ✅ |   ⬜ |    ❌ |    ✅ |    ✅ |    ✅ |    ❌ |
-| solid-js               |               ✅ |               ✅ |   ✅ |   ✅ |    ❌ |    ❌ |    ✅ |    ✅ |    ✅ |
-| @solidjs/signals       |               ✅ |               ⬜ |   ⬜ |   ✅ |    ⬜ |    ✅ |    ⬜ |    ✅ |    ✅ |
-| S.js                   |               ✅ |               ✅ |   ❌ |   ❌ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |
-| pota                   |               ❌ |               ⬜ |   ⬜ |   ❌ |    ⬜ |    ❌ |    ⬜ |    ❌ |    ❌ |
-| @angular/core          |               ✅ |               ✅ |   ❌ |   ⬜ |    ❌ |    ✅ |    ❌ |    ❌ |    ❌ |
-| anod                   |               ✅ |               ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |
+| Framework              | #35,#37,#143,... ×6 | #36,#108,#142 | #38,#109 | #39,#110 | #40 | #42 | #111 | #141 | #178 | #201 | #202 |
+| ---------------------- | ------------------- | ------------- | -------- | -------- | --- | --- | ---- | ---- | ---- | ---- | ---- |
+| alien-signals          |                   ✅ |             ✅ |        ✅ |        ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| @preact/signals-core   |                   ✅ |             ✅ |        ✅ |        ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| @reactively/core       |                   ✅ |             ✅ |        ⬜ |        ⬜ |   ⬜ |   ⬜ |    ⬜ |    ✅ |    ⬜ |    ❌ |    ✅ |
+| tansu                  |                   ✅ |             ✅ |        ⬜ |        ⬜ |   ⬜ |   ✅ |    ⬜ |    ✅ |    ⬜ |    ❌ |    ✅ |
+| signal-polyfill (TC39) |                   ✅ |             ✅ |        ✅ |        ✅ |   ❌ |   ⬜ |    ✅ |    ✅ |    ❌ |    ❌ |    ✅ |
+| @vue/reactivity        |                   ✅ |             ✅ |        ✅ |        ✅ |   ✅ |   ❌ |    ✅ |    ❌ |    ✅ |    ❌ |    ✅ |
+| mobx                   |                   ✅ |             ✅ |        ⬜ |        ⬜ |   ⬜ |   ✅ |    ⬜ |    ✅ |    ⬜ |    ✅ |    ✅ |
+| @reatom/core           |                   ✅ |             ✅ |        ✅ |        ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| svelte                 |                   ✅ |             ✅ |        ✅ |        ✅ |   ✅ |   ⬜ |    ❌ |    ✅ |    ✅ |    ✅ |    ❌ |
+| solid-js               |                   ✅ |             ✅ |        ✅ |        ✅ |   ✅ |   ✅ |    ❌ |    ❌ |    ✅ |    ✅ |    ✅ |
+| @solidjs/signals       |                   ✅ |             ✅ |        ⬜ |        ⬜ |   ⬜ |   ✅ |    ⬜ |    ✅ |    ⬜ |    ✅ |    ✅ |
+| S.js                   |                   ✅ |             ✅ |        ✅ |        ✅ |   ❌ |   ❌ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |
+| pota                   |                   ✅ |             ❌ |        ❌ |        ✅ |   ❌ |   ✅ |    ❌ |    ❌ |    ❌ |    ✅ |    ❌ |
+| @angular/core          |                   ✅ |             ✅ |        ✅ |        ✅ |   ❌ |   ⬜ |    ❌ |    ✅ |    ❌ |    ❌ |    ❌ |
+| anod                   |                   ✅ |             ✅ |        ✅ |        ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
-
-#### #35 effect runs callback immediately on creation
-
-```
- S(a) ← E(eff)
-```
-
-Effect callback executes synchronously upon creation.
 
 #### #36 effect re-runs when dependency changes
 
@@ -934,14 +601,6 @@ Effect callback executes synchronously upon creation.
 ```
 
 Effect re-runs each time its signal dependency changes.
-
-#### #37 effect disposal stops re-runs
-
-```
- S(a) ← E(eff) → dispose
-```
-
-After disposal, the effect no longer re-runs on signal changes.
 
 #### #38 effect cleanup fn called before each re-run
 
@@ -1030,15 +689,6 @@ read b. After disposal, neither a nor b changes trigger re-run.
 "One-shot" pattern: effect auto-disposes once a condition is
 met. Subsequent signal changes must not re-trigger the effect.
 
-#### #143 destroyed effect not re-scheduled on later updates
-
-```
- S(a)  S(b) ← E(eff) → dispose
-```
-
-After disposal, multiple writes to both dependencies must
-never re-schedule the effect.
-
 #### #178 dispose cleanup reads don't leak to parent tracking context
 
 ```
@@ -1048,15 +698,6 @@ never re-schedule the effect.
 
 Inner effect's cleanup reads b. When outer disposes inner,
 b must NOT become a dependency of the outer effect.
-
-#### #214 parent disposes and recreates child: downstream sees correct value
-
-```
- S(a) ← E(eff creates C(c) reading a)
-```
-
-Effect creates an inner computed each run. After re-run the
-new computed must read the latest signal value.
 
 #### #201 computed-triggered disposal: effect skipped and no subscription leak
 
@@ -1080,30 +721,6 @@ re-run and must leave no subscription leak.
 Computed a disposes e1 during evaluation. Sibling effect e2
 must still receive the updated value.
 
-#### #203 computed disposal with unchanged-value sibling computed
-
-```
- S(s) → *C(a)  [always returns 0]
-```
-
- S(s) →  C(a2) [disposes eff when s truthy]
-
-```
-   {a, a2} → C(b) ← E(eff)
-```
-
-a2 disposes the effect during propagation while sibling a
-returns an unchanged value. Must not crash.
-
-#### #41 disposed effect never re-notified
-
-```
- S(a) ← E(eff) → dispose
-```
-
-After disposal, repeated writes to the signal must never
-re-notify the disposed effect.
-
 
 </details>
 
@@ -1125,23 +742,23 @@ Legend:
   ✕        disposed / cleaned up
 ```
 
-| Framework              | #43..#44,... ×4 | #45 | #46 | #47 | #163 | #170 | #209..#210 |
-| ---------------------- | --------------- | --- | --- | --- | ---- | ---- | ---------- |
-| alien-signals          |               ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |          ✅ |
-| @preact/signals-core   |               ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |          ❌ |
-| @reactively/core       |               ❌ |   ⬜ |   ✅ |   ✅ |    ❌ |    ❌ |          ❌ |
-| tansu                  |               ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |          ❌ |
-| signal-polyfill (TC39) |               ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |          ❌ |
-| @vue/reactivity        |               ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |          ❌ |
-| mobx                   |               ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |          ❌ |
-| @reatom/core           |               ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |          ✅ |
-| svelte                 |               ✅ |   ⬜ |   ✅ |   ❌ |    ❌ |    ✅ |          ❌ |
-| solid-js               |               ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |          ❌ |
-| @solidjs/signals       |               ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |          ✅ |
-| S.js                   |               ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ❌ |          ❌ |
-| pota                   |               ❌ |   ❌ |   ❌ |   ❌ |    ❌ |    ❌ |          ❌ |
-| @angular/core          |               ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |          ❌ |
-| anod                   |               ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |          ✅ |
+| Framework              | #43..#44,#48 | #45 | #46 | #47 | #163 | #164 | #170 | #209 | #210 |
+| ---------------------- | ------------ | --- | --- | --- | ---- | ---- | ---- | ---- | ---- |
+| alien-signals          |            ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| @preact/signals-core   |            ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |
+| @reactively/core       |            ❌ |   ⬜ |   ✅ |   ✅ |    ❌ |    ❌ |    ❌ |    ❌ |    ❌ |
+| tansu                  |            ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |
+| signal-polyfill (TC39) |            ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |
+| @vue/reactivity        |            ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |
+| mobx                   |            ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |
+| @reatom/core           |            ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| svelte                 |            ✅ |   ⬜ |   ✅ |   ❌ |    ❌ |    ✅ |    ✅ |    ❌ |    ❌ |
+| solid-js               |            ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |
+| @solidjs/signals       |            ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| S.js                   |            ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ❌ |    ❌ |    ❌ |
+| pota                   |            ✅ |   ✅ |   ❌ |   ✅ |    ❌ |    ❌ |    ✅ |    ✅ |    ❌ |
+| @angular/core          |            ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |
+| anod                   |            ✅ |   ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
@@ -1278,23 +895,23 @@ Legend:
   ═→       inner write (node writes to a signal during evaluation)
 ```
 
-| Framework              | #50,#186 | #51 | #52..#53,... ×17 | #54 | #179 | #57 | #182 | #183 | #185 | #213 | #212 |
-| ---------------------- | -------- | --- | ---------------- | --- | ---- | --- | ---- | ---- | ---- | ---- | ---- |
-| alien-signals          |        ✅ |   ✅ |                ✅ |   ✅ |    ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
-| @preact/signals-core   |        ✅ |   ✅ |                ✅ |   ✅ |    ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
-| @reactively/core       |        ❌ |   ⬜ |                ✅ |   ✅ |    ❌ |   ✅ |    ⬜ |    ✅ |    ✅ |    ✅ |    ✅ |
-| tansu                  |        ✅ |   ⬜ |                ✅ |   ✅ |    ❌ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
-| signal-polyfill (TC39) |        ✅ |   ✅ |                ✅ |   ✅ |    ❌ |   ✅ |    ⬜ |    ✅ |    ✅ |    ❌ |    ❌ |
-| @vue/reactivity        |        ✅ |   ✅ |                ✅ |   ✅ |    ✅ |   ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |
-| mobx                   |        ✅ |   ⬜ |                ✅ |   ✅ |    ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
-| @reatom/core           |        ✅ |   ✅ |                ✅ |   ✅ |    ❌ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
-| svelte                 |        ✅ |   ✅ |                ✅ |   ❌ |    ❌ |   ❌ |    ⬜ |    ✅ |    ✅ |    ❌ |    ✅ |
-| solid-js               |        ✅ |   ✅ |                ✅ |   ✅ |    ❌ |   ✅ |    ✅ |    ❌ |    ❌ |    ✅ |    ✅ |
-| @solidjs/signals       |        ✅ |   ⬜ |                ✅ |   ✅ |    ❌ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |
-| S.js                   |        ✅ |   ❌ |                ✅ |   ✅ |    ❌ |   ✅ |    ❌ |    ❌ |    ❌ |    ✅ |    ✅ |
-| pota                   |        ❌ |   ⬜ |                ❌ |   ❌ |    ❌ |   ❌ |    ❌ |    ❌ |    ⬜ |    ❌ |    ❌ |
-| @angular/core          |        ✅ |   ✅ |                ✅ |   ✅ |    ❌ |   ❌ |    ⬜ |    ✅ |    ✅ |    ✅ |    ✅ |
-| anod                   |        ✅ |   ✅ |                ✅ |   ✅ |    ❌ |   ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |
+| Framework              | #50,#186 | #51 | #52,#112,... ×11 | #53,#55..#56,... ×6 | #54 | #179 | #57 | #182 | #183,#185 | #213 | #212 |
+| ---------------------- | -------- | --- | ---------------- | ------------------- | --- | ---- | --- | ---- | --------- | ---- | ---- |
+| alien-signals          |        ✅ |   ✅ |                ✅ |                   ✅ |   ✅ |    ✅ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
+| @preact/signals-core   |        ✅ |   ✅ |                ✅ |                   ✅ |   ✅ |    ✅ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
+| @reactively/core       |        ❌ |   ⬜ |                ✅ |                   ✅ |   ✅ |    ❌ |   ✅ |    ⬜ |         ✅ |    ✅ |    ✅ |
+| tansu                  |        ✅ |   ⬜ |                ✅ |                   ✅ |   ✅ |    ❌ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
+| signal-polyfill (TC39) |        ✅ |   ✅ |                ✅ |                   ✅ |   ✅ |    ❌ |   ✅ |    ⬜ |         ✅ |    ❌ |    ❌ |
+| @vue/reactivity        |        ✅ |   ✅ |                ✅ |                   ✅ |   ✅ |    ✅ |   ✅ |    ❌ |         ✅ |    ✅ |    ✅ |
+| mobx                   |        ✅ |   ⬜ |                ✅ |                   ✅ |   ✅ |    ✅ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
+| @reatom/core           |        ✅ |   ✅ |                ✅ |                   ✅ |   ✅ |    ❌ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
+| svelte                 |        ✅ |   ✅ |                ✅ |                   ✅ |   ❌ |    ❌ |   ❌ |    ⬜ |         ✅ |    ❌ |    ✅ |
+| solid-js               |        ✅ |   ✅ |                ✅ |                   ✅ |   ✅ |    ❌ |   ✅ |    ✅ |         ❌ |    ✅ |    ✅ |
+| @solidjs/signals       |        ✅ |   ⬜ |                ✅ |                   ✅ |   ✅ |    ❌ |   ✅ |    ✅ |         ✅ |    ❌ |    ❌ |
+| S.js                   |        ✅ |   ❌ |                ✅ |                   ✅ |   ✅ |    ❌ |   ✅ |    ❌ |         ❌ |    ✅ |    ✅ |
+| pota                   |        ❌ |   ❌ |                ✅ |                   ❌ |   ❌ |    ❌ |   ✅ |    ❌ |         ❌ |    ❌ |    ❌ |
+| @angular/core          |        ✅ |   ✅ |                ✅ |                   ✅ |   ✅ |    ❌ |   ❌ |    ⬜ |         ✅ |    ✅ |    ✅ |
+| anod                   |        ✅ |   ✅ |                ✅ |                   ✅ |   ✅ |    ❌ |   ✅ |    ❌ |         ✅ |    ✅ |    ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
@@ -1316,15 +933,6 @@ derived value after each change to a.
 
 Cleanup writes to the effect's own dependency. This must not
 cause an infinite retrigger loop.
-
-#### #52 computed writing to signal
-
-```
- S(a) → C(c) ═→ S(sideChannel)
-```
-
-Computed writes to a side-channel signal. Framework may
-either allow it or throw (both are valid behaviors).
 
 #### #53 inner write: only final value observed
 
@@ -1362,26 +970,6 @@ Effect must be re-scheduled and see the latest value.
 Effect reads from a computed derived from a. Writing to a
 must re-schedule the effect through the computed chain.
 
-#### #112 computed side-effect doesn't affect sibling computeds
-
-```
- S(src) → C(writer) ═→ S(sideChannel) → C(reader)
-```
-
-Computed writer writes to a side-channel signal. A sibling
-computed reader of that signal must see the written value.
-Framework may also forbid computed side effects (also valid).
-
-#### #114 inner write final value unchanged: no downstream notification
-
-```
- S(a) ← E(eff) ═→ S(a) resets to 0 when a===1
- S(a) → C(c) ← E(downstream)
-```
-
-Effect writes a back to its original value. The net change
-is zero, so downstream must not be notified (or at most once).
-
 #### #133 listener writes back: second listener skipped if no net change
 
 ```
@@ -1402,57 +990,6 @@ final settled value (0), not the intermediate value (1).
 First effect changes a from 1 to 10. Second effect must
 observe the final value (10).
 
-#### #135 chained computed inner write: downstream only sees settled
-
-```
- S(src) → C(c1) ═→ S(target) → C(c2)
-```
-
-Computed c1 writes to target. Downstream computed c2 reads
-target and must see the settled value after c1 evaluates.
-Framework may forbid computed side effects (also valid).
-
-#### #136 computed inner write unchanged: no downstream notification
-
-```
- S(src) → C(c) ═→ S(side) [always writes 0]
- S(side) ← E(eff)
-```
-
-Computed always writes the same value to side. The downstream
-effect must not be notified because the value never changes.
-Framework may forbid computed side effects (also valid).
-
-#### #137 computed inner write changed: downstream notified
-
-```
- S(src) → C(c) ═→ S(side) [writes src*100]
-```
-
-Computed writes a changing value to side. After src changes,
-side must reflect the new derived value.
-Framework may forbid computed side effects (also valid).
-
-#### #138 independent computeds sharing source, one inner-writes
-
-```
- S(src) → C(writer) ═→ S(shared) → C(reader)
-```
-
-Two computeds share a source. Writer inner-writes to shared;
-reader derives from shared. Reader must see the updated value.
-Framework may forbid computed side effects (also valid).
-
-#### #172 computed writing to own dep: never caches
-
-```
- S(a) → C(c) ═→ S(a) [increments a]
-```
-
-Computed writes to its own dependency (self-cycle). Each read
-must re-evaluate (value is never stable). Framework may also
-detect the cycle and throw (both behaviors are valid).
-
 #### #180 inner write through computed chain resets signal
 
 ```
@@ -1472,16 +1009,6 @@ if future propagation is correct).
 Computed increments its own source each read. The returned
 value and the signal must reflect the post-write state.
 
-#### #113 inner write convergence: converges or cycle-detects
-
-```
- S(counter) ← E(eff) ═→ S(counter) [increments until target]
-```
-
-Effect increments a counter toward a target. Must either
-converge (counter reaches target) or detect the cycle.
-Partial progress without convergence or detection is invalid.
-
 #### #57 computed side effect triggers downstream
 
 ```
@@ -1491,17 +1018,6 @@ Partial progress without convergence or detection is invalid.
 
 Computed writes to a side-effect signal. An effect watching
 that signal must observe the written value after c evaluates.
-
-#### #181 computed writes multiple signals: downstream sees consistent pair
-
-```
- S(src) → C(writer) ═→ S(b), S(c)
- {S(b), S(c)} → C(pair)
-```
-
-Computed writes to two signals atomically. Downstream must
-see a consistent pair of values.
-Framework may forbid computed side effects (also valid).
 
 #### #182 computed side effect + batch: writes visible after flush
 
@@ -1525,17 +1041,6 @@ Framework may forbid computed side effects (also valid).
 When flag switches off, writer is no longer evaluated, so its
 side-effect write must stop. Subsequent src changes must not
 update side.
-Framework may forbid computed side effects (also valid).
-
-#### #184 nested computeds: outer reads inner, both have side effects
-
-```
- S(src) → C(inner) ═→ S(innerSide)
-          C(inner) → C(outer) ═→ S(outerSide)
-```
-
-Nested computeds both perform side-effect writes. Each side
-signal must reflect the correct derived value.
 Framework may forbid computed side effects (also valid).
 
 #### #185 computed side effect write visible despite later throw
@@ -1598,35 +1103,26 @@ Legend:
   ↔ / ⟳   cyclic dependency
 ```
 
-| Framework              | #61,#63 | #150,#152 | #151 | #153 | #64 |
-| ---------------------- | ------- | --------- | ---- | ---- | --- |
-| alien-signals          |       ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
-| @preact/signals-core   |       ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
-| @reactively/core       |       ✅ |         ✅ |    ⬜ |    ✅ |   ❌ |
-| tansu                  |       ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
-| signal-polyfill (TC39) |       ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
-| @vue/reactivity        |       ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
-| mobx                   |       ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
-| @reatom/core           |       ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
-| svelte                 |       ✅ |         ✅ |    ⬜ |    ❌ |   ✅ |
-| solid-js               |       ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
-| @solidjs/signals       |       ✅ |         ❌ |    ✅ |    ✅ |   ✅ |
-| S.js                   |       ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
-| pota                   |       ❌ |         ❌ |    ✅ |    ❌ |   ❌ |
-| @angular/core          |       ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
-| anod                   |       ✅ |         ✅ |    ✅ |    ✅ |   ✅ |
+| Framework              | #61,#152 | #63 | #150 | #151 | #153 | #64 |
+| ---------------------- | -------- | --- | ---- | ---- | ---- | --- |
+| alien-signals          |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
+| @preact/signals-core   |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
+| @reactively/core       |        ✅ |   ✅ |    ✅ |    ⬜ |    ✅ |   ❌ |
+| tansu                  |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
+| signal-polyfill (TC39) |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
+| @vue/reactivity        |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
+| mobx                   |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
+| @reatom/core           |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
+| svelte                 |        ✅ |   ✅ |    ✅ |    ⬜ |    ❌ |   ✅ |
+| solid-js               |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
+| @solidjs/signals       |        ✅ |   ✅ |    ❌ |    ✅ |    ✅ |   ✅ |
+| S.js                   |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
+| pota                   |        ✅ |   ❌ |    ✅ |    ✅ |    ✅ |   ✅ |
+| @angular/core          |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
+| anod                   |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |   ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
-
-#### #61 indirect cycle through effects
-
-```
- S(a) → E(eff) → S(a)  ⟳
-```
-
-An effect reads a signal then writes back to it, creating an
-indirect write-read loop. Iteration count must stay bounded.
 
 #### #63 cycle from modifying a branch (dynamic cycle creation)
 
@@ -1664,17 +1160,6 @@ Framework should throw or handle the late-onset cycle.
 A computed reads itself inside an untracked scope.
 Even without a tracked dependency edge, re-entering the
 same computation is still a cycle.
-
-#### #152 conditional computed becomes recursive on flag change
-
-```
- S(flag)
-    |
-  C(c) ⟳  (when flag=true)
-```
-
-When flag=false, c returns 0 (no cycle). Setting flag=true
-makes c read itself, creating a conditional self-cycle.
 
 #### #153 computed self-dep recovery after catching cycle error
 
@@ -1717,23 +1202,23 @@ Legend:
   ─→       dependency edge (downstream reads upstream)
 ```
 
-| Framework              | #65..#66,#72,... ×6 | #67..#68,... ×5 | #69 | #70 | #71,... ×6 | #73,#123,#132 | #120 | #130 |
-| ---------------------- | ------------------- | --------------- | --- | --- | ---------- | ------------- | ---- | ---- |
-| alien-signals          |                   ✅ |               ✅ |   ✅ |   ✅ |          ✅ |             ✅ |    ✅ |    ✅ |
-| @preact/signals-core   |                   ✅ |               ✅ |   ✅ |   ✅ |          ✅ |             ✅ |    ✅ |    ✅ |
-| @reactively/core       |                   ⬜ |               ⬜ |   ⬜ |   ⬜ |          ⬜ |             ⬜ |    ⬜ |    ❌ |
-| tansu                  |                   ✅ |               ✅ |   ✅ |   ✅ |          ✅ |             ✅ |    ⬜ |    ✅ |
-| signal-polyfill (TC39) |                   ⬜ |               ⬜ |   ⬜ |   ⬜ |          ⬜ |             ⬜ |    ✅ |    ✅ |
-| @vue/reactivity        |                   ❌ |               ❌ |   ❌ |   ❌ |          ❌ |             ❌ |    ✅ |    ✅ |
-| mobx                   |                   ✅ |               ✅ |   ✅ |   ❌ |          ✅ |             ❌ |    ⬜ |    ✅ |
-| @reatom/core           |                   ✅ |               ✅ |   ✅ |   ✅ |          ✅ |             ✅ |    ✅ |    ✅ |
-| svelte                 |                   ⬜ |               ⬜ |   ⬜ |   ⬜ |          ⬜ |             ⬜ |    ❌ |    ✅ |
-| solid-js               |                   ✅ |               ✅ |   ❌ |   ✅ |          ✅ |             ❌ |    ✅ |    ✅ |
-| @solidjs/signals       |                   ✅ |               ✅ |   ✅ |   ✅ |          ✅ |             ❌ |    ⬜ |    ✅ |
-| S.js                   |                   ❌ |               ❌ |   ❌ |   ✅ |          ✅ |             ❌ |    ✅ |    ✅ |
-| pota                   |                   ❌ |               ❌ |   ❌ |   ❌ |          ❌ |             ❌ |    ⬜ |    ❌ |
-| @angular/core          |                   ⬜ |               ⬜ |   ⬜ |   ⬜ |          ⬜ |             ⬜ |    ✅ |    ✅ |
-| anod                   |                   ✅ |               ❌ |   ❌ |   ✅ |          ✅ |             ❌ |    ✅ |    ✅ |
+| Framework              | #65..#66,#72 | #67..#68,... ×4 | #69 | #70 | #71,... ×5 | #73,#123 | #119,#124,#127 | #120 | #126 | #130 | #131 | #132 |
+| ---------------------- | ------------ | --------------- | --- | --- | ---------- | -------- | -------------- | ---- | ---- | ---- | ---- | ---- |
+| alien-signals          |            ✅ |               ✅ |   ✅ |   ✅ |          ✅ |        ✅ |              ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| @preact/signals-core   |            ✅ |               ✅ |   ✅ |   ✅ |          ✅ |        ✅ |              ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| @reactively/core       |            ⬜ |               ⬜ |   ⬜ |   ⬜ |          ⬜ |        ⬜ |              ⬜ |    ⬜ |    ⬜ |    ❌ |    ⬜ |    ⬜ |
+| tansu                  |            ✅ |               ✅ |   ✅ |   ✅ |          ✅ |        ✅ |              ✅ |    ⬜ |    ✅ |    ✅ |    ✅ |    ✅ |
+| signal-polyfill (TC39) |            ⬜ |               ⬜ |   ⬜ |   ⬜ |          ⬜ |        ⬜ |              ⬜ |    ✅ |    ⬜ |    ✅ |    ⬜ |    ⬜ |
+| @vue/reactivity        |            ❌ |               ❌ |   ❌ |   ❌ |          ❌ |        ❌ |              ❌ |    ✅ |    ❌ |    ✅ |    ❌ |    ❌ |
+| mobx                   |            ✅ |               ✅ |   ✅ |   ❌ |          ✅ |        ❌ |              ✅ |    ⬜ |    ✅ |    ✅ |    ✅ |    ❌ |
+| @reatom/core           |            ✅ |               ✅ |   ✅ |   ✅ |          ✅ |        ✅ |              ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| svelte                 |            ⬜ |               ⬜ |   ⬜ |   ⬜ |          ⬜ |        ⬜ |              ⬜ |    ❌ |    ⬜ |    ✅ |    ⬜ |    ⬜ |
+| solid-js               |            ✅ |               ✅ |   ❌ |   ✅ |          ✅ |        ❌ |              ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |
+| @solidjs/signals       |            ✅ |               ✅ |   ✅ |   ✅ |          ✅ |        ❌ |              ✅ |    ⬜ |    ✅ |    ✅ |    ✅ |    ❌ |
+| S.js                   |            ❌ |               ❌ |   ❌ |   ✅ |          ✅ |        ❌ |              ❌ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |
+| pota                   |            ❌ |               ✅ |   ❌ |   ✅ |          ❌ |        ✅ |              ✅ |    ❌ |    ✅ |    ❌ |    ❌ |    ❌ |
+| @angular/core          |            ⬜ |               ⬜ |   ⬜ |   ⬜ |          ⬜ |        ⬜ |              ⬜ |    ✅ |    ⬜ |    ✅ |    ⬜ |    ⬜ |
+| anod                   |            ✅ |               ❌ |   ❌ |   ✅ |          ✅ |        ❌ |              ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |
 
 <details>
 <summary>Tests with failures or skips</summary>
@@ -1984,23 +1469,23 @@ Legend:
   ╌╌→      untracked read (no dependency created)
 ```
 
-| Framework              | #75,... ×5 | #76 |
-| ---------------------- | ---------- | --- |
-| alien-signals          |          ✅ |   ✅ |
-| @preact/signals-core   |          ✅ |   ✅ |
-| @reactively/core       |          ⬜ |   ⬜ |
-| tansu                  |          ✅ |   ✅ |
-| signal-polyfill (TC39) |          ✅ |   ✅ |
-| @vue/reactivity        |          ✅ |   ✅ |
-| mobx                   |          ✅ |   ❌ |
-| @reatom/core           |          ✅ |   ✅ |
-| svelte                 |          ⬜ |   ⬜ |
-| solid-js               |          ✅ |   ✅ |
-| @solidjs/signals       |          ✅ |   ✅ |
-| S.js                   |          ✅ |   ✅ |
-| pota                   |          ❌ |   ❌ |
-| @angular/core          |          ✅ |   ✅ |
-| anod                   |          ✅ |   ✅ |
+| Framework              | #75,#156 | #76 | #117..#118,#77 |
+| ---------------------- | -------- | --- | -------------- |
+| alien-signals          |        ✅ |   ✅ |              ✅ |
+| @preact/signals-core   |        ✅ |   ✅ |              ✅ |
+| @reactively/core       |        ⬜ |   ⬜ |              ⬜ |
+| tansu                  |        ✅ |   ✅ |              ✅ |
+| signal-polyfill (TC39) |        ✅ |   ✅ |              ✅ |
+| @vue/reactivity        |        ✅ |   ✅ |              ✅ |
+| mobx                   |        ✅ |   ❌ |              ✅ |
+| @reatom/core           |        ✅ |   ✅ |              ✅ |
+| svelte                 |        ⬜ |   ⬜ |              ⬜ |
+| solid-js               |        ✅ |   ✅ |              ✅ |
+| @solidjs/signals       |        ✅ |   ✅ |              ✅ |
+| S.js                   |        ✅ |   ✅ |              ✅ |
+| pota                   |        ❌ |   ✅ |              ✅ |
+| @angular/core          |        ✅ |   ✅ |              ✅ |
+| anod                   |        ✅ |   ✅ |              ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
@@ -2089,23 +1574,23 @@ Legend:
   ⚡       node that may throw
 ```
 
-| Framework              | #84..#85,#87,... ×8 | #89..#90 | #154 | #177 |
-| ---------------------- | ------------------- | -------- | ---- | ---- |
-| alien-signals          |                   ✅ |        ✅ |    ✅ |    ✅ |
-| @preact/signals-core   |                   ✅ |        ✅ |    ✅ |    ✅ |
-| @reactively/core       |                   ✅ |        ⬜ |    ⬜ |    ❌ |
-| tansu                  |                   ✅ |        ⬜ |    ✅ |    ✅ |
-| signal-polyfill (TC39) |                   ✅ |        ✅ |    ⬜ |    ✅ |
-| @vue/reactivity        |                   ✅ |        ✅ |    ❌ |    ✅ |
-| mobx                   |                   ✅ |        ⬜ |    ✅ |    ✅ |
-| @reatom/core           |                   ✅ |        ✅ |    ✅ |    ✅ |
-| svelte                 |                   ✅ |        ✅ |    ⬜ |    ✅ |
-| solid-js               |                   ❌ |        ✅ |    ❌ |    ✅ |
-| @solidjs/signals       |                   ✅ |        ⬜ |    ✅ |    ❌ |
-| S.js                   |                   ❌ |        ✅ |    ❌ |    ✅ |
-| pota                   |                   ⬜ |        ⬜ |    ❌ |    ❌ |
-| @angular/core          |                   ✅ |        ✅ |    ⬜ |    ❌ |
-| anod                   |                   ✅ |        ✅ |    ❌ |    ✅ |
+| Framework              | #84,#87,#91,#155 | #85,#92,#211,#93 | #89..#90 | #154 | #177 |
+| ---------------------- | ---------------- | ---------------- | -------- | ---- | ---- |
+| alien-signals          |                ✅ |                ✅ |        ✅ |    ✅ |    ✅ |
+| @preact/signals-core   |                ✅ |                ✅ |        ✅ |    ✅ |    ✅ |
+| @reactively/core       |                ✅ |                ✅ |        ⬜ |    ⬜ |    ❌ |
+| tansu                  |                ✅ |                ✅ |        ⬜ |    ✅ |    ✅ |
+| signal-polyfill (TC39) |                ✅ |                ✅ |        ✅ |    ⬜ |    ✅ |
+| @vue/reactivity        |                ✅ |                ✅ |        ✅ |    ❌ |    ✅ |
+| mobx                   |                ✅ |                ✅ |        ⬜ |    ✅ |    ✅ |
+| @reatom/core           |                ✅ |                ✅ |        ✅ |    ✅ |    ✅ |
+| svelte                 |                ✅ |                ✅ |        ✅ |    ⬜ |    ✅ |
+| solid-js               |                ❌ |                ❌ |        ✅ |    ❌ |    ✅ |
+| @solidjs/signals       |                ✅ |                ✅ |        ⬜ |    ✅ |    ❌ |
+| S.js                   |                ❌ |                ❌ |        ✅ |    ❌ |    ✅ |
+| pota                   |                ✅ |                ❌ |        ❌ |    ❌ |    ❌ |
+| @angular/core          |                ✅ |                ✅ |        ✅ |    ⬜ |    ❌ |
+| anod                   |                ✅ |                ✅ |        ✅ |    ❌ |    ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
@@ -2251,23 +1736,12 @@ Legend:
 | solid-js               |              ✅ |   ✅ |
 | @solidjs/signals       |              ✅ |   ✅ |
 | S.js                   |              ✅ |   ✅ |
-| pota                   |              ❌ |   ❌ |
+| pota                   |              ✅ |   ✅ |
 | @angular/core          |              ✅ |   ✅ |
 | anod                   |              ✅ |   ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
-
-#### #94 stale invocation does not trigger pending computations
-
-```
- S(a) ─→ C(b) ─→ C(d)
- S(a) ─→ C(c) ─→ C(d)
-```
-
-Diamond dependency: both C(b) and C(c) depend on S(a),
-and C(d) depends on both. After a single write to S(a),
-C(b) should re-evaluate exactly once and C(d) exactly once.
 
 #### #95 stale computations evaluated before their dependees
 
@@ -2278,52 +1752,6 @@ C(b) should re-evaluate exactly once and C(d) exactly once.
 Linear chain: after S(a) changes, C(b) must be
 re-evaluated before C(c) so that C(c) never sees a
 stale intermediate value.
-
-#### #96 downstream correctly marked stale on dep change
-
-```
- S(a) ─→ C(b) ─→ C(c) ─→ C(d)
-```
-
-Three-level computed chain: after each write to S(a),
-the staleness flag must propagate all the way down to
-C(d) so that reading C(d) returns the fresh value.
-
-#### #158 stale chained computed accessed after update: values fresh
-
-```
- S(a) ─→ C(b) ─→ C(c) ─→ C(d)
-          +1       +1       +1
-```
-
-After writing S(a)=10, reading any node in the chain
-(b, c, d) must return the fully updated value — no
-stale intermediate results.
-
-#### #159 pending computation created after dirty signal still updates
-
-```
- S(a) ─→ C(b)
-    (write a=5)
- S(a) ─→ C(b) ─→ C(c)   (c created after write)
-```
-
-A computed created after its upstream signal has already
-been written must still pick up the dirty value on first
-read and remain reactive to further writes.
-
-#### #97 flags indirectly updated during dirty-checking
-
-```
- S(a) ─→ C(b) ─→ C(c)
-   │               │
-   └───────────────→ C(d) = a + c
-```
-
-C(d) depends on both S(a) directly and C(c) transitively.
-During dirty-checking of C(d), the framework must first
-refresh the indirect path (b → c) so that C(d) sees
-consistent values from both branches.
 
 
 </details>
@@ -2344,23 +1772,23 @@ Legend:
   ──X      disposed / removed edge
 ```
 
-| Framework              | #98..#99,... ×5 |
-| ---------------------- | --------------- |
-| alien-signals          |               ✅ |
-| @preact/signals-core   |               ✅ |
-| @reactively/core       |               ✅ |
-| tansu                  |               ✅ |
-| signal-polyfill (TC39) |               ✅ |
-| @vue/reactivity        |               ✅ |
-| mobx                   |               ✅ |
-| @reatom/core           |               ✅ |
-| svelte                 |               ✅ |
-| solid-js               |               ✅ |
-| @solidjs/signals       |               ✅ |
-| S.js                   |               ✅ |
-| pota                   |               ❌ |
-| @angular/core          |               ✅ |
-| anod                   |               ✅ |
+| Framework              | #98,#160..#161 | #99,#101 |
+| ---------------------- | -------------- | -------- |
+| alien-signals          |              ✅ |        ✅ |
+| @preact/signals-core   |              ✅ |        ✅ |
+| @reactively/core       |              ✅ |        ✅ |
+| tansu                  |              ✅ |        ✅ |
+| signal-polyfill (TC39) |              ✅ |        ✅ |
+| @vue/reactivity        |              ✅ |        ✅ |
+| mobx                   |              ✅ |        ✅ |
+| @reatom/core           |              ✅ |        ✅ |
+| svelte                 |              ✅ |        ✅ |
+| solid-js               |              ✅ |        ✅ |
+| @solidjs/signals       |              ✅ |        ✅ |
+| S.js                   |              ✅ |        ✅ |
+| pota                   |              ❌ |        ✅ |
+| @angular/core          |              ✅ |        ✅ |
+| anod                   |              ✅ |        ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
@@ -2375,17 +1803,6 @@ Legend:
 
 After the effect is disposed, writing to S(a) must no
 longer trigger the effect callback.
-
-#### #99 computed collectable by GC if nothing listening
-
-```
- S(a) ─→ C(c)   (c only held via WeakRef)
-```
-
-A computed with no strong references and no active
-subscribers should be eligible for garbage collection.
-Verifies the WeakRef is valid right after creation and
-that the source signal still works independently.
 
 #### #160 consumer links cleaned after losing all listeners
 
@@ -2412,18 +1829,6 @@ Disposing the sole effect at the end of a multi-level
 computed chain must clean up all intermediate subscription
 links so that writes to S(a) no longer propagate.
 The computeds should still be readable on demand.
-
-#### #101 disposed effect graph links fully cleaned up
-
-```
- S(a) ─→ C(b) ─→ E(eff)
-      dispose()
- S(a) ─→ C(b)   (eff removed, links cleaned)
-```
-
-After disposing the effect, further writes to S(a) must
-not re-run the effect. The computed C(b) should remain
-independently readable with the correct value.
 
 
 </details>
@@ -2459,7 +1864,7 @@ Legend:
 | solid-js               | eager | subscribes eagerly | 2 recomputes     | ===       | skips      | returns void | post-write | post-write | unsubscribes     | halts flush | error         | runs 2x per write    | manual bail (200+) | batched            |
 | @solidjs/signals       | lazy  | no subscription    | single recompute | ===       | skips      | returns void | post-write | post-write | keeps subscribed | halts flush | caches error  | runs 1x, then blocks | no throw           | batched            |
 | S.js                   | eager | subscribes eagerly | 2 recomputes     | ===       | propagates | returns void | post-write | throws     | keeps subscribed | halts flush | error         | runs 2x per write    | manual bail (200+) | batched            |
-| pota                   | error | error              | error            | error     | error      | returns void | error      | error      | error            | error       | error         | error                | error              | error              |
+| pota                   | lazy  | no subscription    | 2 recomputes     | ===       | skips      | returns void | unknown    | unknown    | error            | error       | re-evaluates  | no re-run            | error              | batched            |
 | @angular/core          | lazy  | no subscription    | single recompute | Object.is | skips      | ⬜            | post-write | post-write | keeps subscribed | halts flush | caches error  | runs 2x per write    | manual bail (200+) | unbatched (2 runs) |
 | anod                   | eager | no subscription    | single recompute | ===       | skips      | returns void | post-write | post-write | unsubscribes     | continues   | caches error  | runs 2x per write    | manual bail (200+) | batched            |
 
