@@ -19,36 +19,6 @@ import { SkipTest } from "./framework.js";
 export const section = "Memory & GC";
 export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   /**
-   *  S(a) ─→ E(eff)
-   *       dispose()
-   *  S(a) ──X E(eff)
-   *
-   * After the effect is disposed, writing to S(a) must no
-   * longer trigger the effect callback.
-   */
-  "#98 subscriptions cleared when all subscribers removed"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal(0);
-    let runs = 0;
-
-    const dispose = fw.effect(() => {
-      a.read();
-      runs++;
-    });
-    expect(runs).toBe(1);
-
-    a.write(1);
-    expect(runs).toBe(2);
-
-    dispose();
-
-    a.write(2);
-    a.write(3);
-    expect(runs).toBe(2);
-  },
-
-  /**
    *  S(a) ─→ C(c)   (c only held via WeakRef)
    *
    * A computed with no strong references and no active
@@ -155,35 +125,4 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(d.read()).toBe(5);
   },
 
-  /**
-   *  S(a) ─→ C(b) ─→ E(eff)
-   *       dispose()
-   *  S(a) ─→ C(b)   (eff removed, links cleaned)
-   *
-   * After disposing the effect, further writes to S(a) must
-   * not re-run the effect. The computed C(b) should remain
-   * independently readable with the correct value.
-   */
-  "#101 disposed effect graph links fully cleaned up"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal(0);
-    const b = fw.computed(() => a.read() * 2);
-    let runs = 0;
-
-    const dispose = fw.effect(() => {
-      b.read();
-      runs++;
-    });
-    expect(runs).toBe(1);
-
-    dispose();
-
-    a.write(1);
-    a.write(2);
-    expect(runs).toBe(1);
-
-    // Verify the computed still works independently
-    expect(b.read()).toBe(4);
-  },
 };

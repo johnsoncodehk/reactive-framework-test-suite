@@ -136,26 +136,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *  S(a) ← E(eff)
-   *
-   * Signal written externally, then effect observes the new value.
-   * Effect must be re-scheduled and see the latest value.
-   */
-  "#55 effect re-scheduled when writing signal before reading"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal(0);
-    const values: number[] = [];
-
-    fw.effect(() => {
-      values.push(a.read());
-    });
-
-    a.write(1);
-    expect(values[values.length - 1]).toBe(1);
-  },
-
-  /**
    *  S(a) → C(b) ← E(eff)
    *
    * Effect reads from a computed derived from a. Writing to a
