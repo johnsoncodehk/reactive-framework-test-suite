@@ -541,4 +541,41 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(e2Runs).toBe(2);
     expect(e1Runs).toBe(1);
   },
+
+  /**
+   *  S(a) ← E_outer (→ cleanup creates E_inner ← S(b))
+   *
+   * A common debounce-like pattern: an effect's cleanup creates a
+   * fresh effect that subscribes to a different signal. The newly
+   * created inner effect must run once on creation and react to
+   * subsequent writes to its own dependency.
+   */
+  "#222 effect created inside cleanup tracks its own deps"(
+    fw: ReactiveFramework
+  ) {
+    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
+    const a = fw.signal(0);
+    const b = fw.signal(0);
+    let innerRuns = 0;
+
+    fw.effect(() => {
+      a.read();
+      return () => {
+        fw.effect(() => {
+          b.read();
+          innerRuns++;
+        });
+      };
+    });
+    expect(innerRuns).toBe(0);
+
+    // Trigger cleanup once — the cleanup-created effect should
+    // run initially.
+    a.write(1);
+    expect(innerRuns).toBe(1);
+
+    // The cleanup-created effect must track b independently.
+    b.write(1);
+    expect(innerRuns).toBe(2);
+  },
 };
