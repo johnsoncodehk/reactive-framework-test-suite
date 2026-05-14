@@ -773,4 +773,242 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     // infinite looping or stack overflow. Final run count is bounded.
     expect(runs).toBeLessThanOrEqual(20);
   },
+
+  /**
+   *  S(a) → E_outer{ E_inner }
+   *
+   * On a re-run triggered by outer's dep, the cleanup order is:
+   *   1. inner's cleanup (deepest first)
+   *   2. outer's cleanup
+   *   3. outer's body re-runs (creating new inner)
+   *   4. new inner runs
+   */
+  "#237 cleanup order on outer re-run: inner before outer, before new run"(
+    fw: ReactiveFramework
+  ) {
+    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
+    const a = fw.signal(0);
+    const log: string[] = [];
+
+    fw.effect(() => {
+      a.read();
+      log.push("outer:run");
+      fw.effect(() => {
+        log.push("inner:run");
+        return () => log.push("inner:cleanup");
+      });
+      return () => log.push("outer:cleanup");
+    });
+    expect(log).toEqual(["outer:run", "inner:run"]);
+
+    log.length = 0;
+    a.write(1);
+    expect(log).toEqual([
+      "inner:cleanup",
+      "outer:cleanup",
+      "outer:run",
+      "inner:run",
+    ]);
+  },
+
+  /**
+   *  E_outer{ E_inner } → dispose
+   *
+   * Disposal of the outer effect cascades. Inner cleanup runs before
+   * outer cleanup (deepest first).
+   */
+  "#238 cleanup order on dispose: inner before outer"(fw: ReactiveFramework) {
+    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
+    const log: string[] = [];
+
+    const dispose = fw.effect(() => {
+      log.push("outer:run");
+      fw.effect(() => {
+        log.push("inner:run");
+        return () => log.push("inner:cleanup");
+      });
+      return () => log.push("outer:cleanup");
+    });
+    log.length = 0;
+
+    dispose();
+    expect(log).toEqual(["inner:cleanup", "outer:cleanup"]);
+  },
+
+  /**
+   *  E_outer{ E_inner1, E_inner2, E_inner3 } → dispose
+   *
+   * Siblings clean up in reverse creation order (LIFO).
+   */
+  "#239 sibling cleanup on dispose: reverse creation (LIFO)"(
+    fw: ReactiveFramework
+  ) {
+    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
+    const log: string[] = [];
+
+    const dispose = fw.effect(() => {
+      fw.effect(() => {
+        return () => log.push("inner1:cleanup");
+      });
+      fw.effect(() => {
+        return () => log.push("inner2:cleanup");
+      });
+      fw.effect(() => {
+        return () => log.push("inner3:cleanup");
+      });
+      return () => log.push("outer:cleanup");
+    });
+
+    dispose();
+    expect(log).toEqual([
+      "inner3:cleanup",
+      "inner2:cleanup",
+      "inner1:cleanup",
+      "outer:cleanup",
+    ]);
+  },
+
+  /**
+   *  S(a) → E_outer{ E_inner1, E_inner2, E_inner3 }
+   *
+   * Same LIFO contract as #239, but triggered by outer's re-run
+   * (not disposal). Same observed cleanup order.
+   */
+  "#240 sibling cleanup on outer re-run: reverse creation (LIFO)"(
+    fw: ReactiveFramework
+  ) {
+    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
+    const a = fw.signal(0);
+    const log: string[] = [];
+
+    fw.effect(() => {
+      a.read();
+      fw.effect(() => {
+        return () => log.push("inner1:cleanup");
+      });
+      fw.effect(() => {
+        return () => log.push("inner2:cleanup");
+      });
+      fw.effect(() => {
+        return () => log.push("inner3:cleanup");
+      });
+      return () => log.push("outer:cleanup");
+    });
+    log.length = 0;
+
+    a.write(1);
+    // The first 4 entries must be the cleanup chain. (Anything after
+    // is the re-run of outer / new inner setup.)
+    expect(log.slice(0, 4)).toEqual([
+      "inner3:cleanup",
+      "inner2:cleanup",
+      "inner1:cleanup",
+      "outer:cleanup",
+    ]);
+  },
+
+  /**
+   *  E_outer{ E_child{ E_grandchild } } → dispose
+   *
+   * Three-level nesting. On disposal, cleanups fire depth-first in
+   * reverse: grandchild, then child, then outer.
+   */
+  "#241 three-level nested cleanup on dispose: deepest first"(
+    fw: ReactiveFramework
+  ) {
+    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
+    const log: string[] = [];
+
+    const dispose = fw.effect(() => {
+      fw.effect(() => {
+        fw.effect(() => {
+          return () => log.push("grandchild:cleanup");
+        });
+        return () => log.push("child:cleanup");
+      });
+      return () => log.push("outer:cleanup");
+    });
+
+    dispose();
+    expect(log).toEqual([
+      "grandchild:cleanup",
+      "child:cleanup",
+      "outer:cleanup",
+    ]);
+  },
+
+  /**
+   *  S(a) → C(c){ E_inner } → E_outer reads C(c)
+   *
+   * On computed re-evaluation, any effect created by the previous
+   * eval must be cleaned up before the new eval runs.
+   */
+  "#242 effect created in computed: old inner cleanup before new inner setup"(
+    fw: ReactiveFramework
+  ) {
+    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
+    const a = fw.signal(0);
+    const log: string[] = [];
+
+    const c = fw.computed(() => {
+      log.push("computed:eval");
+      fw.effect(() => {
+        log.push("inner:run");
+        return () => log.push("inner:cleanup");
+      });
+      return a.read();
+    });
+
+    fw.effect(() => {
+      c.read();
+    });
+    log.length = 0;
+
+    a.write(1);
+    expect(log).toEqual([
+      "inner:cleanup",
+      "computed:eval",
+      "inner:run",
+    ]);
+  },
+
+  /**
+   *  S(a) → E_outer{ E_inner ─→ S(b) }
+   *
+   * Regression: when inner re-runs alone (via its own dep b), the
+   * outer is touched via the notify chain. The next real outer
+   * re-run (via a) must still dispose children before its own
+   * cleanup — i.e., the inner-only path must not corrupt the
+   * outer's "has child effect" tracking.
+   */
+  "#243 cleanup order correct on outer re-run after prior inner-only re-run"(
+    fw: ReactiveFramework
+  ) {
+    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
+    const a = fw.signal(0);
+    const b = fw.signal(0);
+    const log: string[] = [];
+
+    fw.effect(() => {
+      a.read();
+      log.push("outer:run");
+      fw.effect(() => {
+        b.read();
+        log.push("inner:run");
+        return () => log.push("inner:cleanup");
+      });
+      return () => log.push("outer:cleanup");
+    });
+
+    b.write(1); // inner re-runs alone
+    log.length = 0;
+
+    a.write(1);
+    expect(log).toEqual([
+      "inner:cleanup",
+      "outer:cleanup",
+      "outer:run",
+      "inner:run",
+    ]);
+  },
 };
