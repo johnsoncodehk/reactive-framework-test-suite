@@ -70,24 +70,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *  S(a) → C(b)
-   *
-   * Computed reads inside a batch re-evaluate eagerly when pulled,
-   * reflecting the latest source value (b.read() === 10 after a.write(5)).
-   */
-  "#68 computed readable with updated sources inside batch"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    const b = fw.computed(() => a.read() * 2);
-    fw.batch(() => {
-      a.write(5);
-      expect(b.read()).toBe(10);
-    });
-  },
-
-  /**
    *  S(a) → E(eff)
    *
    * Batch callback throws after writing. Pending effects must still

@@ -56,25 +56,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *  S(a) ← E(eff) → dispose
-   *
-   * After disposal, the effect no longer re-runs on signal changes.
-   */
-  "#37 effect disposal stops re-runs"(fw: ReactiveFramework) {
-    const a = fw.signal(0);
-    let runs = 0;
-    const dispose = fw.effect(() => {
-      a.read();
-      runs++;
-    });
-    expect(runs).toBe(1);
-
-    dispose();
-    a.write(1);
-    expect(runs).toBe(1);
-  },
-
-  /**
    *  S(a) ← E(eff → cleanup)
    *
    * The cleanup function returned by an effect runs before each

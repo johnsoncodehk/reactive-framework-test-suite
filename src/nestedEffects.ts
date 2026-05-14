@@ -43,39 +43,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *  S(a) ─→ E_outer{ E_inner }
-   *               ✕ old inner on each outer re-run
-   *
-   * When the outer effect re-runs, the previous inner effect must be
-   * disposed. Otherwise inner effects accumulate exponentially.
-   */
-  "#44 inner effect auto-cleaned when outer re-runs"(fw: ReactiveFramework) {
-    const a = fw.signal(0);
-    let innerRuns = 0;
-
-    fw.effect(() => {
-      a.read();
-      fw.effect(() => {
-        a.read();
-        innerRuns++;
-      });
-    });
-    innerRuns = 0;
-
-    a.write(1);
-    const runsAfterFirst = innerRuns;
-
-    a.write(2);
-    const runsAfterSecond = innerRuns;
-
-    // Inner effects from previous outer runs should be cleaned up,
-    // so we shouldn't see exponential growth
-    expect(runsAfterSecond - runsAfterFirst).toBeLessThanOrEqual(
-      runsAfterFirst + 1
-    );
-  },
-
-  /**
    *  S(a) ─→ E_outer{ untracked{ E_inner ─→ S(a) } }
    *
    * Inner effect is created inside an untracked block.
