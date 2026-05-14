@@ -237,7 +237,6 @@ const fwPackages = {
   pota: "pota",
   "@angular/core": "@angular/core",
   anod: "anod",
-  r3: "github:milomg/r3",
 };
 
 function getPkgVersion(pkg) {
@@ -293,12 +292,196 @@ ${buildSummaryTable()}
 
 `;
 
+// --- Extract JSDoc from source files ---
+
+const srcDir = join(root, "src");
+
+function stripJsDoc(raw) {
+  return raw
+    .replace(/^[\s]*\* ?/gm, "")
+    .replace(/^\s*\n/, "")
+    .replace(/\s+$/, "");
+}
+
+function parseSourceDocs(filePath) {
+  let content;
+  try {
+    content = readFileSync(filePath, "utf-8");
+  } catch {
+    return { sectionDoc: "", testDocs: {} };
+  }
+
+  // Section-level JSDoc: the one right before `export const section`
+  let sectionDoc = "";
+  const secMatch = content.match(
+    /\/\*\*([\s\S]*?)\*\/\s*\nexport const section/
+  );
+  if (secMatch) {
+    const stripped = stripJsDoc(secMatch[1]);
+    // Drop the first line (section title, same as heading)
+    const lines = stripped.split("\n");
+    const rest = lines.slice(1).join("\n").replace(/^\s*\n/, "");
+    sectionDoc = rest;
+  }
+
+  // Per-test JSDoc: /** ... */ right before "#N ..."
+  // Use [^*]|(\*(?!/)) to prevent matching across */ boundaries
+  const testDocs = {};
+  const testRe = /\/\*\*((?:[^*]|\*(?!\/))*)\*\/\s*\n\s*"(#\d+[^"]*?)"/g;
+  let m;
+  while ((m = testRe.exec(content)) !== null) {
+    testDocs[m[2]] = stripJsDoc(m[1]);
+  }
+
+  return { sectionDoc, testDocs };
+}
+
+// Map section names to source files
+const sectionSourceMap = {};
+for (const f of readdirSync(srcDir).filter(
+  (f) => f.endsWith(".ts") && !["assert.ts", "framework.ts", "index.ts"].includes(f)
+)) {
+  const content = readFileSync(join(srcDir, f), "utf-8");
+  const m = content.match(/export const section = "(.+?)"/);
+  if (m) sectionSourceMap[m[1]] = join(srcDir, f);
+}
+
+function formatDoc(doc) {
+  const blocks = doc.split(/\n\s*\n/).map((b) => b.replace(/^\n+|\n+$/g, ""));
+
+  const diagramRe = /[─↔⟳✕]|[SCE]\(|\*C\(|\?─|<~~|═→|[/\\|]\s*$/;
+  const structRe = /[─╌═⟳✕~]/;
+
+  // Block-level: diagram if it has diagram chars and few prose lines
+  function isBlockDiagram(block) {
+    const lines = block.split("\n").filter((l) => l.trim());
+    if (lines.length === 0) return false;
+    if (!lines.some((l) => diagramRe.test(l) || /^\s{2,}[/\\|]/.test(l))) return false;
+    const prose = lines.filter((l) => {
+      const indent = l.length - l.trimStart().length;
+      return indent <= 1 && l.trim().split(/\s+/).length >= 6 && !structRe.test(l);
+    });
+    return prose.length <= lines.length / 3;
+  }
+
+  // Line-level: for splitting mixed blocks where diagram and prose
+  // aren't separated by blank lines in the source JSDoc
+  function isDiagramLine(line) {
+    const trimmed = line.trim();
+    if (!trimmed) return null;
+    if (structRe.test(line) || /^\s{2,}[/\\|]/.test(line)) return true;
+    const indent = line.length - line.trimStart().length;
+    if (indent >= 4 && trimmed.split(/\s+/).length <= 4) return true;
+    if (/[SCE]\(|\*C\(/.test(line)) {
+      if (indent >= 2) return true;
+      const stripped = trimmed.replace(/\*?[SCE]\([^)]*\)/g, "").replace(/[→←↔─╌═]/g, "").trim();
+      return stripped.split(/\s+/).filter((w) => w.length > 0).length < 5;
+    }
+    return false;
+  }
+
+  const parts = [];
+  for (const block of blocks) {
+    if (!block) continue;
+    if (isBlockDiagram(block)) {
+      parts.push({ text: block, isDiagram: true });
+      continue;
+    }
+    // Check if the block has mixed diagram+prose lines (no blank line separator in JSDoc)
+    const lines = block.split("\n");
+    const lineTypes = lines.map((l) => isDiagramLine(l));
+    if (!lineTypes.some((t) => t === true)) {
+      parts.push({ text: block, isDiagram: false });
+      continue;
+    }
+    // Resolve blank lines: diagram between diagram lines, text otherwise
+    const resolved = lineTypes.map((t, i) => {
+      if (t !== null) return t;
+      const prev = lineTypes.slice(0, i).reverse().find((x) => x !== null);
+      const next = lineTypes.slice(i + 1).find((x) => x !== null);
+      return prev === true && next === true;
+    });
+    // Split into consecutive same-type runs
+    let run = [lines[0]];
+    let runType = resolved[0];
+    for (let i = 1; i < lines.length; i++) {
+      if (resolved[i] !== runType) {
+        const text = run.join("\n").replace(/^\n+|\n+$/g, "");
+        if (text.trim()) parts.push({ text, isDiagram: runType });
+        run = [];
+        runType = resolved[i];
+      }
+      run.push(lines[i]);
+    }
+    const last = run.join("\n").replace(/^\n+|\n+$/g, "");
+    if (last.trim()) parts.push({ text: last, isDiagram: runType });
+  }
+
+  // Merge adjacent diagram parts
+  const merged = [];
+  for (const item of parts) {
+    const prev = merged[merged.length - 1];
+    if (prev && prev.isDiagram && item.isDiagram) {
+      prev.text += "\n\n" + item.text;
+    } else {
+      merged.push({ ...item });
+    }
+  }
+
+  return merged
+    .map((p) => (p.isDiagram ? "```\n" + p.text + "\n```" : p.text))
+    .join("\n\n");
+}
+
+function buildTestDetails(section) {
+  const { testNames, results } = section;
+  const docs = parseSourceDocs(sectionSourceMap[section.section] || "");
+
+  const failed = [];
+  const passed = [];
+  for (const t of testNames) {
+    const hasNonPass = fwNames.some((fw) => {
+      const v = results[fw]?.[t] || "⏭";
+      return v !== "✅";
+    });
+    if (hasNonPass) failed.push(t);
+    else passed.push(t);
+  }
+
+  function renderTests(tests, summary) {
+    const withDocs = tests.filter((t) => docs.testDocs[t]);
+    if (withDocs.length === 0 && tests.length === 0) return "";
+    let out = `\n\n<details>\n<summary>${summary}</summary>\n\n`;
+    for (const t of tests) {
+      const doc = docs.testDocs[t];
+      if (doc) {
+        out += `#### ${t}\n\n${formatDoc(doc)}\n\n`;
+      } else {
+        out += `- ${t}\n`;
+      }
+    }
+    out += "\n</details>\n";
+    return out;
+  }
+
+  if (failed.length > 0) {
+    const label = section.type === "behavioral" ? "Test descriptions" : "Tests with failures or skips";
+    return renderTests(failed, label);
+  }
+
+  const withDocs = testNames.filter((t) => docs.testDocs[t]);
+  if (withDocs.length === 0) return "";
+  return renderTests(withDocs, "Test descriptions");
+}
+
 for (const section of sections) {
   readme += `### ${section.section}\n\n`;
-  if (section.section === "Behavioral Differences") {
-    readme += `> Tests in this section reflect **design choice differences** between frameworks, not correctness issues. Different behaviors are all valid — for example, whether to use \`Object.is\` or \`===\` for equality, or whether inner writes are visible immediately within the same effect run.\n\n`;
+  const docs = parseSourceDocs(sectionSourceMap[section.section] || "");
+  if (docs.sectionDoc) {
+    readme += formatDoc(docs.sectionDoc) + "\n\n";
   }
   readme += buildTable(section);
+  readme += buildTestDetails(section);
   readme += "\n\n";
 }
 

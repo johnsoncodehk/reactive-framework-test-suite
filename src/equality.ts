@@ -2,8 +2,29 @@ import { expect } from "./assert.js";
 import type { ReactiveFramework } from "./framework.js";
 import { SkipTest } from "./framework.js";
 
+/**
+ * Equality & Same-Value Optimization
+ *
+ * Tests that the framework skips propagation when a signal is
+ * written with the same value, or when a computed re-evaluates
+ * but returns an identical result. Downstream nodes must not
+ * re-evaluate when their inputs have not actually changed.
+ *
+ * Legend:
+ *   S        signal (source)
+ *   C        computed
+ *   *C       computed that always returns a constant (value-equality cut)
+ *   E / eff  effect
+ *   ─→       dependency edge (downstream reads upstream)
+ */
 export const section = "Equality & Same-Value Optimization";
 export const cases: Record<string, (fw: ReactiveFramework) => any> = {
+  /**
+   *  S(a) → C(c)
+   *
+   * Writing the same primitive value to a signal must not cause
+   * its downstream computed to re-evaluate.
+   */
   "#28 same primitive value — no propagation"(fw: ReactiveFramework) {
     const a = fw.signal(1);
 
@@ -22,6 +43,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(cCalls).toBe(1);
   },
 
+  /**
+   *  S(a) → *C(b) → C(c)
+   *
+   * b always returns "foo" regardless of a. When a changes,
+   * c must NOT re-evaluate because b's value is unchanged.
+   */
   "#32 computed same result — no downstream propagation"(
     fw: ReactiveFramework
   ) {
@@ -46,6 +73,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(cCalls).toBe(1);
   },
 
+  /**
+   *  S(a) → *C(b) → C(c) → C(d)
+   *
+   * b clamps to 0 or 1. Once b stabilizes at 1, further changes
+   * to a must not propagate past b — c and d stay untouched.
+   */
   "#34 pruning stops at first unchanged node"(fw: ReactiveFramework) {
     // A → B → C → D
     // B always returns constant after first change
@@ -80,6 +113,13 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(dCalls).toBe(0);
   },
 
+  /**
+   *  S(s) → C(c1) → *C(c2) → E(eff)
+   *
+   * c2 always returns 5 regardless of c1. Even with an active
+   * effect subscription, the effect must not re-run when s changes
+   * because c2's value never changes.
+   */
   "#169 live pruning: effect not re-run when intermediate computed returns same"(
     fw: ReactiveFramework
   ) {

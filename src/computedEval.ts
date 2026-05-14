@@ -2,8 +2,29 @@ import { expect } from "./assert.js";
 import type { ReactiveFramework } from "./framework.js";
 import { SkipTest } from "./framework.js";
 
+/**
+ * Computed Evaluation
+ *
+ * Tests that computed nodes evaluate lazily and cache their results:
+ * re-computation only happens when a dependency actually changes,
+ * chained computeds propagate correctly, and value-equality cuts
+ * prevent unnecessary downstream work.
+ *
+ * Legend:
+ *   S        signal (source)
+ *   C        computed
+ *   *C       computed that always returns a constant (value-equality cut)
+ *   E / eff  effect
+ *   ─→       dependency edge (downstream reads upstream)
+ */
 export const section = "Computed Evaluation";
 export const cases: Record<string, (fw: ReactiveFramework) => any> = {
+  /**
+   *  S(a) → C(b)
+   *
+   * Reading a computed twice without changing its dep must not
+   * re-evaluate the compute function (result is cached).
+   */
   "#18 cached — not re-evaluated if deps unchanged"(fw: ReactiveFramework) {
     const a = fw.signal(0);
 
@@ -21,6 +42,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(calls).toBe(1);
   },
 
+  /**
+   *  S(a) → C(b)
+   *
+   * After the source signal changes, the computed must return the
+   * new derived value on the next read.
+   */
   "#19 returns updated value after dep change"(fw: ReactiveFramework) {
     const a = fw.signal(0);
     const b = fw.computed(() => a.read() * 2);
@@ -32,6 +59,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(b.read()).toBe(10);
   },
 
+  /**
+   *  S(a) → C(b) → C(c) → C(d)
+   *
+   * A linear chain of computeds. A change at the source must
+   * propagate through every link to the tail.
+   */
   "#20 chained computed"(fw: ReactiveFramework) {
     const a = fw.signal(0);
     const b = fw.computed(() => a.read() + 1);
@@ -43,6 +76,16 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(d.read()).toBe(13);
   },
 
+  /**
+   *  S(a)  S(b)
+   *    |      |
+   *    |    C(c) ← c reads a
+   *     \  /
+   *     C(d)     ← d reads b when a===0, else reads c
+   *
+   * Dynamic dep switch: when a changes from 0 to 1, d drops b and
+   * picks up c. Subsequent writes to b must not affect d.
+   */
   "#21 chained computed dirty reallocation after trigger"(
     fw: ReactiveFramework
   ) {
@@ -65,6 +108,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(d.read()).toBe(1);
   },
 
+  /**
+   *  S(a) → C(b) → C(c) → C(d)
+   *
+   * Linear chain with call counters. After one source change,
+   * each computed in the chain must re-evaluate exactly once.
+   */
   "#22 chained computed avoids redundant re-compute"(fw: ReactiveFramework) {
     const a = fw.signal(0);
     let bCalls = 0;
@@ -95,6 +144,14 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(dCalls).toBe(1);
   },
 
+  /**
+   *  S(a) → C(b) → C(c)
+   *                  |
+   *                E(eff)
+   *
+   * An effect subscribes to the tail of a chain. A synchronous
+   * read of c after writing a must trigger the effect.
+   */
   "#23 sync access of invalidated chained computed runs effect"(
     fw: ReactiveFramework
   ) {
@@ -114,6 +171,14 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(effectRuns).toBe(2);
   },
 
+  /**
+   *       S(a)
+   *      /    \
+   *    C(b)  C(c)
+   *
+   * Two computeds share one source. After a write, both must
+   * re-evaluate (order is implementation-defined but both must run).
+   */
   "#24 dependency evaluation order consistent with last access"(
     fw: ReactiveFramework
   ) {
@@ -144,6 +209,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(cIdx).toBeGreaterThanOrEqual(0);
   },
 
+  /**
+   *  C(a)   (no deps)
+   *
+   * A computed with no signal dependencies. After the initial
+   * evaluation it must never re-compute.
+   */
   "#25 no re-compute if zero dependencies"(fw: ReactiveFramework) {
     let calls = 0;
     const a = fw.computed(() => {
@@ -159,6 +230,14 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(calls).toBe(1);
   },
 
+  /**
+   *  S(a) → C(b)
+   *           |
+   *         E(eff) → dispose
+   *
+   * A computed is subscribed by an effect, then the effect disposes.
+   * The computed must still return correct values on direct read.
+   */
   "#26 computed remains live after losing all subscribers"(
     fw: ReactiveFramework
   ) {
@@ -178,6 +257,13 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(b.read()).toBe(20);
   },
 
+  /**
+   *  S(a) → C(c)
+   *
+   * Computed returns undefined when a===0, else returns a.
+   * undefined must be treated as a legitimate cached value,
+   * not confused with an uninitialized state.
+   */
   "#145 undefined is a valid computed value (not uninitialized)"(
     fw: ReactiveFramework
   ) {
@@ -196,6 +282,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(c.read()).toBe(undefined);
   },
 
+  /**
+   *  S(a) → C(c)
+   *
+   * Inside a batch, a is written to 5 then back to 0.
+   * The net change is zero, so c must not re-evaluate.
+   */
   "#147 computed not recomputed in batch if dep reverts"(
     fw: ReactiveFramework
   ) {
@@ -219,6 +311,13 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(cCalls).toBe(0);
   },
 
+  /**
+   *  S(a) → C(inner) → C(outer)
+   *
+   * inner returns 0 or 1 (threshold). When a changes from 1 to 2,
+   * inner still returns 1 — outer must NOT re-evaluate
+   * (value-equality cut).
+   */
   "#148 nested computed: outer not recalculated if inner returns same"(
     fw: ReactiveFramework
   ) {
@@ -244,6 +343,14 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(outerCalls).toBe(0);
   },
 
+  /**
+   *  S(a) → C(b) → C(c)
+   *                  |
+   *                E(eff)
+   *
+   * Inside a batch that writes a, the subsequent propagation must
+   * evaluate b before c (topological order preserved).
+   */
   "#149 batch preserves correct evaluation order"(fw: ReactiveFramework) {
     if (!fw.batch) throw new SkipTest("no batch");
     const order: string[] = [];
@@ -272,6 +379,14 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     }
   },
 
+  /**
+   *  S(a) → C(c)
+   *           |
+   *         S(inner)  ← created inside c's compute function
+   *
+   * Creating a new signal inside a computed body must not throw.
+   * The computed derives its value through the inner signal.
+   */
   "#115 signal creation inside computed is allowed"(fw: ReactiveFramework) {
     const a = fw.signal(0);
 
@@ -292,6 +407,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(true).toBe(true);
   },
 
+  /**
+   *  S(a) → C(b) → C(c)
+   *
+   * b clamps a to [0, 10]. When a changes but b's clamped output
+   * stays the same, c must NOT re-evaluate (value-equality cut).
+   */
   "#27 downstream not re-evaluated unless value changed"(
     fw: ReactiveFramework
   ) {

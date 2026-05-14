@@ -2,8 +2,32 @@ import { expect } from "./assert.js";
 import type { ReactiveFramework } from "./framework.js";
 import { SkipTest } from "./framework.js";
 
+/**
+ * Dynamic Dependencies
+ *
+ * Tests that dependency tracking adapts at runtime when conditional
+ * branches change which signals/computeds are read.  A reactive
+ * framework must add newly-reached deps, remove no-longer-reached
+ * deps, and avoid redundant evaluations of nodes that become
+ * unreachable after a branch switch.
+ *
+ * Legend:
+ *   S        signal (source)
+ *   C        computed
+ *   E / eff  effect
+ *   ─→       dependency edge
+ *   ?─→      conditional (dynamic) dependency edge
+ */
 export const section = "Dynamic Dependencies";
 export const cases: Record<string, (fw: ReactiveFramework) => any> = {
+  /**
+   *  S(cond) ─→ C(c)
+   *  S(a)   ?─→ C(c)   (when cond = true)
+   *  S(b)   ?─→ C(c)   (when cond = false)
+   *
+   * Only the active branch dep triggers recomputation.
+   * Writing to the inactive dep must not cause c to re-evaluate.
+   */
   "#12 active dep triggers, inactive dep does not"(fw: ReactiveFramework) {
     const a = fw.signal("a");
     const b = fw.signal("b");
@@ -29,6 +53,15 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(cCalls).toBe(2);
   },
 
+  /**
+   *  S(cond) ─→ C(c)
+   *  S(a)   ?─→ C(c)   (when cond = true)
+   *  S(b)   ?─→ C(c)   (when cond = false)
+   *
+   * After switching cond from true to false, the old dep (a)
+   * must be deactivated: writing to a must not trigger c.
+   * The new dep (b) must be active.
+   */
   "#13 switching branches deactivates old deps"(fw: ReactiveFramework) {
     const a = fw.signal("a");
     const b = fw.signal("b");
@@ -59,6 +92,16 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(cCalls).toBe(1);
   },
 
+  /**
+   *  S(a) ─→ C(c)
+   *  S(cond) ─→ C(d)
+   *  C(c)   ?─→ C(d)   (when cond = true)
+   *  S(b)   ?─→ C(d)   (when cond = false)
+   *
+   * cond and a change simultaneously. After the switch, d reads c
+   * which depends on the updated a. The newly-acquired dep (c) must
+   * be up-to-date before d evaluates.
+   */
   "#14 new deps updated before dependee"(fw: ReactiveFramework) {
     const a = fw.signal(1);
     const b = fw.signal(10);
@@ -76,6 +119,15 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(d.read()).toBe(2);
   },
 
+  /**
+   *  S(a) ─→ C(b)
+   *  S(a) ─→ C(c)
+   *  C(b) ?─→ C(c)   (when a <= 0)
+   *
+   * c reads a directly; when a > 0 it returns a, otherwise it
+   * falls through to b (which also reads a). Toggling a between
+   * positive and zero switches which branch is taken.
+   */
   "#16 lazy branch"(fw: ReactiveFramework) {
     const a = fw.signal(0);
     const b = fw.computed(() => a.read());
@@ -88,6 +140,16 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(c.read()).toBe(0);
   },
 
+  /**
+   *  S(toggle) ─→ C(p)
+   *  S(state) ?─→ C(p)   (when toggle = true)
+   *  S(state)  ─→ C(pp)
+   *               E(eff) ← reads p
+   *
+   * p and pp both subscribe to state. When toggle flips to false,
+   * p drops its subscription to state. This cleanup must not
+   * accidentally remove pp's independent subscription to state.
+   */
   "#165 computed dep cleanup doesn't delete sibling subscription"(
     fw: ReactiveFramework
   ) {
@@ -108,6 +170,16 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(pp.read()).toBe(2);
   },
 
+  /**
+   *  S(flag) ─→ C(c)
+   *  S(src) ?─→ C(c)   (when flag = true)
+   *              |
+   *             E(eff)
+   *
+   * flag=true: c reads src. flag flips to false: c drops src.
+   * src changes while inactive. flag flips back to true:
+   * c must re-subscribe to src and see its updated value.
+   */
   "#166 after dep removed via branch switch, re-subscribing works"(
     fw: ReactiveFramework
   ) {
@@ -130,6 +202,15 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(seen).toBe(2);
   },
 
+  /**
+   *  S(a) ─→ C(b) ─→ C(c)
+   *           C(b) ─→ C(d)
+   *           C(c) ?─→ C(d)   (when b is truthy)
+   *
+   * When a becomes null, b becomes null, and d skips the c branch.
+   * c must NOT re-evaluate because d no longer reaches it,
+   * even though c's dep (b) changed.
+   */
   "#193 sequential dirty check: branch switch skips unreachable computed"(
     fw: ReactiveFramework
   ) {
@@ -159,6 +240,15 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(cCalls).toBe(1);
   },
 
+  /**
+   *  S(items) ─→ C(isLoaded) ─→ C(msg)
+   *                                |
+   *                              E(eff)
+   *
+   * items toggles between undefined and arrays. isLoaded is a
+   * boolean gate; msg maps it to a string. Repeated writes must
+   * propagate correctly through the chain to the effect.
+   */
   "#194 chained computed dirty reallocation via effect"(
     fw: ReactiveFramework
   ) {
@@ -186,6 +276,13 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(seen).toBe("not loaded");
   },
 
+  /**
+   *  S(items) ─→ C(isLoaded) ─→ C(msg)
+   *
+   * Same chain as #194 but driven by manual reads instead of an
+   * effect. Intermediate reads of isLoaded are interleaved between
+   * writes and final reads of msg. The chain must stay consistent.
+   */
   "#195 chained computed dirty reallocation via manual read"(
     fw: ReactiveFramework
   ) {
@@ -208,6 +305,16 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(msg.read()).toBe("not loaded");
   },
 
+  /**
+   *  S(src1) ─→ C(c1)
+   *  S(src1) ─→ C(c2) ← S(src2)
+   *     C(c1) ─→ C(c3) ← C(c2)
+   *
+   * Diamond through src1. When src1 changes 0→2, c1 changes but
+   * c2 stays the same (src1%2 is still 0). c3 must still
+   * re-evaluate because c1 changed. When src2 then changes,
+   * c3 must re-evaluate again.
+   */
   "#196 maybe-dirty diamond: first dep unmarked, second still triggers"(
     fw: ReactiveFramework
   ) {
@@ -236,6 +343,15 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(c3Calls).toBe(3);
   },
 
+  /**
+   *  S(src) ─→ C(c1) ─→ C(c2) ─→ E(eff)
+   *             c1 = src % 2
+   *             c2 = c1 + 1
+   *
+   * Multiple writes to src (all even) leave c1's output at 0.
+   * c1 re-evaluates, but value-equality must stop propagation:
+   * c2 and the effect must not re-run.
+   */
   "#197 chained value-equality stops propagation across multiple writes"(
     fw: ReactiveFramework
   ) {
@@ -276,6 +392,14 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(effectRuns).toBe(0);
   },
 
+  /**
+   *  S(cond) ─→ E(eff)
+   *  S(a)   ?─→ E(eff)   (when cond = true)
+   *
+   * Initially cond=false so a is not tracked. After cond flips
+   * to true, the effect discovers a as a new dep. Subsequent
+   * writes to a must trigger the effect.
+   */
   "#198 effect discovers new branch deps"(fw: ReactiveFramework) {
     // Effect has dynamic branch: cond ? a : "other".
     // Initially cond=false, a is not tracked.
@@ -309,6 +433,14 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(runs).toBe(3);
   },
 
+  /**
+   *  S(cond) ─→ E(eff)
+   *  S(a)   ?─→ E(eff)   (when cond = true)
+   *
+   * Initially cond=true so a is tracked. After cond flips to
+   * false, a becomes inactive. Subsequent writes to a must NOT
+   * trigger the effect.
+   */
   "#199 effect ignores inactive branch dep"(fw: ReactiveFramework) {
     // Effect has dynamic branch: cond ? a : "other".
     // Initially cond=true, a is tracked.
@@ -337,6 +469,23 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(runs).toBe(2);
   },
 
+  /**
+   *  S(a)  S(b)  S(c)  S(fx1Out)  S(fx2Out)
+   *
+   *  E(fx1): c<2 ?─→ a
+   *          c>1 ?─→ b
+   *          writes fx1Out
+   *
+   *  E(fx2): c>1 ?─→ a
+   *          c<3 ?─→ b
+   *          always reads fx1Out
+   *          writes fx2Out
+   *
+   * Two effects with overlapping deps that shift based on a
+   * shared condition signal c. Changing b must only trigger the
+   * effect(s) that currently read it. Changing c reshuffles
+   * which deps each effect tracks.
+   */
   "#200 independent dep tracking across effects with dynamic deps"(
     fw: ReactiveFramework
   ) {

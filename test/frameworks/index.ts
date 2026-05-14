@@ -56,11 +56,6 @@ try {
   frameworks.push(anodFramework);
 } catch {}
 
-try {
-  const { r3Framework } = await import("./r3.js");
-  frameworks.push(r3Framework);
-} catch {}
-
 for (const fw of frameworks) {
   detectCapabilities(fw);
 }

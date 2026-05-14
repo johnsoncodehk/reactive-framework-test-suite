@@ -2,8 +2,30 @@ import { expect } from "./assert.js";
 import type { ReactiveFramework } from "./framework.js";
 import { SkipTest } from "./framework.js";
 
+/**
+ * Nested Effects & Ordering
+ *
+ * Tests that effects created inside other effects behave correctly:
+ * outer effects run before inner effects, inner effects are disposed
+ * when the outer re-runs, disposal cascades through multiple levels,
+ * and recursive writes inside effects do not cause infinite loops.
+ *
+ * Legend:
+ *   S        signal (source)
+ *   C        computed
+ *   E        effect
+ *   E{E}     outer effect containing an inner effect
+ *   ─→       dependency edge (downstream reads upstream)
+ *   ✕        disposed / cleaned up
+ */
 export const section = "Nested Effects & Ordering";
 export const cases: Record<string, (fw: ReactiveFramework) => any> = {
+  /**
+   *  S(a) ─→ E_outer{ E_inner }
+   *
+   * Outer effect and inner effect both read a.
+   * Outer must execute before inner on initial run.
+   */
   "#43 outer effect runs before inner effect"(fw: ReactiveFramework) {
     const order: string[] = [];
     const a = fw.signal(0);
@@ -20,6 +42,13 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(order[0]).toBe("outer");
   },
 
+  /**
+   *  S(a) ─→ E_outer{ E_inner }
+   *               ✕ old inner on each outer re-run
+   *
+   * When the outer effect re-runs, the previous inner effect must be
+   * disposed. Otherwise inner effects accumulate exponentially.
+   */
   "#44 inner effect auto-cleaned when outer re-runs"(fw: ReactiveFramework) {
     const a = fw.signal(0);
     let innerRuns = 0;
@@ -46,6 +75,13 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     );
   },
 
+  /**
+   *  S(a) ─→ E_outer{ untracked{ E_inner ─→ S(a) } }
+   *
+   * Inner effect is created inside an untracked block.
+   * Outer effect must not subscribe to a's deps via untracked.
+   * Inner effect still reads a directly and may re-run.
+   */
   "#45 untracked inner effect does not subscribe to deps"(
     fw: ReactiveFramework
   ) {
@@ -69,6 +105,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(innerRuns).toBeGreaterThanOrEqual(0);
   },
 
+  /**
+   *  S(a) ─→ E(eff)   [reads a twice]
+   *
+   * Effect reads the same signal twice in one execution.
+   * Must still fire only once per change, not once per read.
+   */
   "#46 duplicate subscribers don't cause duplicate notifications"(
     fw: ReactiveFramework
   ) {
@@ -86,6 +128,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(runs).toBe(2);
   },
 
+  /**
+   *  S(a) ─→ E(eff) ──write──→ S(a)
+   *
+   * Effect writes to its own dependency on the first run.
+   * Framework must handle the recursion without infinite looping.
+   */
   "#47 effect recursion handled on first execution"(fw: ReactiveFramework) {
     const a = fw.signal(0);
     let runs = 0;
@@ -104,6 +152,14 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(a.read()).toBe(1);
   },
 
+  /**
+   *  S(a) ─→ E_parent{ S(child) ─→ E_child }
+   *                       ↑ write
+   *
+   * Parent effect creates a child signal and inner effect, then
+   * writes to the child signal. Parent must not re-trigger from
+   * the child's signal write — only from a.
+   */
   "#163 parent effect not triggered by child's own signal"(
     fw: ReactiveFramework
   ) {
@@ -127,6 +183,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(parentRuns).toBe(runsAfterSetup + 1);
   },
 
+  /**
+   *  S(a) ─→ E_outer{ E_inner ─→ S(b) }
+   *
+   * Inner effect reads b (not a). When b changes, the inner
+   * effect must re-run independently of the outer effect.
+   */
   "#164 inner autorun created inside outer tracks own deps"(
     fw: ReactiveFramework
   ) {
@@ -151,6 +213,14 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(innerRuns).toBeGreaterThanOrEqual(1);
   },
 
+  /**
+   *  S(a) ─→ *C(b)  ← b = a % 2
+   *            |
+   *  E_outer{ E_inner ─→ *C(b) }
+   *
+   * a changes from 0 to 2 but b stays 0 (same parity).
+   * Inner effect must NOT re-run (value-equality cut).
+   */
   "#170 inner effect not triggered when computed dep resolves unchanged"(
     fw: ReactiveFramework
   ) {
@@ -170,6 +240,16 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(innerRuns).toBe(initial);
   },
 
+  /**
+   *  S(a) ─→ E_outer{ E_middle{ E_inner } }
+   *                ✕ dispose outer
+   *                  ✕ middle cascades
+   *                    ✕ inner cascades
+   *
+   * Three levels of nesting. Disposing the outermost effect must
+   * cascade disposal to middle and inner. After dispose, no effect
+   * runs when a changes.
+   */
   "#209 three-level nested effect: cascading disposal"(
     fw: ReactiveFramework
   ) {
@@ -199,6 +279,14 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(innerRuns).toBe(0);
   },
 
+  /**
+   *  S(a) ─→ E_outer{ E_b ─→ S(b),  E_c ─→ S(c) }
+   *               ✕ old E_b, E_c on outer re-run
+   *
+   * Outer effect creates two sibling inner effects. When a changes,
+   * both old inner effects must be cleaned up. After re-run, only
+   * the new inner effects should respond to b and c changes.
+   */
   "#210 multiple inner effects all cleaned when outer re-runs"(
     fw: ReactiveFramework
   ) {
@@ -235,6 +323,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(cRuns).toBe(1);
   },
 
+  /**
+   *  S(a) ─→ E_outer{ val=a.read(); E_inner{ observe(val) } }
+   *
+   * Inner effect captures a closure variable from the outer effect.
+   * The observed value must reflect the outer's current execution.
+   */
   "#48 nested effects depend on state of outer effects"(
     fw: ReactiveFramework
   ) {

@@ -2,8 +2,29 @@ import { expect } from "./assert.js";
 import type { ReactiveFramework } from "./framework.js";
 import { SkipTest } from "./framework.js";
 
+/**
+ * Untracked / Unsampled Reads
+ *
+ * Tests that `fw.untracked()` suppresses dependency tracking.
+ * Reads performed inside an untracked scope must not subscribe the
+ * enclosing effect or computed to the read signal.
+ *
+ * Legend:
+ *   S        signal (source)
+ *   C        computed
+ *   E / eff  effect
+ *   ─→       dependency edge
+ *   ╌╌→      untracked read (no dependency created)
+ */
 export const section = "Untracked / Unsampled Reads";
 export const cases: Record<string, (fw: ReactiveFramework) => any> = {
+  /**
+   *  S(a) ─→ E(eff)
+   *  S(b) ╌╌→ E(eff)   (untracked)
+   *
+   * Effect tracks S(a) normally but reads S(b) inside
+   * `untracked`. Changing S(b) must not re-run the effect.
+   */
   "#75 untracked read in effect does not create dependency"(
     fw: ReactiveFramework
   ) {
@@ -28,6 +49,13 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(runs).toBe(2);
   },
 
+  /**
+   *  S(a) ─→ C(c)
+   *  S(b) ╌╌→ C(c)   (untracked)
+   *
+   * Computed tracks S(a) but reads S(b) inside `untracked`.
+   * Changing S(b) must not invalidate C(c).
+   */
   "#76 untracked read in computed does not create dependency"(
     fw: ReactiveFramework
   ) {
@@ -50,6 +78,14 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(c.read()).toBe(11);
   },
 
+  /**
+   *  S(a) ─→ C(b)
+   *        ╌╌→ read via untracked
+   *
+   * After S(a) is written, reading C(b) inside `untracked`
+   * must still return the up-to-date value (lazy re-evaluation)
+   * even though no dependency edge is created.
+   */
   "#117 untracked read of stale computed returns fresh value"(
     fw: ReactiveFramework
   ) {
@@ -65,6 +101,14 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(result).toBe(10);
   },
 
+  /**
+   *  S(a) ─→ C(b) ╌╌→ E(eff)   (untracked)
+   *
+   * Effect reads C(b) inside `untracked`. Even though C(b)
+   * itself depends on S(a), the effect must not re-run when
+   * S(a) changes — the untracked scope blocks the entire
+   * transitive chain.
+   */
   "#118 untracked transitively doesn't track through nested deps"(
     fw: ReactiveFramework
   ) {
@@ -86,6 +130,14 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(effectRuns).toBe(1);
   },
 
+  /**
+   *  S(a) ─→ E(eff)
+   *           eff ╌╌→ S(b).write   (untracked write)
+   *
+   * Writing to S(b) inside an untracked scope within an effect
+   * should not throw. The write is performed but does not
+   * create a dependency back to the effect.
+   */
   "#156 untracked write inside effect doesn't throw"(
     fw: ReactiveFramework
   ) {
@@ -113,6 +165,13 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(true).toBe(true);
   },
 
+  /**
+   *  S(a) ╌╌→ E(eff)   (untracked)
+   *  S(b) ╌╌→ E(eff)   (untracked)
+   *
+   * All reads inside a single untracked scope are suppressed.
+   * Writing to either S(a) or S(b) must not re-trigger the effect.
+   */
   "#77 nested untracked inside effect still blocks tracking"(
     fw: ReactiveFramework
   ) {

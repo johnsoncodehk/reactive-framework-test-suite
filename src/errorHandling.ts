@@ -2,8 +2,30 @@ import { expect } from "./assert.js";
 import type { ReactiveFramework } from "./framework.js";
 import { SkipTest, hasEffectCleanup, hasComputedThrows } from "./framework.js";
 
+/**
+ * Error Handling
+ *
+ * Tests that exceptions thrown inside computeds, effects, or
+ * cleanup functions do not corrupt the reactive graph. After an
+ * error the framework must remain consistent: recovery writes
+ * produce correct values, unrelated branches stay intact, and
+ * no stale scheduled work leaks across updates.
+ *
+ * Legend:
+ *   S        signal (source)
+ *   C        computed
+ *   E / eff  effect
+ *   ─→       dependency edge (downstream reads upstream)
+ *   ⚡       node that may throw
+ */
 export const section = "Error Handling";
 export const cases: Record<string, (fw: ReactiveFramework) => any> = {
+  /**
+   *  S(a) → C(b) ⚡ throws when a===0
+   *
+   * Computed throws on its initial evaluation. After fixing the
+   * signal, the computed must return the correct value.
+   */
   "#84 graph stays consistent after error in initial computed"(
     fw: ReactiveFramework
   ) {
@@ -20,6 +42,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(b.read()).toBe(1);
   },
 
+  /**
+   *  S(a) → C(b) ⚡ throws when a===2
+   *
+   * Computed works initially, throws on re-evaluation, then
+   * recovers on the next write. Graph must stay consistent.
+   */
   "#85 graph stays consistent after error in computed re-evaluation"(
     fw: ReactiveFramework
   ) {
@@ -39,6 +67,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(b.read()).toBe(3);
   },
 
+  /**
+   *  S(a) → C(bad) ⚡     S(b) → C(good)
+   *
+   * Two independent branches. An error in bad must not affect
+   * good — good must continue to read and update normally.
+   */
   "#87 errors in one computed don't leak to unrelated dependents"(
     fw: ReactiveFramework
   ) {
@@ -63,6 +97,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(good.read()).toBe(40);
   },
 
+  /**
+   *  S(a) ← E(eff ⚡ throws when a===1, → cleanup)
+   *
+   * Effect throws on re-run. The cleanup from the previous
+   * successful run must still be called.
+   */
   "#89 effect cleanup reset when effect throws"(fw: ReactiveFramework) {
     if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
     const a = fw.signal(0);
@@ -88,6 +128,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(cleanupCalled).toBe(true);
   },
 
+  /**
+   *  S(a) ← E(eff → cleanup ⚡ throws)
+   *
+   * Cleanup itself throws. The effect must not enter an infinite
+   * loop; subsequent updates must be bounded.
+   */
   "#90 effect disposed when cleanup throws"(fw: ReactiveFramework) {
     if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
     const a = fw.signal(0);
@@ -117,6 +163,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(effectRuns).toBeLessThanOrEqual(runsAfterError + 1);
   },
 
+  /**
+   *  S(a) → C(bad) ⚡     S(b) → C(good)
+   *
+   * After an exception in bad, the good branch must still
+   * re-evaluate normally on subsequent writes to b.
+   */
   "#91 exception halts propagation but other branches remain intact"(
     fw: ReactiveFramework
   ) {
@@ -149,6 +201,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(goodCalls).toBe(1);
   },
 
+  /**
+   *  S(a) → C(b) ⚡ throws when a===1
+   *
+   * After error and recovery, no stale scheduled state remains.
+   * Subsequent writes produce correct values without ghost re-runs.
+   */
   "#92 no stale scheduled updates left after exception"(
     fw: ReactiveFramework
   ) {
@@ -172,6 +230,13 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(b.read()).toBe(6);
   },
 
+  /**
+   *  batch { S(a).write; throw } ← E(eff)
+   *
+   * User code throws inside a batch. The batch's signal write
+   * must still flush, the effect must fire, and the graph must
+   * remain consistent after the throw.
+   */
   "#154 batch throw: effects survive, graph consistent"(
     fw: ReactiveFramework
   ) {
@@ -199,6 +264,13 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(a.read()).toBe(2);
   },
 
+  /**
+   *  S(a) → C(c) ⚡ throws when a===0 ← E(eff)
+   *
+   * Computed throws while being watched by an effect. Re-reading
+   * the computed must not recompute excessively (error is cached).
+   * After recovery write, the computed returns normally.
+   */
   "#155 errors cached when watched by effect (live caching)"(
     fw: ReactiveFramework
   ) {
@@ -234,6 +306,13 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(c.read()).toBe(1);
   },
 
+  /**
+   *  S(a)  S(b)  S(c) → C(d)
+   *  E1 reads a; E2 ⚡ reads a; E3 reads a,d
+   *
+   * E2 throws when a===2. After the failed flush, writing to
+   * unrelated signal b must NOT re-trigger E3.
+   */
   "#177 skipped effects from failed flush not re-triggered by unrelated signal"(
     fw: ReactiveFramework
   ) {
@@ -269,6 +348,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(effect3Runs).toBe(0);
   },
 
+  /**
+   *  S(a) → C(b) ⚡ → C(c)
+   *
+   * b throws, causing downstream c to also throw. After recovery
+   * both b and c must return correct values.
+   */
   "#211 computed error chain: downstream computed also throws"(
     fw: ReactiveFramework
   ) {
@@ -291,6 +376,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(c.read()).toBe(4);
   },
 
+  /**
+   *  S(a) → C(b) ⚡ throws when a is true
+   *
+   * Computed alternates between throwing and returning "ok".
+   * Each transition must work correctly in both directions.
+   */
   "#93 exception recovery in computed"(fw: ReactiveFramework) {
     if (!hasComputedThrows(fw)) throw new SkipTest("no computedThrows");
     const a = fw.signal(true);

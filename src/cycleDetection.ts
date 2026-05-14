@@ -2,8 +2,28 @@ import { expect } from "./assert.js";
 import type { ReactiveFramework } from "./framework.js";
 import { SkipTest } from "./framework.js";
 
+/**
+ * Cycle & Infinite Loop Detection
+ *
+ * Tests that a framework handles circular dependencies and runaway
+ * effects without hanging or crashing: cycles are detected (throw or
+ * graceful fallback), and iteration counts stay bounded.
+ *
+ * Legend:
+ *   S        signal (source)
+ *   C        computed
+ *   E / eff  effect
+ *   ─→       dependency edge (downstream reads upstream)
+ *   ↔ / ⟳   cyclic dependency
+ */
 export const section = "Cycle & Infinite Loop Detection";
 export const cases: Record<string, (fw: ReactiveFramework) => any> = {
+  /**
+   *  C(a) ↔ C(b)
+   *
+   * Two computeds each reading the other. Framework should throw
+   * or handle the trivial two-node cycle gracefully.
+   */
   "#58 detect trivial cycle (A↔B)"(fw: ReactiveFramework) {
     let threw = false;
     try {
@@ -19,6 +39,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(true).toBe(true);
   },
 
+  /**
+   *  C(a) → C(b) → C(c) → C(a)  ⟳
+   *
+   * Three-node cycle. Framework should detect the longer loop
+   * just as it would a trivial two-node cycle.
+   */
   "#59 detect deep cycle (A→B→C→…→A)"(fw: ReactiveFramework) {
     let threw = false;
     try {
@@ -34,6 +60,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(true).toBe(true);
   },
 
+  /**
+   *  C(c) ⟳
+   *
+   * A computed reads itself. The simplest possible self-cycle.
+   * Framework should throw or return a safe fallback.
+   */
   "#60 computed depending on itself"(fw: ReactiveFramework) {
     let threw = false;
     try {
@@ -51,6 +83,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(true).toBe(true);
   },
 
+  /**
+   *  S(a) → E(eff) → S(a)  ⟳
+   *
+   * An effect reads a signal then writes back to it, creating an
+   * indirect write-read loop. Iteration count must stay bounded.
+   */
   "#61 indirect cycle through effects"(fw: ReactiveFramework) {
     const a = fw.signal(0);
     let iterations = 0;
@@ -70,6 +108,16 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(iterations).toBeLessThanOrEqual(200);
   },
 
+  /**
+   *  S(cond)  S(a)
+   *     |      |
+   *     E(eff)─┘
+   *       |
+   *       └─→ a.write(a.read()+1)  ⟳  (when cond=true)
+   *
+   * Effect is safe when cond=false. Setting cond=true creates a
+   * dynamic read-write cycle on a. Framework must detect it.
+   */
   "#63 cycle from modifying a branch (dynamic cycle creation)"(
     fw: ReactiveFramework
   ) {
@@ -95,6 +143,17 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(iterations).toBeLessThanOrEqual(200);
   },
 
+  /**
+   *  S(cond)
+   *     |
+   *   C(b) ──→ C(a)
+   *     ↑        |
+   *     └────────┘  ⟳  (when cond=true)
+   *
+   * When cond=false, b returns 0 and no cycle exists.
+   * Setting cond=true makes b read a, forming a↔b cycle.
+   * Framework should throw or handle the late-onset cycle.
+   */
   "#150 dynamic cycle: computed pair becomes cyclic on condition change"(
     fw: ReactiveFramework
   ) {
@@ -121,6 +180,13 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(true).toBe(true);
   },
 
+  /**
+   *  C(c) ──untracked──→ C(c)  ⟳
+   *
+   * A computed reads itself inside an untracked scope.
+   * Even without a tracked dependency edge, re-entering the
+   * same computation is still a cycle.
+   */
   "#151 self-reference via untracked: cycle still detected"(
     fw: ReactiveFramework
   ) {
@@ -143,6 +209,14 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(true).toBe(true);
   },
 
+  /**
+   *  S(flag)
+   *     |
+   *   C(c) ⟳  (when flag=true)
+   *
+   * When flag=false, c returns 0 (no cycle). Setting flag=true
+   * makes c read itself, creating a conditional self-cycle.
+   */
   "#152 conditional computed becomes recursive on flag change"(
     fw: ReactiveFramework
   ) {
@@ -170,6 +244,14 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(true).toBe(true);
   },
 
+  /**
+   *  S(a) → C(c) ⟳  (when a=0, c reads itself)
+   *           |
+   *         a.write(1) → C(c) reads a normally
+   *
+   * When a=0, c tries to read itself (cycle) and catches the error.
+   * After setting a=1, c should recover and return a's value.
+   */
   "#153 computed self-dep recovery after catching cycle error"(
     fw: ReactiveFramework
   ) {
@@ -196,6 +278,13 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     } catch {}
   },
 
+  /**
+   *  S(a) → E(e1) → S(b) → E(e2) → S(a)  ⟳
+   *
+   * Two effects ping-pong values between two signals
+   * (e1 reads a, writes b; e2 reads b, writes a+1).
+   * Framework must cap iterations instead of looping forever.
+   */
   "#64 max iteration limit reached"(fw: ReactiveFramework) {
     const a = fw.signal(0);
     const b = fw.signal(0);
