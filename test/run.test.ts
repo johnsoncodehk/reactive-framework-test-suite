@@ -13,21 +13,22 @@ for (const { section, cases, type } of testSuite) {
 
   describe(section, () => {
     for (const fw of frameworks) {
-      results[fw.name] = {};
+      const fwName = fw.name!;
+      results[fwName] = {};
       for (const [name, fn] of Object.entries(cases)) {
-        test(`${fw.name} > ${name}`, () => {
+        test(`${fwName} > ${name}`, () => {
           try {
             let result: any;
             fw.run(() => {
               result = fn(fw);
             });
-            results[fw.name][name] = type === "behavioral" ? result : "✅";
+            results[fwName][name] = type === "behavioral" ? result : "✅";
           } catch (e) {
             if (e instanceof SkipTest) {
-              results[fw.name][name] = "⬜";
+              results[fwName][name] = "⬜";
               return;
             }
-            results[fw.name][name] = type === "behavioral" ? "error" : "❌";
+            results[fwName][name] = type === "behavioral" ? "error" : "❌";
           }
         });
       }

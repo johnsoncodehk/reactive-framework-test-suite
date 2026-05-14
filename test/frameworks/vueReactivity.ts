@@ -1,5 +1,4 @@
 import type { ReactiveFramework } from "../../src/framework.js";
-// @ts-ignore — import from dist to access unexported startBatch/endBatch
 import {
   ref,
   computed,
@@ -7,9 +6,9 @@ import {
   pauseTracking,
   resetTracking,
   onEffectCleanup,
-  startBatch,
-  endBatch,
-} from "@vue/reactivity/dist/reactivity.esm-bundler.js";
+} from "@vue/reactivity";
+// @ts-ignore — startBatch/endBatch are exported by the bundler entry but not the public types
+import { startBatch, endBatch } from "@vue/reactivity/dist/reactivity.esm-bundler.js";
 
 export const vueReactivityFramework: ReactiveFramework = {
   name: "@vue/reactivity",
