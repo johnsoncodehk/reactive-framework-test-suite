@@ -50,11 +50,13 @@ export function detectCapabilities(fw: ReactiveFramework): void {
 }
 
 export function hasEffectCleanup(fw: ReactiveFramework): boolean {
-  return caps.get(fw)?.effectCleanup ?? false;
+  detectCapabilities(fw);
+  return caps.get(fw)!.effectCleanup;
 }
 
 export function hasComputedThrows(fw: ReactiveFramework): boolean {
-  return caps.get(fw)?.computedThrows ?? false;
+  detectCapabilities(fw);
+  return caps.get(fw)!.computedThrows;
 }
 
 export interface Signal<T> {

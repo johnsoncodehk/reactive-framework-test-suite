@@ -1,5 +1,4 @@
 import type { ReactiveFramework } from "../../src/framework.js";
-import { detectCapabilities } from "../../src/framework.js";
 
 import { alienSignalsFramework } from "./alienSignals.js";
 import { preactSignalsFramework } from "./preactSignals.js";
@@ -56,6 +55,3 @@ try {
   frameworks.push(anodFramework);
 } catch {}
 
-for (const fw of frameworks) {
-  detectCapabilities(fw);
-}
