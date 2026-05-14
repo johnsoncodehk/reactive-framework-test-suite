@@ -95,3 +95,44 @@ Of the 13 high+medium gaps, the ones I'd recommend adding as cross-framework tes
 | #235 batch inside effect body | ✅ | preact/tansu/mobx/solid/S.js/anod fail |
 | #236 cleanup write to own dep (cycle) | ✅ | only angular fails |
 
+## Round 2: cleanup ordering (translated from alien-signals PR #116)
+
+A second audit covered cleanup *ordering* (not just whether cleanup
+runs). Original PR draft added 7 strict tests asserting alien-signals's
+exact model; they were relaxed after discovering that many frameworks
+have a different but valid model (flat-effect, FIFO siblings, etc).
+
+### Gap
+Existing suite had no coverage of cleanup ordering contracts:
+inner-before-outer, sibling LIFO/FIFO, depth-first reverse on
+multi-level nesting, ordering on re-run vs dispose, cleanup ordering
+after a prior inner-only re-run.
+
+### Implementation Result
+
+| Test | Status | Notes |
+|---|---|---|
+| #237 cleanup ordering on outer re-run | ✅ relaxed to invariants | pota/angular/anod fail (real bugs) |
+| #238 cleanup ordering on dispose | ✅ relaxed | anod fails (real bug) |
+| #239 (original) sibling LIFO on dispose | ❌ moved to #244 probe | sibling order is model choice, not invariant |
+| #240 (original) sibling LIFO on re-run | ❌ moved to #244 probe | same as #239 |
+| #241 three-level cleanup depth-first | ✅ relaxed | most frameworks pass |
+| #242 effect in computed: old cleanup before new eval | ✅ relaxed | grouped with #39/#110 |
+| #243 cleanup ordering after prior inner-only re-run | ✅ relaxed | pota/angular/anod fail (real bugs) |
+| #244 sibling cleanup order probe (behavioral) | ✅ added | Returns "LIFO" / "FIFO" / "no cascade" |
+| computed unwatched LIFO (from PR #116) | ❌ dropped | auto-disposal of unobserved computeds not shared across frameworks |
+
+### Key insight
+Strict equality assertions over-constrained tests to one framework's
+model. Cleanup ordering has both:
+- **Universal invariants** (outer:cleanup before outer:run; inner before
+  outer if cascaded) → assert in main suite
+- **Model choices** (LIFO vs FIFO siblings; cascade vs flat) → report
+  as descriptive strings in `behaviorDifferences.ts`
+
+#244 probe summarizes each framework's choice:
+- **LIFO**: alien-signals, anod
+- **FIFO**: reatom
+- **no cascade** (flat-effect model): preact, vue, svelte, solid,
+  S.js, signal-polyfill, angular, pota
+

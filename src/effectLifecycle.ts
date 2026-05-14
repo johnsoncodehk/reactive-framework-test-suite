@@ -773,4 +773,212 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     // infinite looping or stack overflow. Final run count is bounded.
     expect(runs).toBeLessThanOrEqual(20);
   },
+
+  /**
+   *  S(a) → E_outer{ E_inner }
+   *
+   * Universal invariants on outer re-run:
+   *   - outer's old cleanup runs BEFORE outer's new body runs
+   *   - if inner cleanup fires at all, it runs BEFORE outer's cleanup
+   *     (deepest first when the framework cascades)
+   *
+   * Frameworks with a flat-effect model (no parent-child cascade)
+   * just won't fire inner cleanup; that's accepted.
+   */
+  "#237 cleanup ordering on outer re-run: outer-cleanup before re-run, inner before outer if cascaded"(
+    fw: ReactiveFramework
+  ) {
+    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
+    const a = fw.signal(0);
+    const log: string[] = [];
+
+    fw.effect(() => {
+      a.read();
+      log.push("outer:run");
+      fw.effect(() => {
+        log.push("inner:run");
+        return () => log.push("inner:cleanup");
+      });
+      return () => log.push("outer:cleanup");
+    });
+    expect(log).toEqual(["outer:run", "inner:run"]);
+
+    log.length = 0;
+    a.write(1);
+
+    const outerCleanupIdx = log.indexOf("outer:cleanup");
+    const outerRunIdx = log.lastIndexOf("outer:run");
+    const innerCleanupIdx = log.indexOf("inner:cleanup");
+
+    expect(outerCleanupIdx).toBeGreaterThanOrEqual(0);
+    expect(outerRunIdx).toBeGreaterThan(outerCleanupIdx);
+    if (innerCleanupIdx >= 0) {
+      expect(innerCleanupIdx).toBeLessThan(outerCleanupIdx);
+    }
+  },
+
+  /**
+   *  E_outer{ E_inner } → dispose
+   *
+   * Universal invariant on dispose:
+   *   - outer cleanup must run
+   *   - if inner cleanup runs (cascade), it runs BEFORE outer
+   *
+   * Flat frameworks (no cascade) only see outer cleanup; that's accepted.
+   */
+  "#238 cleanup ordering on dispose: inner before outer if cascaded"(
+    fw: ReactiveFramework
+  ) {
+    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
+    const log: string[] = [];
+
+    const dispose = fw.effect(() => {
+      log.push("outer:run");
+      fw.effect(() => {
+        log.push("inner:run");
+        return () => log.push("inner:cleanup");
+      });
+      return () => log.push("outer:cleanup");
+    });
+    log.length = 0;
+
+    dispose();
+    const outerCleanupIdx = log.indexOf("outer:cleanup");
+    const innerCleanupIdx = log.indexOf("inner:cleanup");
+
+    expect(outerCleanupIdx).toBeGreaterThanOrEqual(0);
+    if (innerCleanupIdx >= 0) {
+      expect(innerCleanupIdx).toBeLessThan(outerCleanupIdx);
+    }
+  },
+
+  /**
+   *  E_outer{ E_child{ E_grandchild } } → dispose
+   *
+   * Universal invariant for three-level nesting:
+   *   - if cleanups cascade, deepest goes first (grandchild < child < outer)
+   *   - outer cleanup must fire
+   *
+   * Flat frameworks (no cascade) will only see outer cleanup; accepted.
+   */
+  "#241 three-level cleanup ordering: deepest first if cascaded"(
+    fw: ReactiveFramework
+  ) {
+    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
+    const log: string[] = [];
+
+    const dispose = fw.effect(() => {
+      fw.effect(() => {
+        fw.effect(() => {
+          return () => log.push("grandchild:cleanup");
+        });
+        return () => log.push("child:cleanup");
+      });
+      return () => log.push("outer:cleanup");
+    });
+
+    dispose();
+    const outerIdx = log.indexOf("outer:cleanup");
+    const childIdx = log.indexOf("child:cleanup");
+    const grandIdx = log.indexOf("grandchild:cleanup");
+
+    expect(outerIdx).toBeGreaterThanOrEqual(0);
+    if (childIdx >= 0) {
+      expect(childIdx).toBeLessThan(outerIdx);
+    }
+    if (grandIdx >= 0) {
+      expect(grandIdx).toBeLessThan(outerIdx);
+      if (childIdx >= 0) {
+        expect(grandIdx).toBeLessThan(childIdx);
+      }
+    }
+  },
+
+  /**
+   *  S(a) → C(c){ E_inner } → E_outer reads C(c)
+   *
+   * Universal invariant on computed re-evaluation:
+   *   - if computed cleans up effects from previous eval, the cleanup
+   *     fires BEFORE the new eval runs
+   *   - the new eval and new inner:run come after computed:eval
+   *
+   * Frameworks that don't cascade computed-owned effects just won't
+   * fire inner:cleanup; accepted.
+   */
+  "#242 effect in computed: old inner cleanup (if any) before new eval"(
+    fw: ReactiveFramework
+  ) {
+    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
+    const a = fw.signal(0);
+    const log: string[] = [];
+
+    const c = fw.computed(() => {
+      log.push("computed:eval");
+      fw.effect(() => {
+        log.push("inner:run");
+        return () => log.push("inner:cleanup");
+      });
+      return a.read();
+    });
+
+    fw.effect(() => {
+      c.read();
+    });
+    log.length = 0;
+
+    a.write(1);
+    const evalIdx = log.lastIndexOf("computed:eval");
+    const innerRunIdx = log.lastIndexOf("inner:run");
+    const innerCleanupIdx = log.indexOf("inner:cleanup");
+
+    expect(evalIdx).toBeGreaterThanOrEqual(0);
+    expect(innerRunIdx).toBeGreaterThan(evalIdx);
+    if (innerCleanupIdx >= 0) {
+      expect(innerCleanupIdx).toBeLessThan(evalIdx);
+    }
+  },
+
+  /**
+   *  S(a) → E_outer{ E_inner ─→ S(b) }
+   *
+   * Regression: when inner re-runs alone (via its own dep b), the
+   * outer is touched via the notify chain. The next real outer
+   * re-run (via a) must still produce a valid cleanup ordering.
+   *
+   * Universal invariant: same as #237 — outer cleanup before outer
+   * re-run; inner cleanup (if cascaded) before outer cleanup.
+   */
+  "#243 cleanup ordering correct after prior inner-only re-run"(
+    fw: ReactiveFramework
+  ) {
+    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
+    const a = fw.signal(0);
+    const b = fw.signal(0);
+    const log: string[] = [];
+
+    fw.effect(() => {
+      a.read();
+      log.push("outer:run");
+      fw.effect(() => {
+        b.read();
+        log.push("inner:run");
+        return () => log.push("inner:cleanup");
+      });
+      return () => log.push("outer:cleanup");
+    });
+
+    b.write(1); // inner re-runs alone
+    log.length = 0;
+
+    a.write(1);
+    const outerCleanupIdx = log.indexOf("outer:cleanup");
+    const outerRunIdx = log.lastIndexOf("outer:run");
+    const innerCleanupIdx = log.indexOf("inner:cleanup");
+
+    expect(outerCleanupIdx).toBeGreaterThanOrEqual(0);
+    expect(outerRunIdx).toBeGreaterThan(outerCleanupIdx);
+    if (innerCleanupIdx >= 0) {
+      expect(innerCleanupIdx).toBeLessThan(outerCleanupIdx);
+    }
+  },
 };
