@@ -1,8 +1,8 @@
 # Reactive Framework Test Suite
 
-Cross-library test suite for comparing reactive signal behavior across **15 frameworks** with **163 test cases**.
+Cross-library test suite for comparing reactive signal behavior across **15 frameworks** with **164 test cases**.
 
-> 2015 passed, 264 failed, 166 skipped out of 2445 total runs
+> 2029 passed, 265 failed, 166 skipped out of 2460 total runs
 
 Test cases are collected and adapted from the test suites of all participating frameworks — thanks to every project for their thorough testing work. This suite focuses on **reactive semantics** (propagation, batching, disposal, edge cases), not API completeness. Tests that require an optional capability (e.g. `batch`) are skipped (⬜) for frameworks that don't expose it, rather than marked as failures.
 
@@ -36,21 +36,21 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 
 | Framework              | Pass | Fail | Skip | Total |
 | ---------------------- | ---- | ---- | ---- | ----- |
-| alien-signals          |  163 |    0 |    0 |   163 |
-| @preact/signals-core   |  161 |    2 |    0 |   163 |
-| @reatom/core           |  161 |    2 |    0 |   163 |
-| anod                   |  151 |   12 |    0 |   163 |
-| tansu                  |  147 |    5 |   11 |   163 |
-| @solidjs/signals       |  144 |    8 |   11 |   163 |
-| solid-js               |  139 |   24 |    0 |   163 |
-| mobx                   |  135 |   17 |   11 |   163 |
-| @vue/reactivity        |  132 |   31 |    0 |   163 |
-| signal-polyfill (TC39) |  128 |    8 |   27 |   163 |
-| @angular/core          |  126 |   10 |   27 |   163 |
-| S.js                   |  118 |   45 |    0 |   163 |
-| svelte                 |  117 |   12 |   34 |   163 |
-| @reactively/core       |  102 |   16 |   45 |   163 |
-| pota                   |   91 |   72 |    0 |   163 |
+| alien-signals          |  164 |    0 |    0 |   164 |
+| @preact/signals-core   |  162 |    2 |    0 |   164 |
+| @reatom/core           |  162 |    2 |    0 |   164 |
+| anod                   |  152 |   12 |    0 |   164 |
+| tansu                  |  148 |    5 |   11 |   164 |
+| @solidjs/signals       |  145 |    8 |   11 |   164 |
+| solid-js               |  140 |   24 |    0 |   164 |
+| mobx                   |  136 |   17 |   11 |   164 |
+| @vue/reactivity        |  133 |   31 |    0 |   164 |
+| signal-polyfill (TC39) |  129 |    8 |   27 |   164 |
+| @angular/core          |  127 |   10 |   27 |   164 |
+| S.js                   |  119 |   45 |    0 |   164 |
+| svelte                 |  118 |   12 |   34 |   164 |
+| @reactively/core       |  102 |   17 |   45 |   164 |
+| pota                   |   92 |   72 |    0 |   164 |
 
 ## Results
 
@@ -1102,23 +1102,23 @@ Legend:
   ↔ / ⟳   cyclic dependency
 ```
 
-| Framework              | #61,#152 | #63 | #150 | #151 | #153 | #64,#221 |
-| ---------------------- | -------- | --- | ---- | ---- | ---- | -------- |
-| alien-signals          |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |        ✅ |
-| @preact/signals-core   |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |        ✅ |
-| @reactively/core       |        ✅ |   ✅ |    ✅ |    ⬜ |    ✅ |        ❌ |
-| tansu                  |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |        ✅ |
-| signal-polyfill (TC39) |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |        ✅ |
-| @vue/reactivity        |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |        ✅ |
-| mobx                   |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |        ✅ |
-| @reatom/core           |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |        ✅ |
-| svelte                 |        ✅ |   ✅ |    ✅ |    ⬜ |    ❌ |        ✅ |
-| solid-js               |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |        ✅ |
-| @solidjs/signals       |        ✅ |   ✅ |    ❌ |    ✅ |    ✅ |        ✅ |
-| S.js                   |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |        ✅ |
-| pota                   |        ✅ |   ❌ |    ✅ |    ✅ |    ✅ |        ✅ |
-| @angular/core          |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |        ✅ |
-| anod                   |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |        ✅ |
+| Framework              | #61,#152 | #63 | #150 | #151 | #153 | #64,#221,#223 |
+| ---------------------- | -------- | --- | ---- | ---- | ---- | ------------- |
+| alien-signals          |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |             ✅ |
+| @preact/signals-core   |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |             ✅ |
+| @reactively/core       |        ✅ |   ✅ |    ✅ |    ⬜ |    ✅ |             ❌ |
+| tansu                  |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |             ✅ |
+| signal-polyfill (TC39) |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |             ✅ |
+| @vue/reactivity        |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |             ✅ |
+| mobx                   |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |             ✅ |
+| @reatom/core           |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |             ✅ |
+| svelte                 |        ✅ |   ✅ |    ✅ |    ⬜ |    ❌ |             ✅ |
+| solid-js               |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |             ✅ |
+| @solidjs/signals       |        ✅ |   ✅ |    ❌ |    ✅ |    ✅ |             ✅ |
+| S.js                   |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |             ✅ |
+| pota                   |        ✅ |   ❌ |    ✅ |    ✅ |    ✅ |             ✅ |
+| @angular/core          |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |             ✅ |
+| anod                   |        ✅ |   ✅ |    ✅ |    ✅ |    ✅ |             ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
@@ -1192,6 +1192,17 @@ b; e2 reads b writes c; e3 reads c writes a). #64 tests a 2-effect
 cycle; this variant verifies the framework's bounding holds for
 longer cycles too — frameworks that detect direct (length-2) loops
 may miss longer paths.
+
+#### #223 cycle through computed stays bounded
+
+```
+ S(a) → E(e1) → S(b) → C(c) → E(e2) → S(a)  ⟳
+```
+
+Cycle path goes through an intermediate computed: e1 writes b,
+c is derived from b, e2 reads c and writes a. Differs from #64
+(direct effect-effect) and #221 (effect-effect chain) — verifies
+the bound holds when the cycle passes through a computed.
 
 
 </details>
