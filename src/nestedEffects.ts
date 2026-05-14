@@ -352,4 +352,86 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     a.write(1);
     expect(outerRuns).toBe(2);
   },
+
+  /**
+   *  S(a) ─→ E_outer{ E_inner1 ─→ S(b1),  E_inner2 ─→ S(b2) }
+   *
+   * Outer creates two sibling inner effects. After only one of them
+   * re-runs (via its own dep), the outer must still respond to a.
+   * Same parent-child link integrity property as #226, but with
+   * sibling inners — could expose bugs where one inner's re-run
+   * corrupts the other or the parent's link.
+   */
+  "#227 outer responds after one of multiple sibling inners re-runs"(
+    fw: ReactiveFramework
+  ) {
+    const a = fw.signal(0);
+    const b1 = fw.signal(0);
+    const b2 = fw.signal(0);
+    let outerRuns = 0;
+    let inner1Runs = 0;
+    let inner2Runs = 0;
+
+    fw.effect(() => {
+      a.read();
+      outerRuns++;
+      fw.effect(() => {
+        b1.read();
+        inner1Runs++;
+      });
+      fw.effect(() => {
+        b2.read();
+        inner2Runs++;
+      });
+    });
+    expect(outerRuns).toBe(1);
+    expect(inner1Runs).toBe(1);
+    expect(inner2Runs).toBe(1);
+
+    // Only inner1 re-runs
+    b1.write(1);
+    expect(outerRuns).toBe(1);
+    expect(inner1Runs).toBeGreaterThanOrEqual(2);
+
+    // Outer must still respond to its own dep
+    a.write(1);
+    expect(outerRuns).toBe(2);
+  },
+
+  /**
+   *  S(a) ─→ E_outer{ E_inner ─→ S(b) }
+   *  b.write × 3
+   *
+   * Inner re-runs multiple times via successive writes to b. After
+   * the burst, the outer must still respond to a. Verifies the
+   * parent-child link survives repeated inner re-runs, not just one.
+   */
+  "#228 outer responds after inner re-runs multiple times"(
+    fw: ReactiveFramework
+  ) {
+    const a = fw.signal(0);
+    const b = fw.signal(0);
+    let outerRuns = 0;
+    let innerRuns = 0;
+
+    fw.effect(() => {
+      a.read();
+      outerRuns++;
+      fw.effect(() => {
+        b.read();
+        innerRuns++;
+      });
+    });
+    expect(outerRuns).toBe(1);
+    expect(innerRuns).toBe(1);
+
+    b.write(1);
+    b.write(2);
+    b.write(3);
+    expect(outerRuns).toBe(1);
+    expect(innerRuns).toBeGreaterThanOrEqual(2);
+
+    a.write(1);
+    expect(outerRuns).toBe(2);
+  },
 };
