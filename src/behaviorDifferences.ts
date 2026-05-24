@@ -459,6 +459,35 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
+   *  run{ E(child ─→ S(source)); throw }
+   *
+   * A scope/root body creates a child effect then throws before
+   * returning. Checks whether the framework disposes child
+   * effects created before the throw or leaves them alive.
+   * Returns "disposes children" or "children survive".
+   */
+  "#246 throwing run body child effect cleanup"(fw: ReactiveFramework) {
+    const source = fw.signal(0);
+    let childRuns = 0;
+
+    try {
+      fw.run(() => {
+        fw.effect(() => {
+          childRuns++;
+          source.read();
+        });
+        throw new Error("scope setup failed");
+      });
+    } catch {}
+
+    childRuns = 0;
+    try {
+      source.write(1);
+    } catch {}
+    return childRuns === 0 ? "disposes children" : "children survive";
+  },
+
+  /**
    *  E_outer{ E_inner1, E_inner2, E_inner3 } → dispose
    *
    * Probes the cleanup order of sibling effects when their owner

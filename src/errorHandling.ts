@@ -322,6 +322,52 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
+   *  S(a) ← E(e1)
+   *  S(a) ← E(e2 ⚡ throws when a===1)
+   *  S(a) ← E(e3)
+   *  S(b) ← E(e4)
+   *
+   * e2 throws during propagation of a(1), which may halt the
+   * flush. On a subsequent write to unrelated signal b, only
+   * b-dependent effects must run — a-dependent effects skipped
+   * by the earlier halt must NOT leak into the new flush.
+   */
+  "#247 flush queue consistent after effect throw"(
+    fw: ReactiveFramework
+  ) {
+    const a = fw.signal(0);
+    const b = fw.signal(0);
+    let e3Runs = 0;
+
+    fw.effect(() => {
+      a.read();
+    });
+    try {
+      fw.effect(() => {
+        if (a.read() === 1) throw new Error("e2 error");
+      });
+    } catch {}
+    fw.effect(() => {
+      a.read();
+      e3Runs++;
+    });
+    fw.effect(() => {
+      b.read();
+    });
+
+    e3Runs = 0;
+    try {
+      a.write(1);
+    } catch {}
+    e3Runs = 0;
+
+    try {
+      b.write(1);
+    } catch {}
+    expect(e3Runs).toBe(0);
+  },
+
+  /**
    *  S(a) → C(b) ⚡ throws when a is true
    *
    * Computed alternates between throwing and returning "ok".
