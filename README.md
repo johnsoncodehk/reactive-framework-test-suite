@@ -2308,3 +2308,7 @@ for (const { section, cases } of testSuite) {
 npm install
 npm test
 ```
+
+## License
+
+[MIT](./LICENSE)
