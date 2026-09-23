@@ -1,18 +1,3 @@
-/// <reference types="vitest/importMeta" />
-
-interface ImportMeta {
-  dirname: string;
-}
-
-declare module "fs" {
-  export function mkdirSync(path: string, options?: { recursive?: boolean }): void;
-  export function writeFileSync(path: string, data: string): void;
-}
-
-declare module "path" {
-  export function join(...paths: string[]): string;
-}
-
 declare module "pota" {
   export const createSignal: any;
   export const memo: any;

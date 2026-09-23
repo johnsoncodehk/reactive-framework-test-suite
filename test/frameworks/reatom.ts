@@ -30,7 +30,16 @@ export const reatomFramework: ReactiveFramework = {
     const instance = effect(() => {
       const maybeCleanup = batch(fn);
       if (typeof maybeCleanup === "function") {
-        abortVar.subscribe(maybeCleanup);
+        // Reatom runs cleanups as AbortSignal listeners, so a throwing cleanup
+        // never reaches the caller; Node would instead report it as an
+        // uncaught exception after the test has finished.
+        abortVar.subscribe(() => {
+          try {
+            maybeCleanup();
+          } catch (e) {
+            console.error(e);
+          }
+        });
       }
     });
 

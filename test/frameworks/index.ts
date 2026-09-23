@@ -14,7 +14,7 @@ import { svelteFramework } from "./svelte.js";
 import { tansuFramework } from "./tansu.js";
 import { tc39SignalsFramework } from "./tc39Signals.js";
 import { vueReactivityFramework } from "./vueReactivity.js";
-import { xReactivityFramework } from "./xReactivity.js";
+import { solidSignalsFramework } from "./solidSignals.js";
 
 export const frameworks: ReactiveFramework[] = [
   alienSignalsFramework,
@@ -27,7 +27,7 @@ export const frameworks: ReactiveFramework[] = [
   reatomFramework,
   svelteFramework,
   solidFramework,
-  xReactivityFramework,
+  solidSignalsFramework,
   sjsFramework,
   potaFramework,
   angularSignalsFramework,
