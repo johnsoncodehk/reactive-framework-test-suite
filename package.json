@@ -1,6 +1,6 @@
 {
   "name": "reactive-framework-test-suite",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "Cross-framework test suite for reactive signal libraries: propagation, batching, disposal, error handling and other edge cases.",
   "keywords": [
     "signals",
