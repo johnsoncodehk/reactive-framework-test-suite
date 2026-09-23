@@ -17,7 +17,7 @@ function safeFlush() {
   } catch {}
 }
 
-export const xReactivityFramework: ReactiveFramework = {
+export const solidSignalsFramework: ReactiveFramework = {
   name: "@solidjs/signals",
   signal(initialValue) {
     const [read, write] = createSignal(initialValue as any);
