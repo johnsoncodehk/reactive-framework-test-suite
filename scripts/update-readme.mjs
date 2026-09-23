@@ -544,6 +544,10 @@ for (const { section, cases } of testSuite) {
 npm install
 npm test
 \`\`\`
+
+## License
+
+[MIT](./LICENSE)
 `;
 
 writeFileSync(join(root, "README.md"), readme);
