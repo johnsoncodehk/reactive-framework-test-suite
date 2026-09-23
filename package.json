@@ -1,32 +1,35 @@
 {
   "name": "reactive-framework-test-suite",
   "version": "0.0.2",
+  "description": "Cross-framework test suite for reactive signal libraries: propagation, batching, disposal, error handling and other edge cases.",
+  "keywords": [
+    "signals",
+    "reactivity",
+    "reactive",
+    "test-suite",
+    "computed",
+    "effect"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/johnsoncodehk/reactive-framework-test-suite.git"
+  },
   "license": "MIT",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "files": [
-    "src/index.ts",
-    "src/assert.ts",
-    "src/framework.ts",
-    "src/graphPropagation.ts",
-    "src/dynamicDeps.ts",
-    "src/computedEval.ts",
-    "src/equality.ts",
-    "src/effectLifecycle.ts",
-    "src/nestedEffects.ts",
-    "src/innerWrite.ts",
-    "src/cycleDetection.ts",
-    "src/batching.ts",
-    "src/untracked.ts",
-    "src/errorHandling.ts",
-    "src/staleEvaluation.ts",
-    "src/memoryGc.ts",
-    "src/behaviorDifferences.ts"
+    "dist"
   ],
   "scripts": {
-    "test": "vitest run; node scripts/update-readme.mjs"
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run && node scripts/update-readme.mjs",
+    "prepack": "npm run build"
   },
   "devDependencies": {
     "@amadeus-it-group/tansu": "^2.0.0",
@@ -36,6 +39,7 @@
     "@reactively/core": "^0.0.8",
     "@reatom/core": "^1001.0.0",
     "@solidjs/signals": "^0.3.0",
+    "@types/node": "^22.20.4",
     "@vue/reactivity": "^3.5.0",
     "alien-signals": "^3.2.1",
     "anod": "^0.9.1",

@@ -1,5 +1,5 @@
 export type { ReactiveFramework, Signal, Computed } from "./framework.js";
-export { SkipTest, detectCapabilities, hasEffectCleanup, hasComputedThrows } from "./framework.js";
+export { SkipTest } from "./framework.js";
 export { expect, setExpect } from "./assert.js";
 
 import type { ReactiveFramework } from "./framework.js";
