@@ -516,13 +516,16 @@ Wire it up with your test runner (vitest, jest, mocha, etc.):
 
 \`\`\`ts
 import { testSuite, SkipTest, setExpect } from "reactive-framework-test-suite";
-import { expect } from "vitest";
+import { describe, test, expect } from "vitest";
 
 // Optional: swap the built-in expect for your runner's
 // for richer error messages and tighter integration.
 setExpect(expect);
 
-for (const { section, cases } of testSuite) {
+for (const { section, cases, type } of testSuite) {
+  // Behavioral cases never fail; they return a string describing
+  // the design choice your framework made (see Behavioral Differences).
+  if (type === "behavioral") continue;
   describe(section, () => {
     for (const [name, fn] of Object.entries(cases)) {
       test(name, () => {
