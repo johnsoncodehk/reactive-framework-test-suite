@@ -31,7 +31,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | pota | `pota` | 0.7.82 | 2024-02-01 |
 | @angular/core | `@angular/core` | 20.3.33 | 2026-09-30 |
 | anod | `anod` | 0.9.1 | 2026-04-27 |
-| @pravosleva/reactive-engine | `@pravosleva/reactive-engine` | 2.1.1 | 2026-10-13 |
+| @pravosleva/reactive-engine | `@pravosleva/reactive-engine` | 2.1.2 | 2026-10-13 |
 
 ## Summary
 

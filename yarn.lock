@@ -301,9 +301,9 @@
   integrity sha512-oTXEIha4SsuXdTA4Iyskj0kpdx2yVXdhd75c2v3xGrHFfVMsbhTPZU/nMPL4sWKo4pBHm3aucLaqGlF696dTyQ==
 
 "@pravosleva/reactive-engine@^2.1.1":
-  version "2.1.1"
-  resolved "https://registry.yarnpkg.com/@pravosleva/reactive-engine/-/reactive-engine-2.1.1.tgz#0fc7b545a0a34c462b62a019a71f31c86331e2ac"
-  integrity sha512-ajVV+fewgxWjGKlItPcldg90nr5VTv6RXVrD/PGV+YeiUCvMvc0BMaai9EZj+t4LYPL1o3m1Q710hKf8Hj/VeQ==
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/@pravosleva/reactive-engine/-/reactive-engine-2.1.2.tgz#9bb1932d00432746671b05ea6c6eea725e5a973e"
+  integrity sha512-XLhXhpmmgm+07m4TH1EYPQK8x/dTHsqSYClZNW5w5/PDGchh7+dCcDCV6wdQiwfxgu081/fFRe/2Pya1QlqwIw==
 
 "@preact/signals-core@^1.8.0":
   version "1.14.4"
