@@ -2,7 +2,7 @@
 
 Cross-library test suite for comparing reactive signal behavior across **16 frameworks** with **178 test cases**.
 
-> 2330 passed, 306 failed, 212 skipped out of 2848 total runs
+> 2348 passed, 288 failed, 212 skipped out of 2848 total runs
 
 Test cases are collected and adapted from the test suites of all participating frameworks — thanks to every project for their thorough testing work. This suite focuses on **reactive semantics** (propagation, batching, disposal, edge cases), not API completeness. Tests that require an optional capability (e.g. `batch`) are skipped (⬜) for frameworks that don't expose it, rather than marked as failures.
 
@@ -31,7 +31,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | pota | `pota` | 0.7.82 | 2024-02-01 |
 | @angular/core | `@angular/core` | 20.3.33 | 2026-09-30 |
 | anod | `anod` | 0.9.1 | 2026-04-27 |
-| @pravosleva/reactive-engine | `@pravosleva/reactive-engine` | 2.1.2 | 2026-10-13 |
+| @pravosleva/reactive-engine | `@pravosleva/reactive-engine` | 2.1.4 | 2026-10-13 |
 
 ## Summary
 
@@ -41,11 +41,11 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | @preact/signals-core        |  174 |    4 |    0 |   178 |
 | @reatom/core                |  174 |    4 |    0 |   178 |
 | @vue/reactivity             |  171 |    7 |    0 |   178 |
+| @pravosleva/reactive-engine |  167 |   11 |    0 |   178 |
 | anod                        |  160 |   18 |    0 |   178 |
 | solid-js                    |  153 |   25 |    0 |   178 |
 | tansu                       |  151 |    6 |   21 |   178 |
 | @solidjs/signals            |  149 |    8 |   21 |   178 |
-| @pravosleva/reactive-engine |  149 |   29 |    0 |   178 |
 | signal-polyfill (TC39)      |  141 |    8 |   29 |   178 |
 | mobx                        |  139 |   18 |   21 |   178 |
 | @angular/core               |  137 |   12 |   29 |   178 |
@@ -71,24 +71,24 @@ Legend:
   ─→       dependency edge (downstream reads upstream)
 ```
 
-| Framework                   | #1..#3,... ×9 | #7 | #9..#10,#206 | #116,#190,#207 | #187 | #188 | #189,#205 | #192 | #204 |
-| --------------------------- | ------------- | -- | ------------ | -------------- | ---- | ---- | --------- | ---- | ---- |
-| alien-signals               |             ✅ |  ✅ |            ✅ |              ✅ |    ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
-| @preact/signals-core        |             ✅ |  ✅ |            ✅ |              ✅ |    ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
-| @reactively/core            |             ✅ |  ✅ |            ✅ |              ✅ |    ✅ |    ⬜ |         ✅ |    ✅ |    ⬜ |
-| tansu                       |             ✅ |  ✅ |            ✅ |              ✅ |    ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
-| signal-polyfill (TC39)      |             ✅ |  ✅ |            ✅ |              ✅ |    ✅ |    ⬜ |         ✅ |    ✅ |    ⬜ |
-| @vue/reactivity             |             ✅ |  ✅ |            ✅ |              ✅ |    ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
-| mobx                        |             ✅ |  ❌ |            ✅ |              ✅ |    ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
-| @reatom/core                |             ✅ |  ✅ |            ✅ |              ✅ |    ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
-| svelte                      |             ✅ |  ✅ |            ✅ |              ✅ |    ✅ |    ⬜ |         ✅ |    ✅ |    ⬜ |
-| solid-js                    |             ✅ |  ✅ |            ✅ |              ✅ |    ❌ |    ❌ |         ❌ |    ✅ |    ✅ |
-| @solidjs/signals            |             ✅ |  ✅ |            ✅ |              ✅ |    ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
-| S.js                        |             ✅ |  ❌ |            ✅ |              ✅ |    ❌ |    ❌ |         ❌ |    ❌ |    ✅ |
-| pota                        |             ✅ |  ✅ |            ✅ |              ❌ |    ❌ |    ❌ |         ❌ |    ✅ |    ❌ |
-| @angular/core               |             ✅ |  ✅ |            ✅ |              ✅ |    ✅ |    ⬜ |         ✅ |    ✅ |    ⬜ |
-| anod                        |             ✅ |  ✅ |            ✅ |              ✅ |    ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
-| @pravosleva/reactive-engine |             ✅ |  ✅ |            ❌ |              ✅ |    ✅ |    ❌ |         ❌ |    ❌ |    ✅ |
+| Framework                   | #1..#3,... ×12 | #7 | #116,#190,#207 | #187,#205 | #188 | #189 | #192 | #204 |
+| --------------------------- | -------------- | -- | -------------- | --------- | ---- | ---- | ---- | ---- |
+| alien-signals               |              ✅ |  ✅ |              ✅ |         ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| @preact/signals-core        |              ✅ |  ✅ |              ✅ |         ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| @reactively/core            |              ✅ |  ✅ |              ✅ |         ✅ |    ⬜ |    ✅ |    ✅ |    ⬜ |
+| tansu                       |              ✅ |  ✅ |              ✅ |         ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| signal-polyfill (TC39)      |              ✅ |  ✅ |              ✅ |         ✅ |    ⬜ |    ✅ |    ✅ |    ⬜ |
+| @vue/reactivity             |              ✅ |  ✅ |              ✅ |         ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| mobx                        |              ✅ |  ❌ |              ✅ |         ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| @reatom/core                |              ✅ |  ✅ |              ✅ |         ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| svelte                      |              ✅ |  ✅ |              ✅ |         ✅ |    ⬜ |    ✅ |    ✅ |    ⬜ |
+| solid-js                    |              ✅ |  ✅ |              ✅ |         ❌ |    ❌ |    ❌ |    ✅ |    ✅ |
+| @solidjs/signals            |              ✅ |  ✅ |              ✅ |         ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| S.js                        |              ✅ |  ❌ |              ✅ |         ❌ |    ❌ |    ❌ |    ❌ |    ✅ |
+| pota                        |              ✅ |  ✅ |              ❌ |         ❌ |    ❌ |    ❌ |    ✅ |    ❌ |
+| @angular/core               |              ✅ |  ✅ |              ✅ |         ✅ |    ⬜ |    ✅ |    ✅ |    ⬜ |
+| anod                        |              ✅ |  ✅ |              ✅ |         ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| @pravosleva/reactive-engine |              ✅ |  ✅ |              ✅ |         ✅ |    ❌ |    ❌ |    ✅ |    ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
@@ -104,32 +104,6 @@ Legend:
 ```
 
 Both branches unchanged. d must NOT re-evaluate (propagation cut).
-
-#### #9 linear convergence
-
-```
- S(a) → C(b)
-   \    /
-    C(c)
-   /
- S(a) → C(d)  [same a]
-```
-
- a→b, {a,b}→c, {a,c}→d
-
-Increasing fan-in at each level. Each node evaluates once.
-
-#### #10 exponential convergence
-
- a→b, {b,a}→c, {c,b}→d, {d,c}→e
-
-```
- S(a) ─→ C(b) ─→ C(c) ─→ C(d) ─→ C(e)
-   \─────→ /  \─────→ /  \─────→ /
-```
-
-Each level reads previous two. Naive impl is O(2^n).
-Each node must evaluate exactly once.
 
 #### #116 other listeners still notified after one disposes
 
@@ -235,22 +209,6 @@ Both change — c and effect must evaluate only once each.
 Two signals cross-feed two computeds joining at e.
 Both signals change — c, d, e each evaluate once.
 
-#### #206 stacked diamonds
-
-```
-      S(a)
-     /    \
-   C(b)  C(c)
-     \    /
-      C(d)
-     /    \
-   C(e)  C(f)
-     \    /
-      C(g)
-```
-
-Two diamonds stacked. Each node evaluates once.
-
 #### #207 wide fan-out: all effects fire once
 
 ```
@@ -302,7 +260,7 @@ Legend:
 | pota                        |        ✅ |                   ✅ |                ❌ |    ❌ |    ✅ |    ❌ |
 | @angular/core               |        ✅ |                   ✅ |                ✅ |    ✅ |    ✅ |    ✅ |
 | anod                        |        ✅ |                   ✅ |                ✅ |    ✅ |    ✅ |    ✅ |
-| @pravosleva/reactive-engine |        ✅ |                   ✅ |                ✅ |    ❌ |    ❌ |    ✅ |
+| @pravosleva/reactive-engine |        ✅ |                   ✅ |                ✅ |    ❌ |    ✅ |    ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
@@ -441,24 +399,24 @@ Legend:
   ─→       dependency edge (downstream reads upstream)
 ```
 
-| Framework                   | #18,#25 | #19,#21,#24,... ×6 | #22 | #23 | #147 | #149 | #27 |
-| --------------------------- | ------- | ------------------ | --- | --- | ---- | ---- | --- |
-| alien-signals               |       ✅ |                  ✅ |   ✅ |   ✅ |    ✅ |    ✅ |   ✅ |
-| @preact/signals-core        |       ✅ |                  ✅ |   ✅ |   ✅ |    ❌ |    ✅ |   ✅ |
-| @reactively/core            |       ✅ |                  ✅ |   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
-| tansu                       |       ✅ |                  ✅ |   ✅ |   ✅ |    ✅ |    ✅ |   ✅ |
-| signal-polyfill (TC39)      |       ✅ |                  ✅ |   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
-| @vue/reactivity             |       ✅ |                  ✅ |   ✅ |   ✅ |    ❌ |    ✅ |   ✅ |
-| mobx                        |       ❌ |                  ✅ |   ✅ |   ✅ |    ❌ |    ✅ |   ❌ |
-| @reatom/core                |       ✅ |                  ✅ |   ✅ |   ✅ |    ✅ |    ✅ |   ✅ |
-| svelte                      |       ✅ |                  ✅ |   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
-| solid-js                    |       ✅ |                  ✅ |   ✅ |   ✅ |    ❌ |    ✅ |   ✅ |
-| @solidjs/signals            |       ✅ |                  ✅ |   ✅ |   ✅ |    ❌ |    ✅ |   ✅ |
-| S.js                        |       ✅ |                  ✅ |   ✅ |   ✅ |    ❌ |    ✅ |   ❌ |
-| pota                        |       ✅ |                  ✅ |   ✅ |   ❌ |    ❌ |    ✅ |   ✅ |
-| @angular/core               |       ✅ |                  ✅ |   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
-| anod                        |       ✅ |                  ✅ |   ✅ |   ✅ |    ❌ |    ✅ |   ✅ |
-| @pravosleva/reactive-engine |       ✅ |                  ✅ |   ❌ |   ✅ |    ❌ |    ✅ |   ✅ |
+| Framework                   | #18,#25 | #19,#21..#22,... ×7 | #23 | #147 | #149 | #27 |
+| --------------------------- | ------- | ------------------- | --- | ---- | ---- | --- |
+| alien-signals               |       ✅ |                   ✅ |   ✅ |    ✅ |    ✅ |   ✅ |
+| @preact/signals-core        |       ✅ |                   ✅ |   ✅ |    ❌ |    ✅ |   ✅ |
+| @reactively/core            |       ✅ |                   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
+| tansu                       |       ✅ |                   ✅ |   ✅ |    ✅ |    ✅ |   ✅ |
+| signal-polyfill (TC39)      |       ✅ |                   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
+| @vue/reactivity             |       ✅ |                   ✅ |   ✅ |    ❌ |    ✅ |   ✅ |
+| mobx                        |       ❌ |                   ✅ |   ✅ |    ❌ |    ✅ |   ❌ |
+| @reatom/core                |       ✅ |                   ✅ |   ✅ |    ✅ |    ✅ |   ✅ |
+| svelte                      |       ✅ |                   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
+| solid-js                    |       ✅ |                   ✅ |   ✅ |    ❌ |    ✅ |   ✅ |
+| @solidjs/signals            |       ✅ |                   ✅ |   ✅ |    ❌ |    ✅ |   ✅ |
+| S.js                        |       ✅ |                   ✅ |   ✅ |    ❌ |    ✅ |   ❌ |
+| pota                        |       ✅ |                   ✅ |   ❌ |    ❌ |    ✅ |   ✅ |
+| @angular/core               |       ✅ |                   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
+| anod                        |       ✅ |                   ✅ |   ✅ |    ❌ |    ✅ |   ✅ |
+| @pravosleva/reactive-engine |       ✅ |                   ✅ |   ✅ |    ❌ |    ✅ |   ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
@@ -471,15 +429,6 @@ Legend:
 
 Reading a computed twice without changing its dep must not
 re-evaluate the compute function (result is cached).
-
-#### #22 chained computed avoids redundant re-compute
-
-```
- S(a) → C(b) → C(c) → C(d)
-```
-
-Linear chain with call counters. After one source change,
-each computed in the chain must re-evaluate exactly once.
 
 #### #23 sync access of invalidated chained computed runs effect
 
@@ -550,24 +499,24 @@ Legend:
   ─→       dependency edge (downstream reads upstream)
 ```
 
-| Framework                   | #28 | #34 | #169 | #220 |
-| --------------------------- | --- | --- | ---- | ---- |
-| alien-signals               |   ✅ |   ✅ |    ✅ |    ✅ |
-| @preact/signals-core        |   ✅ |   ✅ |    ✅ |    ✅ |
-| @reactively/core            |   ✅ |   ✅ |    ✅ |    ✅ |
-| tansu                       |   ✅ |   ✅ |    ✅ |    ❌ |
-| signal-polyfill (TC39)      |   ✅ |   ✅ |    ✅ |    ✅ |
-| @vue/reactivity             |   ✅ |   ✅ |    ✅ |    ✅ |
-| mobx                        |   ❌ |   ❌ |    ✅ |    ❌ |
-| @reatom/core                |   ✅ |   ✅ |    ✅ |    ✅ |
-| svelte                      |   ✅ |   ✅ |    ✅ |    ✅ |
-| solid-js                    |   ✅ |   ✅ |    ✅ |    ✅ |
-| @solidjs/signals            |   ✅ |   ✅ |    ✅ |    ✅ |
-| S.js                        |   ❌ |   ❌ |    ❌ |    ❌ |
-| pota                        |   ✅ |   ✅ |    ✅ |    ✅ |
-| @angular/core               |   ✅ |   ✅ |    ✅ |    ✅ |
-| anod                        |   ✅ |   ✅ |    ✅ |    ✅ |
-| @pravosleva/reactive-engine |   ✅ |   ❌ |    ❌ |    ❌ |
+| Framework                   | #28,#34 | #169 | #220 |
+| --------------------------- | ------- | ---- | ---- |
+| alien-signals               |       ✅ |    ✅ |    ✅ |
+| @preact/signals-core        |       ✅ |    ✅ |    ✅ |
+| @reactively/core            |       ✅ |    ✅ |    ✅ |
+| tansu                       |       ✅ |    ✅ |    ❌ |
+| signal-polyfill (TC39)      |       ✅ |    ✅ |    ✅ |
+| @vue/reactivity             |       ✅ |    ✅ |    ✅ |
+| mobx                        |       ❌ |    ✅ |    ❌ |
+| @reatom/core                |       ✅ |    ✅ |    ✅ |
+| svelte                      |       ✅ |    ✅ |    ✅ |
+| solid-js                    |       ✅ |    ✅ |    ✅ |
+| @solidjs/signals            |       ✅ |    ✅ |    ✅ |
+| S.js                        |       ❌ |    ❌ |    ❌ |
+| pota                        |       ✅ |    ✅ |    ✅ |
+| @angular/core               |       ✅ |    ✅ |    ✅ |
+| anod                        |       ✅ |    ✅ |    ✅ |
+| @pravosleva/reactive-engine |       ✅ |    ✅ |    ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
@@ -649,7 +598,7 @@ Legend:
 | pota                        |               ✅ |             ❌ |   ❌ |             ✅ |   ❌ |   ✅ |    ❌ |    ❌ |    ❌ |    ✅ |    ❌ |    ❌ |    ❌ |    ❌ |    ❌ |    ❌ |    ❌ |    ❌ |    ✅ |         ❌ |         ✅ |
 | @angular/core               |               ✅ |             ✅ |   ✅ |             ✅ |   ❌ |   ⬜ |    ❌ |    ✅ |    ❌ |    ❌ |    ❌ |    ✅ |    ✅ |    ✅ |    ⬜ |    ✅ |    ✅ |    ⬜ |    ❌ |         ✅ |         ✅ |
 | anod                        |               ✅ |             ✅ |   ✅ |             ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |    ✅ |         ❌ |         ❌ |
-| @pravosleva/reactive-engine |               ✅ |             ✅ |   ✅ |             ✅ |   ❌ |   ✅ |    ✅ |    ✅ |    ❌ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |         ✅ |         ✅ |
+| @pravosleva/reactive-engine |               ✅ |             ✅ |   ✅ |             ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |         ✅ |         ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
@@ -958,7 +907,7 @@ Legend:
 | pota                        |       ✅ |   ✅ |   ❌ |   ✅ |    ❌ |               ❌ |    ✅ |    ✅ |    ❌ |
 | @angular/core               |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |               ✅ |    ✅ |    ❌ |    ❌ |
 | anod                        |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |               ✅ |    ✅ |    ✅ |    ✅ |
-| @pravosleva/reactive-engine |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |               ✅ |    ❌ |    ❌ |    ❌ |
+| @pravosleva/reactive-engine |       ✅ |   ✅ |   ✅ |   ✅ |    ✅ |               ✅ |    ✅ |    ❌ |    ❌ |
 
 <details>
 <summary>Tests with failures or skips</summary>
@@ -1123,24 +1072,24 @@ Legend:
   ═→       inner write (node writes to a signal during evaluation)
 ```
 
-| Framework                   | #50,#224..#225 | #51 | #52,#112,... ×11 | #53,#56,... ×5 | #54 | #179 | #57 | #182 | #183,#185 | #186 | #213 | #212 |
-| --------------------------- | -------------- | --- | ---------------- | -------------- | --- | ---- | --- | ---- | --------- | ---- | ---- | ---- |
-| alien-signals               |              ✅ |   ✅ |                ✅ |              ✅ |   ✅ |    ✅ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |    ✅ |
-| @preact/signals-core        |              ✅ |   ✅ |                ✅ |              ✅ |   ✅ |    ✅ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |    ✅ |
-| @reactively/core            |              ❌ |   ⬜ |                ✅ |              ✅ |   ✅ |    ❌ |   ✅ |    ⬜ |         ✅ |    ❌ |    ✅ |    ✅ |
-| tansu                       |              ✅ |   ⬜ |                ✅ |              ✅ |   ✅ |    ❌ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |    ✅ |
-| signal-polyfill (TC39)      |              ✅ |   ✅ |                ✅ |              ✅ |   ✅ |    ❌ |   ✅ |    ⬜ |         ✅ |    ✅ |    ❌ |    ❌ |
-| @vue/reactivity             |              ✅ |   ✅ |                ✅ |              ✅ |   ✅ |    ✅ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |    ✅ |
-| mobx                        |              ✅ |   ⬜ |                ✅ |              ✅ |   ✅ |    ✅ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |    ✅ |
-| @reatom/core                |              ✅ |   ✅ |                ✅ |              ✅ |   ✅ |    ❌ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |    ✅ |
-| svelte                      |              ✅ |   ✅ |                ✅ |              ✅ |   ❌ |    ❌ |   ❌ |    ⬜ |         ✅ |    ✅ |    ❌ |    ✅ |
-| solid-js                    |              ✅ |   ✅ |                ✅ |              ✅ |   ✅ |    ❌ |   ✅ |    ✅ |         ❌ |    ✅ |    ✅ |    ✅ |
-| @solidjs/signals            |              ✅ |   ⬜ |                ✅ |              ✅ |   ✅ |    ❌ |   ✅ |    ✅ |         ✅ |    ✅ |    ❌ |    ❌ |
-| S.js                        |              ✅ |   ❌ |                ✅ |              ✅ |   ✅ |    ❌ |   ✅ |    ❌ |         ❌ |    ✅ |    ✅ |    ✅ |
-| pota                        |              ❌ |   ❌ |                ✅ |              ❌ |   ❌ |    ❌ |   ✅ |    ❌ |         ❌ |    ❌ |    ❌ |    ❌ |
-| @angular/core               |              ✅ |   ✅ |                ✅ |              ✅ |   ✅ |    ❌ |   ❌ |    ⬜ |         ✅ |    ✅ |    ✅ |    ✅ |
-| anod                        |              ✅ |   ✅ |                ✅ |              ✅ |   ✅ |    ❌ |   ✅ |    ❌ |         ✅ |    ✅ |    ✅ |    ✅ |
-| @pravosleva/reactive-engine |              ✅ |   ✅ |                ✅ |              ✅ |   ✅ |    ❌ |   ✅ |    ✅ |         ✅ |    ❌ |    ❌ |    ❌ |
+| Framework                   | #50,#186,... ×4 | #51 | #52,#112,... ×11 | #53,#56,... ×4 | #54 | #180 | #179 | #57 | #182 | #183,#185 | #213 | #212 |
+| --------------------------- | --------------- | --- | ---------------- | -------------- | --- | ---- | ---- | --- | ---- | --------- | ---- | ---- |
+| alien-signals               |               ✅ |   ✅ |                ✅ |              ✅ |   ✅ |    ✅ |    ✅ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
+| @preact/signals-core        |               ✅ |   ✅ |                ✅ |              ✅ |   ✅ |    ✅ |    ✅ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
+| @reactively/core            |               ❌ |   ⬜ |                ✅ |              ✅ |   ✅ |    ✅ |    ❌ |   ✅ |    ⬜ |         ✅ |    ✅ |    ✅ |
+| tansu                       |               ✅ |   ⬜ |                ✅ |              ✅ |   ✅ |    ✅ |    ❌ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
+| signal-polyfill (TC39)      |               ✅ |   ✅ |                ✅ |              ✅ |   ✅ |    ✅ |    ❌ |   ✅ |    ⬜ |         ✅ |    ❌ |    ❌ |
+| @vue/reactivity             |               ✅ |   ✅ |                ✅ |              ✅ |   ✅ |    ✅ |    ✅ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
+| mobx                        |               ✅ |   ⬜ |                ✅ |              ✅ |   ✅ |    ✅ |    ✅ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
+| @reatom/core                |               ✅ |   ✅ |                ✅ |              ✅ |   ✅ |    ✅ |    ❌ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
+| svelte                      |               ✅ |   ✅ |                ✅ |              ✅ |   ❌ |    ✅ |    ❌ |   ❌ |    ⬜ |         ✅ |    ❌ |    ✅ |
+| solid-js                    |               ✅ |   ✅ |                ✅ |              ✅ |   ✅ |    ✅ |    ❌ |   ✅ |    ✅ |         ❌ |    ✅ |    ✅ |
+| @solidjs/signals            |               ✅ |   ⬜ |                ✅ |              ✅ |   ✅ |    ✅ |    ❌ |   ✅ |    ✅ |         ✅ |    ❌ |    ❌ |
+| S.js                        |               ✅ |   ❌ |                ✅ |              ✅ |   ✅ |    ✅ |    ❌ |   ✅ |    ❌ |         ❌ |    ✅ |    ✅ |
+| pota                        |               ❌ |   ❌ |                ✅ |              ❌ |   ❌ |    ❌ |    ❌ |   ✅ |    ❌ |         ❌ |    ❌ |    ❌ |
+| @angular/core               |               ✅ |   ✅ |                ✅ |              ✅ |   ✅ |    ✅ |    ❌ |   ❌ |    ⬜ |         ✅ |    ✅ |    ✅ |
+| anod                        |               ✅ |   ✅ |                ✅ |              ✅ |   ✅ |    ✅ |    ❌ |   ✅ |    ❌ |         ✅ |    ✅ |    ✅ |
+| @pravosleva/reactive-engine |               ✅ |   ✅ |                ✅ |              ✅ |   ✅ |    ❌ |    ❌ |   ✅ |    ✅ |         ✅ |    ✅ |    ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
@@ -1452,24 +1401,24 @@ Legend:
   ─→       dependency edge (downstream reads upstream)
 ```
 
-| Framework                   | #66,#72 | #67,#128 | #69 | #70 | #119 | #120 | #121..#122,... ×4 | #123 | #124,#127 | #125 | #126 | #130 | #131 | #132 |
-| --------------------------- | ------- | -------- | --- | --- | ---- | ---- | ----------------- | ---- | --------- | ---- | ---- | ---- | ---- | ---- |
-| alien-signals               |       ✅ |        ✅ |   ✅ |   ✅ |    ✅ |    ✅ |                 ✅ |    ✅ |         ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
-| @preact/signals-core        |       ✅ |        ✅ |   ✅ |   ✅ |    ✅ |    ✅ |                 ✅ |    ✅ |         ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
-| @reactively/core            |       ⬜ |        ⬜ |   ⬜ |   ⬜ |    ⬜ |    ⬜ |                 ⬜ |    ⬜ |         ⬜ |    ⬜ |    ⬜ |    ❌ |    ⬜ |    ⬜ |
-| tansu                       |       ✅ |        ✅ |   ✅ |   ✅ |    ✅ |    ⬜ |                 ✅ |    ✅ |         ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
-| signal-polyfill (TC39)      |       ⬜ |        ⬜ |   ⬜ |   ⬜ |    ⬜ |    ✅ |                 ⬜ |    ⬜ |         ⬜ |    ⬜ |    ⬜ |    ✅ |    ⬜ |    ⬜ |
-| @vue/reactivity             |       ✅ |        ✅ |   ✅ |   ✅ |    ✅ |    ✅ |                 ✅ |    ❌ |         ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |
-| mobx                        |       ✅ |        ✅ |   ✅ |   ❌ |    ✅ |    ⬜ |                 ✅ |    ❌ |         ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |
-| @reatom/core                |       ✅ |        ✅ |   ✅ |   ✅ |    ✅ |    ✅ |                 ✅ |    ✅ |         ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
-| svelte                      |       ⬜ |        ⬜ |   ⬜ |   ⬜ |    ⬜ |    ❌ |                 ⬜ |    ⬜ |         ⬜ |    ⬜ |    ⬜ |    ✅ |    ⬜ |    ⬜ |
-| solid-js                    |       ✅ |        ✅ |   ❌ |   ✅ |    ✅ |    ✅ |                 ✅ |    ❌ |         ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |
-| @solidjs/signals            |       ✅ |        ✅ |   ✅ |   ✅ |    ✅ |    ⬜ |                 ✅ |    ❌ |         ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |
-| S.js                        |       ❌ |        ❌ |   ❌ |   ✅ |    ❌ |    ✅ |                 ✅ |    ❌ |         ❌ |    ❌ |    ✅ |    ✅ |    ❌ |    ❌ |
-| pota                        |       ❌ |        ✅ |   ❌ |   ✅ |    ✅ |    ❌ |                 ❌ |    ✅ |         ✅ |    ✅ |    ✅ |    ❌ |    ❌ |    ❌ |
-| @angular/core               |       ⬜ |        ⬜ |   ⬜ |   ⬜ |    ⬜ |    ✅ |                 ⬜ |    ⬜ |         ⬜ |    ⬜ |    ⬜ |    ✅ |    ⬜ |    ⬜ |
-| anod                        |       ✅ |        ❌ |   ❌ |   ✅ |    ✅ |    ✅ |                 ✅ |    ❌ |         ✅ |    ❌ |    ✅ |    ✅ |    ❌ |    ❌ |
-| @pravosleva/reactive-engine |       ✅ |        ✅ |   ✅ |   ✅ |    ❌ |    ✅ |                 ✅ |    ❌ |         ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ❌ |
+| Framework                   | #66,#72 | #67,#125,#128 | #69 | #70 | #119,#124,#127 | #120 | #121..#122,... ×4 | #123 | #126 | #130 | #131 | #132 |
+| --------------------------- | ------- | ------------- | --- | --- | -------------- | ---- | ----------------- | ---- | ---- | ---- | ---- | ---- |
+| alien-signals               |       ✅ |             ✅ |   ✅ |   ✅ |              ✅ |    ✅ |                 ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| @preact/signals-core        |       ✅ |             ✅ |   ✅ |   ✅ |              ✅ |    ✅ |                 ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| @reactively/core            |       ⬜ |             ⬜ |   ⬜ |   ⬜ |              ⬜ |    ⬜ |                 ⬜ |    ⬜ |    ⬜ |    ❌ |    ⬜ |    ⬜ |
+| tansu                       |       ✅ |             ✅ |   ✅ |   ✅ |              ✅ |    ⬜ |                 ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| signal-polyfill (TC39)      |       ⬜ |             ⬜ |   ⬜ |   ⬜ |              ⬜ |    ✅ |                 ⬜ |    ⬜ |    ⬜ |    ✅ |    ⬜ |    ⬜ |
+| @vue/reactivity             |       ✅ |             ✅ |   ✅ |   ✅ |              ✅ |    ✅ |                 ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ❌ |
+| mobx                        |       ✅ |             ✅ |   ✅ |   ❌ |              ✅ |    ⬜ |                 ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ❌ |
+| @reatom/core                |       ✅ |             ✅ |   ✅ |   ✅ |              ✅ |    ✅ |                 ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| svelte                      |       ⬜ |             ⬜ |   ⬜ |   ⬜ |              ⬜ |    ❌ |                 ⬜ |    ⬜ |    ⬜ |    ✅ |    ⬜ |    ⬜ |
+| solid-js                    |       ✅ |             ✅ |   ❌ |   ✅ |              ✅ |    ✅ |                 ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ❌ |
+| @solidjs/signals            |       ✅ |             ✅ |   ✅ |   ✅ |              ✅ |    ⬜ |                 ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ❌ |
+| S.js                        |       ❌ |             ❌ |   ❌ |   ✅ |              ❌ |    ✅ |                 ✅ |    ❌ |    ✅ |    ✅ |    ❌ |    ❌ |
+| pota                        |       ❌ |             ✅ |   ❌ |   ✅ |              ✅ |    ❌ |                 ❌ |    ✅ |    ✅ |    ❌ |    ❌ |    ❌ |
+| @angular/core               |       ⬜ |             ⬜ |   ⬜ |   ⬜ |              ⬜ |    ✅ |                 ⬜ |    ⬜ |    ⬜ |    ✅ |    ⬜ |    ⬜ |
+| anod                        |       ✅ |             ❌ |   ❌ |   ✅ |              ✅ |    ✅ |                 ✅ |    ❌ |    ✅ |    ✅ |    ❌ |    ❌ |
+| @pravosleva/reactive-engine |       ✅ |             ✅ |   ✅ |   ✅ |              ✅ |    ✅ |                 ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ❌ |
 
 <details>
 <summary>Tests with failures or skips</summary>
@@ -1944,38 +1893,27 @@ Legend:
   ─→       dependency edge
 ```
 
-| Framework                   | #94 | #95 | #158..#159,#97 |
-| --------------------------- | --- | --- | -------------- |
-| alien-signals               |   ✅ |   ✅ |              ✅ |
-| @preact/signals-core        |   ✅ |   ✅ |              ✅ |
-| @reactively/core            |   ✅ |   ✅ |              ✅ |
-| tansu                       |   ✅ |   ✅ |              ✅ |
-| signal-polyfill (TC39)      |   ✅ |   ✅ |              ✅ |
-| @vue/reactivity             |   ✅ |   ✅ |              ✅ |
-| mobx                        |   ✅ |   ❌ |              ✅ |
-| @reatom/core                |   ✅ |   ✅ |              ✅ |
-| svelte                      |   ✅ |   ✅ |              ✅ |
-| solid-js                    |   ✅ |   ✅ |              ✅ |
-| @solidjs/signals            |   ✅ |   ✅ |              ✅ |
-| S.js                        |   ✅ |   ✅ |              ✅ |
-| pota                        |   ✅ |   ✅ |              ✅ |
-| @angular/core               |   ✅ |   ✅ |              ✅ |
-| anod                        |   ✅ |   ✅ |              ✅ |
-| @pravosleva/reactive-engine |   ❌ |   ✅ |              ✅ |
+| Framework                   | #94,... ×4 | #95 |
+| --------------------------- | ---------- | --- |
+| alien-signals               |          ✅ |   ✅ |
+| @preact/signals-core        |          ✅ |   ✅ |
+| @reactively/core            |          ✅ |   ✅ |
+| tansu                       |          ✅ |   ✅ |
+| signal-polyfill (TC39)      |          ✅ |   ✅ |
+| @vue/reactivity             |          ✅ |   ✅ |
+| mobx                        |          ✅ |   ❌ |
+| @reatom/core                |          ✅ |   ✅ |
+| svelte                      |          ✅ |   ✅ |
+| solid-js                    |          ✅ |   ✅ |
+| @solidjs/signals            |          ✅ |   ✅ |
+| S.js                        |          ✅ |   ✅ |
+| pota                        |          ✅ |   ✅ |
+| @angular/core               |          ✅ |   ✅ |
+| anod                        |          ✅ |   ✅ |
+| @pravosleva/reactive-engine |          ✅ |   ✅ |
 
 <details>
 <summary>Tests with failures or skips</summary>
-
-#### #94 stale invocation does not trigger pending computations
-
-```
- S(a) ─→ C(b) ─→ C(d)
- S(a) ─→ C(c) ─→ C(d)
-```
-
-Diamond dependency: both C(b) and C(c) depend on S(a),
-and C(d) depends on both. After a single write to S(a),
-C(b) should re-evaluate exactly once and C(d) exactly once.
 
 #### #95 stale computations evaluated before their dependees
 
@@ -2105,7 +2043,7 @@ Legend:
 | pota                        | lazy  | no subscription    | 2 recomputes     | ===       | skips      | returns void | unknown    | unknown    | error            | error       | re-evaluates  | no re-run            | error              | batched            | disposes children | no cascade |
 | @angular/core               | lazy  | no subscription    | single recompute | Object.is | skips      | ⬜            | post-write | post-write | keeps subscribed | halts flush | caches error  | runs 2x per write    | manual bail (200+) | unbatched (2 runs) | children survive  | no cascade |
 | anod                        | eager | no subscription    | single recompute | ===       | skips      | returns void | post-write | post-write | unsubscribes     | continues   | caches error  | runs 2x per write    | manual bail (200+) | batched            | children survive  | LIFO       |
-| @pravosleva/reactive-engine | lazy  | no subscription    | single recompute | ===       | propagates | returns void | post-write | post-write | keeps subscribed | halts flush | re-evaluates  | runs 1x, then blocks | no throw           | unbatched (2 runs) | children survive  | no cascade |
+| @pravosleva/reactive-engine | lazy  | no subscription    | single recompute | Object.is | propagates | returns void | post-write | post-write | keeps subscribed | halts flush | re-evaluates  | runs 1x per write    | no throw           | unbatched (2 runs) | children survive  | no cascade |
 
 <details>
 <summary>Test descriptions</summary>
