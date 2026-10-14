@@ -300,10 +300,10 @@
   resolved "https://registry.yarnpkg.com/@napi-rs/lzma-linux-x64-gnu/-/lzma-linux-x64-gnu-1.5.1.tgz#e57d4306966078662038094fb38eb9146dc3aea9"
   integrity sha512-oTXEIha4SsuXdTA4Iyskj0kpdx2yVXdhd75c2v3xGrHFfVMsbhTPZU/nMPL4sWKo4pBHm3aucLaqGlF696dTyQ==
 
-"@pravosleva/reactive-engine@latest":
-  version "2.1.4"
-  resolved "https://registry.yarnpkg.com/@pravosleva/reactive-engine/-/reactive-engine-2.1.4.tgz#ce4c4bf0f044acd0870c067d6633ad7e2339d458"
-  integrity sha512-fZ4IRA5VCL+AqZecNO53vY0rybErwKzQ2xeTra1NEPN9iG0ues7CAx8cix+gp97ixK900GivCB3ewZ5ZKlzo0Q==
+"@pravosleva/reactive-engine@2.1.12":
+  version "2.1.12"
+  resolved "https://registry.yarnpkg.com/@pravosleva/reactive-engine/-/reactive-engine-2.1.12.tgz#ef0603f3c2191c741262d38c49aeff2eb5708f71"
+  integrity sha512-P3DKQFiU/QrRIFDjEgQ8cyjTaSUiyCBl1MGAFUBtyffYMFEnY7McsE3QyfEgaGE3+WlqO7piyI/7y+yG0Z0AaQ==
 
 "@preact/signals-core@^1.8.0":
   version "1.14.4"
