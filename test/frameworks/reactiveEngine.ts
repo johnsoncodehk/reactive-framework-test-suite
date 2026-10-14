@@ -3,7 +3,7 @@ import { ReactiveEngineCore } from '@pravosleva/reactive-engine'
 
 const engine = new ReactiveEngineCore()
 
-export const reactiveEngineFrameork: ReactiveFramework = {
+export const reactiveEngineFramework: ReactiveFramework = {
   name: "@pravosleva/reactive-engine",
 
   signal<T>(initialValue: T) {
