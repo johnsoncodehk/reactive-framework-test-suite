@@ -17,19 +17,19 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | Framework | Package | Version | Published |
 |-----------|---------|---------|-----------|
 | alien-signals | `alien-signals` | 3.2.1 | 2026-05-14 |
-| @preact/signals-core | `@preact/signals-core` | 1.14.4 | 2026-07-07 |
+| @preact/signals-core | `@preact/signals-core` | 1.14.2 | 2026-05-11 |
 | @reactively/core | `@reactively/core` | 0.0.8 | 2023-03-20 |
 | tansu | `@amadeus-it-group/tansu` | 2.0.0 | 2024-12-04 |
 | signal-polyfill (TC39) | `signal-polyfill` | 0.2.2 | 2025-01-17 |
-| @vue/reactivity | `@vue/reactivity` | 3.5.43 | 2026-09-17 |
-| mobx | `mobx` | 6.16.1 | 2026-06-08 |
-| @reatom/core | `@reatom/core` | 1001.3.0 | 2026-07-20 |
-| svelte | `svelte` | 5.57.2 | 2026-10-06 |
-| solid-js | `solid-js` | 1.9.17 | 2026-10-07 |
+| @vue/reactivity | `@vue/reactivity` | 3.5.34 | 2026-05-06 |
+| mobx | `mobx` | 6.15.3 | 2026-05-07 |
+| @reatom/core | `@reatom/core` | 1001.0.0 | 2026-05-13 |
+| svelte | `svelte` | 5.55.5 | 2026-04-23 |
+| solid-js | `solid-js` | 1.9.12 | 2026-03-24 |
 | @solidjs/signals | `@solidjs/signals` | 0.3.2 | 2025-04-29 |
 | S.js | `s-js` | 0.4.9 | 2018-07-28 |
 | pota | `pota` | 0.7.82 | 2024-02-01 |
-| @angular/core | `@angular/core` | 20.3.33 | 2026-09-30 |
+| @angular/core | `@angular/core` | 20.3.20 | 2026-05-06 |
 | anod | `anod` | 0.9.1 | 2026-04-27 |
 | @pravosleva/reactive-engine | `@pravosleva/reactive-engine` | 2.1.12 | 2026-10-14 |
 
@@ -38,7 +38,7 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | Framework                   | Pass | Fail | Skip | Total |
 | --------------------------- | ---- | ---- | ---- | ----- |
 | alien-signals               |  178 |    0 |    0 |   178 |
-| @preact/signals-core        |  174 |    4 |    0 |   178 |
+| @preact/signals-core        |  175 |    3 |    0 |   178 |
 | @reatom/core                |  174 |    4 |    0 |   178 |
 | @pravosleva/reactive-engine |  173 |    5 |    0 |   178 |
 | @vue/reactivity             |  171 |    7 |    0 |   178 |
@@ -49,8 +49,8 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 | signal-polyfill (TC39)      |  141 |    8 |   29 |   178 |
 | mobx                        |  139 |   18 |   21 |   178 |
 | @angular/core               |  137 |   12 |   29 |   178 |
-| svelte                      |  130 |   12 |   36 |   178 |
 | S.js                        |  130 |   48 |    0 |   178 |
+| svelte                      |  129 |   13 |   36 |   178 |
 | @reactively/core            |  101 |   22 |   55 |   178 |
 | pota                        |   93 |   85 |    0 |   178 |
 
@@ -402,7 +402,7 @@ Legend:
 | Framework                   | #18,#25 | #19,#21..#22,... ×7 | #23 | #147 | #149 | #27 |
 | --------------------------- | ------- | ------------------- | --- | ---- | ---- | --- |
 | alien-signals               |       ✅ |                   ✅ |   ✅ |    ✅ |    ✅ |   ✅ |
-| @preact/signals-core        |       ✅ |                   ✅ |   ✅ |    ❌ |    ✅ |   ✅ |
+| @preact/signals-core        |       ✅ |                   ✅ |   ✅ |    ✅ |    ✅ |   ✅ |
 | @reactively/core            |       ✅ |                   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
 | tansu                       |       ✅ |                   ✅ |   ✅ |    ✅ |    ✅ |   ✅ |
 | signal-polyfill (TC39)      |       ✅ |                   ✅ |   ✅ |    ⬜ |    ⬜ |   ✅ |
@@ -591,7 +591,7 @@ Legend:
 | @vue/reactivity             |               ✅ |             ✅ |   ✅ |             ✅ |   ✅ |   ✅ |    ✅ |    ❌ |    ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |         ✅ |         ✅ |
 | mobx                        |               ✅ |             ✅ |   ⬜ |             ⬜ |   ⬜ |   ✅ |    ⬜ |    ✅ |    ⬜ |    ✅ |    ✅ |    ✅ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ❌ |    ⬜ |         ⬜ |         ⬜ |
 | @reatom/core                |               ✅ |             ✅ |   ✅ |             ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |         ✅ |         ✅ |
-| svelte                      |               ✅ |             ✅ |   ✅ |             ✅ |   ✅ |   ⬜ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |    ✅ |    ❌ |    ⬜ |    ⬜ |    ✅ |    ⬜ |    ✅ |         ✅ |         ✅ |
+| svelte                      |               ✅ |             ✅ |   ✅ |             ✅ |   ✅ |   ⬜ |    ❌ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |    ✅ |    ❌ |    ⬜ |    ⬜ |    ✅ |    ⬜ |    ✅ |         ✅ |         ✅ |
 | solid-js                    |               ✅ |             ✅ |   ✅ |             ✅ |   ✅ |   ✅ |    ❌ |    ❌ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |         ✅ |         ✅ |
 | @solidjs/signals            |               ✅ |             ✅ |   ⬜ |             ⬜ |   ⬜ |   ✅ |    ⬜ |    ✅ |    ⬜ |    ✅ |    ✅ |    ✅ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ✅ |    ⬜ |         ⬜ |         ⬜ |
 | S.js                        |               ✅ |             ✅ |   ✅ |             ✅ |   ❌ |   ❌ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |    ❌ |    ❌ |    ✅ |         ✅ |         ✅ |
