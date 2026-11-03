@@ -1,6 +1,8 @@
 import type { ReactiveFramework } from "../../src/framework.js";
 import S from "s-js";
 
+let effectDepth = 0;
+
 export const sjsFramework: ReactiveFramework = {
   name: "S.js",
   signal(initialValue) {
@@ -15,15 +17,31 @@ export const sjsFramework: ReactiveFramework = {
     return { read: () => c() };
   },
   effect(fn) {
-    let dispose!: () => void;
-    S.root((d: () => void) => {
-      dispose = d;
-      S(() => {
+    let disposed = false;
+    const body = () => {
+      if (disposed) return;
+      effectDepth++;
+      try {
         const cleanup = fn();
         if (typeof cleanup === "function") {
           S.cleanup(cleanup);
         }
-      });
+      } finally {
+        effectDepth--;
+      }
+    };
+    // An effect created inside another effect becomes a child computation,
+    // so S.js's own ownership disposes it when the parent re-runs or is disposed.
+    if (effectDepth > 0) {
+      S(body);
+      return () => {
+        disposed = true;
+      };
+    }
+    let dispose!: () => void;
+    S.root((d: () => void) => {
+      dispose = d;
+      S(body);
     });
     return dispose;
   },

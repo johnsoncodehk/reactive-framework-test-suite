@@ -13,6 +13,8 @@ import {
   onCleanup,
 } from "solid-js/dist/solid.cjs";
 
+let effectDepth = 0;
+
 export const solidFramework: ReactiveFramework = {
   name: "solid-js",
   signal(initialValue) {
@@ -26,15 +28,31 @@ export const solidFramework: ReactiveFramework = {
     return { read: createMemo(fn) };
   },
   effect(fn) {
-    let dispose!: () => void;
-    createRoot((d: () => void) => {
-      dispose = d;
-      createComputed(() => {
+    let disposed = false;
+    const body = () => {
+      if (disposed) return;
+      effectDepth++;
+      try {
         const cleanup = fn();
         if (typeof cleanup === "function") {
           onCleanup(cleanup);
         }
-      });
+      } finally {
+        effectDepth--;
+      }
+    };
+    // An effect created inside another effect becomes a child computation,
+    // so Solid's own ownership disposes it when the parent re-runs or is disposed.
+    if (effectDepth > 0) {
+      createComputed(body);
+      return () => {
+        disposed = true;
+      };
+    }
+    let dispose!: () => void;
+    createRoot((d: () => void) => {
+      dispose = d;
+      createComputed(body);
     });
     return dispose;
   },

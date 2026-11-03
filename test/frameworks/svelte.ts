@@ -32,4 +32,7 @@ export const svelteFramework: ReactiveFramework = {
     $.flush();
     destroy();
   },
+  untracked(fn) {
+    return $.untrack(fn);
+  },
 };

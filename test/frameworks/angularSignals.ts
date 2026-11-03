@@ -42,7 +42,9 @@ export const angularSignalsFramework: ReactiveFramework = {
     w.run();
     return () => {
       w.destroy();
-      if (typeof cleanup === "function") cleanup();
+      const c = cleanup;
+      cleanup = undefined;
+      if (typeof c === "function") c();
     };
   },
   run(fn) {

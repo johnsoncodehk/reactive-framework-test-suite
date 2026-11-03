@@ -5,6 +5,9 @@ import type { ReactiveFramework } from "../../src/framework.js";
 import * as pota from "pota/src/lib/reactivity/primitives/solid.js";
 const { signal: createSignal, memo, renderEffect, batch, root, cleanup, untrack } = pota as any;
 
+let effectDepth = 0;
+let runDisposers: (() => void)[] | null = null;
+
 export const potaFramework: ReactiveFramework = {
   name: "pota",
   signal(initialValue) {
@@ -15,23 +18,47 @@ export const potaFramework: ReactiveFramework = {
     return { read: memo(fn) };
   },
   effect(fn) {
-    let dispose!: () => void;
-    root((d: () => void) => {
-      dispose = d;
-      renderEffect(() => {
+    let disposed = false;
+    const body = () => {
+      if (disposed) return;
+      effectDepth++;
+      try {
         const cl = fn();
         if (typeof cl === "function") {
           cleanup(cl);
         }
-      });
+      } finally {
+        effectDepth--;
+      }
+    };
+    // An effect created inside another effect becomes a child computation,
+    // so pota's own ownership disposes it when the parent re-runs or is disposed.
+    if (effectDepth > 0) {
+      renderEffect(body);
+      return () => {
+        disposed = true;
+      };
+    }
+    let dispose!: () => void;
+    root((d: () => void) => {
+      dispose = d;
+      renderEffect(body);
     });
+    runDisposers?.push(dispose);
     return dispose;
   },
   run(fn) {
-    root((dispose: () => void) => {
+    // Not run inside root(): solid-js (which pota wraps) defers render
+    // effects queued during a root's initialization until it returns,
+    // which would hold back every effect re-run for the whole test.
+    const disposers: (() => void)[] = [];
+    runDisposers = disposers;
+    try {
       fn();
-      dispose();
-    });
+    } finally {
+      runDisposers = null;
+      for (const d of disposers) d();
+    }
   },
   batch(fn) {
     batch(fn);
