@@ -2,6 +2,19 @@ import type { ReactiveFramework } from "../../src/framework.js";
 import { reactive, stabilize } from "@reactively/core";
 
 let tracked: any[] = [];
+let stabilizing = false;
+
+// stabilize() is not reentrant: a nested call re-runs the effect that is
+// currently executing. Effects queued during a pass are run by that pass.
+function flush() {
+  if (stabilizing) return;
+  stabilizing = true;
+  try {
+    stabilize();
+  } finally {
+    stabilizing = false;
+  }
+}
 
 export const reactivelyFramework: ReactiveFramework = {
   name: "@reactively/core",
@@ -12,7 +25,7 @@ export const reactivelyFramework: ReactiveFramework = {
       read: () => r.value,
       write: (v) => {
         r.value = v;
-        stabilize();
+        flush();
       },
     };
   },
@@ -24,7 +37,7 @@ export const reactivelyFramework: ReactiveFramework = {
   effect(fn) {
     const r = reactive(fn, { effect: true });
     tracked.push(r);
-    stabilize();
+    flush();
     return () => {
       (r as any).effect = false;
       (r as any).removeParentObservers();
@@ -40,6 +53,7 @@ export const reactivelyFramework: ReactiveFramework = {
         try { (r as any).removeParentObservers(); } catch {}
       }
       tracked = [];
+      stabilizing = false;
       try { stabilize(); } catch {}
     }
   },
