@@ -23,6 +23,12 @@ export interface TestSection {
   section: string;
   cases: Record<string, (fw: ReactiveFramework) => any>;
   type?: "behavioral";
+  /**
+   * Cases may run until their own guard trips, or exhaust memory first,
+   * in a library that doesn't bound the behavior under test. Run them in
+   * a separate process with a fixed heap limit.
+   */
+  mayNotTerminate?: boolean;
 }
 
 export const testSuite: TestSection[] = [

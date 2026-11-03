@@ -14,9 +14,13 @@ import type { ReactiveFramework } from "./framework.js";
  *     meaning "never propagated", the effect must have re-run during
  *     the cycle, or re-run on a later external write.
  *
- * Every case carries a test-side guard (run count and time limit).
- * The guard only protects the suite from hanging: tripping it is a
- * failure, never a detection. A stack overflow is a failure too.
+ * Every case carries a test-side guard of GUARD_RUNS effect runs. The
+ * guard only protects the suite from hanging: tripping it is a failure,
+ * never a detection. A stack overflow is a failure too.
+ *
+ * A library that retains memory on every iteration can exhaust the heap
+ * before the guard trips, so this section declares `mayNotTerminate`:
+ * run its cases in a separate process with a fixed heap limit.
  *
  * Legend:
  *   S        signal (source)
@@ -26,24 +30,18 @@ import type { ReactiveFramework } from "./framework.js";
  *   ↔ / ⟳   cyclic dependency
  */
 export const section = "Cycle & Infinite Loop Detection";
+export const mayNotTerminate = true;
 
-// Above the built-in limits of the libraries under test (e.g. solid-js
-// throws "Potential Infinite Loop" after 10^6 queued updates). The time
-// limit stops libraries whose unbounded loops are slow or grow memory.
-const GUARD_RUNS = 2_000_000;
-const GUARD_MS = 1_000;
+// Above the largest built-in limit among the libraries under test:
+// solid-js throws "Potential Infinite Loop" after 10^6 queued updates.
+const GUARD_RUNS = 1_100_000;
 
 function createGuard() {
-  const start = Date.now();
   let runs = 0;
   let tripped = false;
   return {
     tick() {
-      if (
-        tripped ||
-        ++runs > GUARD_RUNS ||
-        Date.now() - start > GUARD_MS
-      ) {
+      if (tripped || ++runs > GUARD_RUNS) {
         tripped = true;
         throw new Error("test guard: runaway loop");
       }
