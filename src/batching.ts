@@ -181,10 +181,11 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    *  S(a) → E(eff1)  cleanup: b.write(a.read())
    *  S(b) → E(eff2)
    *
-   * When eff1's cleanup writes to b, that write is implicitly batched
-   * so eff2 sees the final value in a single notification.
+   * When eff1's cleanup writes to b, eff2 must settle on the final
+   * value of b. (Only the final value is checked, not the number of
+   * notifications.)
    */
-  "#120 cleanup writes inside effect are implicitly batched"(
+  "#120 cleanup writes inside effect: downstream settles on final value"(
     fw: ReactiveFramework
   ) {
     if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
@@ -307,6 +308,9 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
       a.write(0);
     });
     expect(runs).toBe(1);
+
+    a.write(5);
+    expect(runs).toBe(2);
   },
 
   /**
@@ -327,10 +331,15 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
 
     fw.batch(() => {
       a.write(1);
-      dispose();
-      a.write(2);
     });
-    expect(runs).toBe(1);
+    expect(runs).toBe(2);
+
+    fw.batch(() => {
+      a.write(2);
+      dispose();
+      a.write(3);
+    });
+    expect(runs).toBe(2);
   },
 
   /**
@@ -381,29 +390,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     });
 
     expect(seen).toBe(42);
-  },
-
-  /**
-   *  S(a) → E(eff) → dispose
-   *
-   * batch { a.write(1); dispose() } — effect is disposed inside the
-   * batch. It must NOT run when the batch completes.
-   */
-  "#127 unsubscribe inside batch: not called at end"(fw: ReactiveFramework) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    let runs = 0;
-    const dispose = fw.effect(() => {
-      a.read();
-      runs++;
-    });
-    expect(runs).toBe(1);
-
-    fw.batch(() => {
-      a.write(1);
-      dispose();
-    });
-    expect(runs).toBe(1);
   },
 
   /**
@@ -464,10 +450,11 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    *  S(b) ─→ E(eff2)
    *  S(c) ─→ /
    *
-   * Writes inside an effect body are implicitly batched. eff2
-   * sees both b and c updated in a single notification.
+   * Writes inside an effect body: eff2 must settle on the final
+   * values of both b and c. (Only the final value is checked, not the
+   * number of notifications.)
    */
-  "#130 effect inner writes are implicitly batched"(fw: ReactiveFramework) {
+  "#130 effect inner writes: downstream settles on final values"(fw: ReactiveFramework) {
     const a = fw.signal(0);
     const b = fw.signal(0);
     const c = fw.signal(0);

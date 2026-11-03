@@ -190,6 +190,7 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     const cIdx = order.indexOf("c");
     expect(bIdx).toBeGreaterThanOrEqual(0);
     expect(cIdx).toBeGreaterThanOrEqual(0);
+    expect(bIdx).toBeLessThan(cIdx);
   },
 
   /**
@@ -325,9 +326,9 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
       a.write(1);
     });
 
-    if (order.length >= 2) {
-      expect(order.indexOf("b")).toBeLessThan(order.indexOf("c"));
-    }
+    expect(order.indexOf("b")).toBeGreaterThanOrEqual(0);
+    expect(order.indexOf("c")).toBeGreaterThanOrEqual(0);
+    expect(order.indexOf("b")).toBeLessThan(order.indexOf("c"));
   },
 
   /**
@@ -341,21 +342,14 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   "#115 signal creation inside computed is allowed"(fw: ReactiveFramework) {
     const a = fw.signal(0);
 
-    let threw = false;
-    try {
-      const c = fw.computed(() => {
-        const inner = fw.signal(a.read() * 10);
-        return inner.read();
-      });
+    const c = fw.computed(() => {
+      const inner = fw.signal(a.read() * 10);
+      return inner.read();
+    });
 
-      expect(c.read()).toBe(0);
-      a.write(3);
-      expect(c.read()).toBe(30);
-    } catch {
-      threw = true;
-    }
-
-    expect(true).toBe(true);
+    expect(c.read()).toBe(0);
+    a.write(3);
+    expect(c.read()).toBe(30);
   },
 
   /**

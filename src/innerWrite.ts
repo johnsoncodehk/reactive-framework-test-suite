@@ -75,21 +75,28 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * either allow it or throw (both are valid behaviors).
    */
   "#52 computed writing to signal"(fw: ReactiveFramework) {
-    const a = fw.signal(0);
+    const a = fw.signal(3);
     const sideChannel = fw.signal(0);
 
+    let c: { read(): number };
+    let value: number;
     try {
-      const c = fw.computed(() => {
+      c = fw.computed(() => {
         const v = a.read();
         sideChannel.write(v * 10);
         return v;
       });
-      c.read();
+      value = c.read();
     } catch {
       return; // computed side effects forbidden — valid
     }
 
-    expect(sideChannel.read()).toBe(0);
+    expect(value).toBe(3);
+    expect(sideChannel.read()).toBe(30);
+
+    a.write(4);
+    expect(c.read()).toBe(4);
+    expect(sideChannel.read()).toBe(40);
   },
 
   /**
@@ -204,28 +211,31 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     let effectRuns = 0;
     let downstreamRuns = 0;
 
-    try {
-      fw.effect(() => {
-        effectRuns++;
-        if (effectRuns > 20) throw new Error("bail");
-        const v = a.read();
-        if (v === 1) {
-          a.write(0);
-        }
-      });
+    fw.effect(() => {
+      effectRuns++;
+      if (effectRuns > 20) throw new Error("bail");
+      const v = a.read();
+      if (v === 1) {
+        a.write(0);
+      }
+    });
 
-      const c = fw.computed(() => a.read());
-      fw.effect(() => {
-        c.read();
-        downstreamRuns++;
-      });
+    const c = fw.computed(() => a.read());
+    fw.effect(() => {
+      c.read();
+      downstreamRuns++;
+    });
 
-      const downstreamBefore = downstreamRuns;
-      a.write(1);
+    const downstreamBefore = downstreamRuns;
+    a.write(1);
 
-      expect(a.read()).toBe(0);
-      expect(downstreamRuns).toBeLessThanOrEqual(downstreamBefore + 1);
-    } catch {}
+    expect(effectRuns).toBeLessThanOrEqual(20);
+    expect(a.read()).toBe(0);
+    expect(downstreamRuns).toBeLessThanOrEqual(downstreamBefore + 1);
+
+    const settled = downstreamRuns;
+    a.write(5);
+    expect(downstreamRuns).toBeGreaterThan(settled);
   },
 
   /**
@@ -235,7 +245,7 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * First effect writes a back to 0. Second effect must see the
    * final settled value (0), not the intermediate value (1).
    */
-  "#133 listener writes back: second listener skipped if no net change"(
+  "#133 listener writes back: second listener settles on final value"(
     fw: ReactiveFramework
   ) {
     const a = fw.signal(0);
@@ -254,7 +264,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
       values2.push(a.read());
     });
 
-    const before2 = values2.length;
     a.write(1);
 
     expect(a.read()).toBe(0);
@@ -360,6 +369,10 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     src.write(1);
     c.read();
     expect(downstreamRuns).toBeLessThanOrEqual(1);
+
+    const settled = downstreamRuns;
+    side.write(5);
+    expect(downstreamRuns).toBeGreaterThan(settled);
   },
 
   /**
@@ -438,21 +451,25 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     const a = fw.signal(0);
     let computeCalls = 0;
 
+    let c: { read(): number };
     try {
-      const c = fw.computed(() => {
+      c = fw.computed(() => {
         computeCalls++;
         a.write(a.read() + 1);
         return a.read();
       });
-
       c.read();
-      const callsAfterFirst = computeCalls;
-
-      c.read();
-      expect(computeCalls).toBeGreaterThan(callsAfterFirst);
     } catch {
-      // Cycle detection is also valid
+      return; // cycle detection / forbidden computed writes are also valid
     }
+    const callsAfterFirst = computeCalls;
+
+    try {
+      c.read();
+    } catch {
+      return; // cycle detection / forbidden computed writes are also valid
+    }
+    expect(computeCalls).toBeGreaterThan(callsAfterFirst);
   },
 
   /**
@@ -527,8 +544,9 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    *  S(counter) ← E(eff) ═→ S(counter) [increments until target]
    *
    * Effect increments a counter toward a target. Must either
-   * converge (counter reaches target) or detect the cycle.
-   * Partial progress without convergence or detection is invalid.
+   * converge (counter reaches target) or detect the cycle (throw, or
+   * stop re-running the effect on its own write while still reacting
+   * to external writes). Not reacting at all is invalid.
    */
   "#113 inner write convergence: converges or cycle-detects"(
     fw: ReactiveFramework
@@ -536,27 +554,39 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     const counter = fw.signal(0);
     const target = 5;
     let iterations = 0;
+    let bailed = false;
+    let threw = false;
     try {
       fw.effect(() => {
         iterations++;
-        if (iterations > 100) throw new Error("bail");
+        if (iterations > 100) {
+          bailed = true;
+          throw new Error("bail");
+        }
         const v = counter.read();
         if (v < target) counter.write(v + 1);
       });
-    } catch {}
-
-    const value = counter.read();
-    const converged = value === target;
-    const cycleDet = iterations <= 100 && value < target;
-
-    // Both converge and cycle-detect are valid.
-    // "partial" (stopped without reaching target AND without cycle detection) is not.
-    expect(converged || cycleDet).toBe(true);
-
-    if (converged) {
-      expect(value).toBe(target);
-      expect(iterations).toBeLessThanOrEqual(target + 1);
+    } catch {
+      threw = true;
     }
+
+    // The test's own bail is a safety net, not evidence of detection.
+    expect(bailed).toBe(false);
+
+    // Detection: the framework threw.
+    if (threw) return;
+
+    if (counter.read() === target) {
+      expect(iterations).toBeLessThanOrEqual(target + 1);
+      return;
+    }
+
+    // Detection: the framework stopped the self-write loop on its own.
+    // That is only distinguishable from "never reacts" if the effect
+    // still re-runs on an external write.
+    const before = iterations;
+    counter.write(target);
+    expect(iterations).toBeGreaterThan(before);
   },
 
   /**

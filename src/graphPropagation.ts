@@ -611,21 +611,19 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   /**
    *    S(s)
    *      |
-   *    *C(c)  ← always returns 0
+   *    *C(c)  ← 0 until s >= 10, then 1
    *      |
    *    E(eff)
    *
    * Computed value unchanged despite source change.
-   * Effect must NOT re-run (propagation cut by value-equality).
+   * Effect must NOT re-run (propagation cut by value-equality),
+   * but must re-run once the computed value actually changes.
    */
   "#192 effect not re-run when computed dep value unchanged"(
     fw: ReactiveFramework
   ) {
     const s = fw.signal(0);
-    const c = fw.computed(() => {
-      s.read();
-      return 0;
-    });
+    const c = fw.computed(() => (s.read() >= 10 ? 1 : 0));
     let runs = 0;
     fw.effect(() => {
       c.read();
@@ -635,6 +633,9 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
 
     s.write(1);
     expect(runs).toBe(1);
+
+    s.write(10);
+    expect(runs).toBe(2);
   },
 
   /**

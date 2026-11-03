@@ -1,6 +1,5 @@
 import { expect } from "./assert.js";
 import type { ReactiveFramework } from "./framework.js";
-import { SkipTest } from "./framework.js";
 
 /**
  * Memory & GC
@@ -19,38 +18,6 @@ import { SkipTest } from "./framework.js";
 export const section = "Memory & GC";
 export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   /**
-   *  S(a) ─→ C(c)   (c only held via WeakRef)
-   *
-   * A computed with no strong references and no active
-   * subscribers should be eligible for garbage collection.
-   * Verifies the WeakRef is valid right after creation and
-   * that the source signal still works independently.
-   */
-  "#99 computed collectable by GC if nothing listening"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal(0);
-    let ref: WeakRef<{ read(): number }> | undefined;
-
-    (() => {
-      const c = fw.computed(() => a.read() * 2);
-      c.read();
-      ref = new WeakRef(c);
-    })();
-
-    // Computed is no longer referenced strongly
-    // After GC it should be collectable
-    // We can't force GC deterministically, so just verify
-    // the computed was created and the weak ref is valid initially
-    expect(ref).toBeDefined();
-    expect(ref!.deref()).toBeDefined();
-
-    // Signal should still work independently
-    a.write(5);
-    expect(a.read()).toBe(5);
-  },
-
-  /**
    *  S(a) ─→ C(b) ─→ E(eff1)
    *               ─→ E(eff2)
    *       dispose both
@@ -60,7 +27,7 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * trigger the disposed callbacks. The computed C(b) should
    * still be readable on demand.
    */
-  "#160 consumer links cleaned after losing all listeners"(
+  "#160 computed after losing all listeners: disposed effects stop, value stays correct"(
     fw: ReactiveFramework
   ) {
     const a = fw.signal(0);
@@ -95,11 +62,11 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    *  S(a) ─→ C(b) ─→ C(c) ─→ C(d)   (no listener)
    *
    * Disposing the sole effect at the end of a multi-level
-   * computed chain must clean up all intermediate subscription
-   * links so that writes to S(a) no longer propagate.
+   * computed chain must stop writes to S(a) from reaching it.
+   * (Link cleanup itself is internal and not observed here.)
    * The computeds should still be readable on demand.
    */
-  "#161 multi-level computed cleanup after all listeners removed"(
+  "#161 multi-level computed after all listeners removed: disposed effect stops, value stays correct"(
     fw: ReactiveFramework
   ) {
     const a = fw.signal(0);

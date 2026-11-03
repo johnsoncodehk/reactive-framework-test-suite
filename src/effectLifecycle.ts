@@ -154,9 +154,14 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
 
     fw.batch(() => {
       a.write(1);
+    });
+    expect(runs).toBe(2);
+
+    fw.batch(() => {
+      a.write(2);
       dispose();
     });
-    expect(runs).toBe(1);
+    expect(runs).toBe(2);
   },
 
   /**
@@ -348,7 +353,7 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * Effect creates an inner computed each run. After re-run the
    * new computed must read the latest signal value.
    */
-  "#214 parent disposes and recreates child: downstream sees correct value"(
+  "#214 effect recreates inner computed each run: new child sees latest value"(
     fw: ReactiveFramework
   ) {
     const a = fw.signal(1);
@@ -454,8 +459,12 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
       s.read();
       return 0; // value never changes
     });
+    let disposedFromComputed = false;
     const a2 = fw.computed(() => {
-      if (s.read()) dispose();
+      if (s.read()) {
+        disposedFromComputed = true;
+        dispose();
+      }
       return s.read();
     });
     const b = fw.computed(() => {
@@ -464,11 +473,21 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
       return 0;
     });
 
+    let runs = 0;
     dispose = fw.effect(() => {
+      runs++;
       b.read();
     });
+    expect(runs).toBe(1);
 
-    s.write(1); // should not crash
+    s.write(1); // disposes the effect mid-propagation; must not crash
+    expect(disposedFromComputed).toBe(true);
+    const runsAfterDispose = runs;
+
+    s.write(2);
+    expect(runs).toBe(runsAfterDispose);
+    expect(a2.read()).toBe(2);
+    expect(b.read()).toBe(0);
   },
 
   /**

@@ -54,9 +54,11 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   ) {
     if (!fw.untracked) throw new SkipTest("no untracked");
     const a = fw.signal(0);
+    let outerRuns = 0;
     let innerRuns = 0;
 
     fw.effect(() => {
+      outerRuns++;
       fw.untracked!(() => {
         fw.effect(() => {
           a.read();
@@ -64,12 +66,15 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
         });
       });
     });
+    expect(outerRuns).toBe(1);
+    expect(innerRuns).toBe(1);
     innerRuns = 0;
 
     a.write(1);
     // The outer effect should not re-run since deps are untracked
     // But the inner effect should re-run since it directly reads a
-    expect(innerRuns).toBeGreaterThanOrEqual(0);
+    expect(outerRuns).toBe(1);
+    expect(innerRuns).toBe(1);
   },
 
   /**
@@ -202,9 +207,13 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
       });
     });
     const initial = innerRuns;
+    expect(initial).toBe(1);
 
     a.write(2);
     expect(innerRuns).toBe(initial);
+
+    a.write(3);
+    expect(innerRuns).toBeGreaterThan(initial);
   },
 
   /**
@@ -236,11 +245,20 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
       });
     });
 
+    expect(middleRuns).toBeGreaterThan(0);
+    expect(innerRuns).toBeGreaterThan(0);
+
+    middleRuns = 0;
+    innerRuns = 0;
+    a.write(1);
+    expect(middleRuns).toBeGreaterThan(0);
+    expect(innerRuns).toBeGreaterThan(0);
+
     middleRuns = 0;
     innerRuns = 0;
 
     dispose();
-    a.write(1);
+    a.write(2);
 
     expect(middleRuns).toBe(0);
     expect(innerRuns).toBe(0);
