@@ -183,17 +183,25 @@ function buildSummaryTable() {
   const maxFwLen = Math.max(9, ...fwNames.map((n) => n.length));
   const lines = [];
   lines.push(
-    `| ${"Framework".padEnd(maxFwLen)} | Pass | Fail | Skip | Total |`
+    `| ${"Framework".padEnd(maxFwLen)} | Pass rate | Coverage | Pass | Fail | Skip | Total |`
   );
-  lines.push(`| ${"-".repeat(maxFwLen)} | ---- | ---- | ---- | ----- |`);
+  lines.push(`| ${"-".repeat(maxFwLen)} | --------: | -------: | ---- | ---- | ---- | ----- |`);
 
+  // Pass rate = pass / (pass + fail): skips are not counted as failures.
+  // Coverage = (pass + fail) / total: how much of the suite was exercised.
+  const rate = (fw) => {
+    const { pass, fail } = fwStats[fw];
+    return pass + fail ? pass / (pass + fail) : 0;
+  };
+  const coverage = (fw) => (fwStats[fw].pass + fwStats[fw].fail) / totalCases;
+  const pct = (x) => (x * 100).toFixed(1) + "%";
   const sorted = [...fwNames].sort(
-    (a, b) => fwStats[b].pass - fwStats[a].pass
+    (a, b) => rate(b) - rate(a) || coverage(b) - coverage(a)
   );
   for (const fw of sorted) {
     const { pass, fail, skip } = fwStats[fw];
     lines.push(
-      `| ${fw.padEnd(maxFwLen)} | ${String(pass).padStart(4)} | ${String(fail).padStart(4)} | ${String(skip).padStart(4)} | ${String(totalCases).padStart(5)} |`
+      `| ${fw.padEnd(maxFwLen)} | ${pct(rate(fw)).padStart(9)} | ${pct(coverage(fw)).padStart(8)} | ${String(pass).padStart(4)} | ${String(fail).padStart(4)} | ${String(skip).padStart(4)} | ${String(totalCases).padStart(5)} |`
     );
   }
 
@@ -213,6 +221,8 @@ Test cases are collected and adapted from the test suites of all participating f
 - ✅ Pass — correct behavior
 - ❌ Fail — incorrect behavior or crash
 - ⬜ Skip — required API not available
+
+The summary is sorted by **pass rate** (pass / (pass + fail)), then by **coverage** ((pass + fail) / total). Read the two together: a high pass rate over low coverage means fewer tests could be run against that framework, not that it is more correct.
 
 The **Behavioral Differences** section is separate — those tests reflect design choices (e.g. \`Object.is\` vs \`===\` equality, whether effects re-run, immediate vs deferred inner writes) where different answers are all valid.
 
