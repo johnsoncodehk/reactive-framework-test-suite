@@ -18,9 +18,7 @@ export const potaFramework: ReactiveFramework = {
     return { read: memo(fn) };
   },
   effect(fn) {
-    let disposed = false;
     const body = () => {
-      if (disposed) return;
       effectDepth++;
       try {
         const cl = fn();
@@ -36,7 +34,9 @@ export const potaFramework: ReactiveFramework = {
     if (effectDepth > 0) {
       renderEffect(body);
       return () => {
-        disposed = true;
+        throw new Error(
+          "pota has no public API to dispose a child computation on its own; it is disposed with its parent"
+        );
       };
     }
     let dispose!: () => void;

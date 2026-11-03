@@ -28,9 +28,7 @@ export const solidFramework: ReactiveFramework = {
     return { read: createMemo(fn) };
   },
   effect(fn) {
-    let disposed = false;
     const body = () => {
-      if (disposed) return;
       effectDepth++;
       try {
         const cleanup = fn();
@@ -46,7 +44,9 @@ export const solidFramework: ReactiveFramework = {
     if (effectDepth > 0) {
       createComputed(body);
       return () => {
-        disposed = true;
+        throw new Error(
+          "solid-js has no public API to dispose a child computation on its own; it is disposed with its parent"
+        );
       };
     }
     let dispose!: () => void;
