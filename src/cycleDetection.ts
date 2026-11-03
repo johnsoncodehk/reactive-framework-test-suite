@@ -1,13 +1,22 @@
 import { expect } from "./assert.js";
 import type { ReactiveFramework } from "./framework.js";
-import { SkipTest } from "./framework.js";
 
 /**
  * Cycle & Infinite Loop Detection
  *
  * Tests that a framework handles circular dependencies and runaway
- * effects without hanging or crashing: cycles are detected (throw or
- * graceful fallback), and iteration counts stay bounded.
+ * effects without hanging or crashing.
+ *
+ * Every cycle here is unbounded: nothing in the test code stops it.
+ * Accepted outcomes:
+ *   - the framework throws (cycle / iteration limit detected), or
+ *   - the framework stops the loop on its own. To rule out "stopped"
+ *     meaning "never propagated", the effect must have re-run during
+ *     the cycle, or re-run on a later external write.
+ *
+ * Every case carries a test-side guard (run count and time limit).
+ * The guard only protects the suite from hanging: tripping it is a
+ * failure, never a detection. A stack overflow is a failure too.
  *
  * Legend:
  *   S        signal (source)
@@ -17,30 +26,91 @@ import { SkipTest } from "./framework.js";
  *   ↔ / ⟳   cyclic dependency
  */
 export const section = "Cycle & Infinite Loop Detection";
+
+// Above the built-in limits of the libraries under test (e.g. solid-js
+// throws "Potential Infinite Loop" after 10^6 queued updates). The time
+// limit stops libraries whose unbounded loops are slow or grow memory.
+const GUARD_RUNS = 2_000_000;
+const GUARD_MS = 1_000;
+
+function createGuard() {
+  const start = Date.now();
+  let runs = 0;
+  let tripped = false;
+  return {
+    tick() {
+      if (
+        tripped ||
+        ++runs > GUARD_RUNS ||
+        Date.now() - start > GUARD_MS
+      ) {
+        tripped = true;
+        throw new Error("test guard: runaway loop");
+      }
+    },
+    get tripped() {
+      return tripped;
+    },
+  };
+}
+
+/**
+ * Returns true if the framework threw (detection). A stack overflow is
+ * a crash, not a detection.
+ */
+function settle(fn: () => void): boolean {
+  try {
+    fn();
+    return false;
+  } catch (e) {
+    if (e instanceof RangeError) {
+      throw new Error("stack overflow instead of cycle detection");
+    }
+    return true;
+  }
+}
+
+/**
+ * After a cycle settled without throwing, the effect must have re-run
+ * during the cycle, or re-run on an external write (or have that write
+ * rejected by the framework's detection).
+ */
+function expectStillReactive(
+  guard: ReturnType<typeof createGuard>,
+  runs: () => number,
+  runsBeforeCycle: number,
+  write: () => void
+) {
+  if (runs() > runsBeforeCycle) return;
+  const before = runs();
+  const threw = settle(write);
+  expect(guard.tripped).toBe(false);
+  expect(threw || runs() > before).toBe(true);
+}
+
 export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   /**
    *  S(a) → E(eff) → S(a)  ⟳
    *
-   * An effect reads a signal then writes back to it, creating an
-   * indirect write-read loop. Iteration count must stay bounded.
+   * An effect reads a signal then writes back to it, unconditionally.
+   * The framework must either throw or stop the loop by itself.
    */
   "#61 indirect cycle through effects"(fw: ReactiveFramework) {
     const a = fw.signal(0);
-    let iterations = 0;
+    const guard = createGuard();
+    let runs = 0;
 
-    try {
+    const threw = settle(() => {
       fw.effect(() => {
-        const v = a.read();
-        if (iterations++ < 100) {
-          a.write(v + 1);
-        }
+        guard.tick();
+        runs++;
+        a.write(a.read() + 1);
       });
-    } catch {
-      // Cycle detected — expected for some frameworks
-    }
+    });
 
-    // Should either stop or throw
-    expect(iterations).toBeLessThanOrEqual(200);
+    expect(guard.tripped).toBe(false);
+    if (threw) return;
+    expectStillReactive(guard, () => runs, 1, () => a.write(-1));
   },
 
   /**
@@ -50,32 +120,36 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    *       |
    *       └─→ a.write(a.read()+1)  ⟳  (when cond=true)
    *
-   * Effect is safe when cond=false. Setting cond=true creates a
-   * dynamic read-write cycle on a. Framework must detect it.
+   * Effect is safe when cond=false. Setting cond=true creates an
+   * unbounded read-write cycle on a. The framework must either throw
+   * or stop the loop by itself.
    */
   "#63 cycle from modifying a branch (dynamic cycle creation)"(
     fw: ReactiveFramework
   ) {
     const cond = fw.signal(false);
     const a = fw.signal(0);
-    let iterations = 0;
+    const guard = createGuard();
+    let runs = 0;
 
-    try {
-      fw.effect(() => {
-        if (iterations++ > 100) throw new Error("bail");
-        if (cond.read()) {
-          a.write(a.read() + 1);
-        } else {
-          a.read();
-        }
-      });
+    fw.effect(() => {
+      guard.tick();
+      runs++;
+      if (cond.read()) {
+        a.write(a.read() + 1);
+      } else {
+        a.read();
+      }
+    });
 
-      cond.write(true);
-    } catch {
-      // Expected: creating a cycle dynamically should be detected
-    }
+    a.write(1);
+    expect(runs).toBe(2);
 
-    expect(iterations).toBeLessThanOrEqual(200);
+    const threw = settle(() => cond.write(true));
+
+    expect(guard.tripped).toBe(false);
+    if (threw) return;
+    expectStillReactive(guard, () => runs, 2, () => a.write(-1));
   },
 
   /**
@@ -114,34 +188,31 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    *  S(a) → E(e1) → S(b) → E(e2) → S(a)  ⟳
    *
    * Two effects ping-pong values between two signals
-   * (e1 reads a, writes b; e2 reads b, writes a+1).
-   * Framework must cap iterations instead of looping forever.
+   * (e1 reads a, writes b; e2 reads b, writes a+1) with no end
+   * condition. The framework must cap iterations (throw or stop)
+   * instead of looping forever.
    */
   "#64 max iteration limit reached"(fw: ReactiveFramework) {
     const a = fw.signal(0);
     const b = fw.signal(0);
-    let iterations = 0;
+    const guard = createGuard();
+    let runs = 0;
 
-    try {
+    const threw = settle(() => {
       fw.effect(() => {
-        iterations++;
-        const v = a.read();
-        if (v < 100) {
-          b.write(v);
-        }
+        guard.tick();
+        runs++;
+        b.write(a.read());
       });
       fw.effect(() => {
-        const v = b.read();
-        if (v < 100) {
-          a.write(v + 1);
-        }
+        guard.tick();
+        a.write(b.read() + 1);
       });
-    } catch {
-      // Expected: iteration limit reached
-    }
+    });
 
-    // Should be bounded
-    expect(iterations).toBeLessThanOrEqual(300);
+    expect(guard.tripped).toBe(false);
+    if (threw) return;
+    expectStillReactive(guard, () => runs, 1, () => a.write(-1));
   },
 
   /**
@@ -157,33 +228,28 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     const a = fw.signal(0);
     const b = fw.signal(0);
     const c = fw.signal(0);
-    let iterations = 0;
+    const guard = createGuard();
+    let runs = 0;
 
-    try {
+    const threw = settle(() => {
       fw.effect(() => {
-        iterations++;
-        const v = a.read();
-        if (v < 100) {
-          b.write(v);
-        }
+        guard.tick();
+        runs++;
+        b.write(a.read());
       });
       fw.effect(() => {
-        const v = b.read();
-        if (v < 100) {
-          c.write(v);
-        }
+        guard.tick();
+        c.write(b.read());
       });
       fw.effect(() => {
-        const v = c.read();
-        if (v < 100) {
-          a.write(v + 1);
-        }
+        guard.tick();
+        a.write(c.read() + 1);
       });
-    } catch {
-      // Expected: iteration limit reached
-    }
+    });
 
-    expect(iterations).toBeLessThanOrEqual(300);
+    expect(guard.tripped).toBe(false);
+    if (threw) return;
+    expectStillReactive(guard, () => runs, 1, () => a.write(-1));
   },
 
   /**
@@ -198,26 +264,23 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     const a = fw.signal(0);
     const b = fw.signal(0);
     const c = fw.computed(() => b.read());
-    let iterations = 0;
+    const guard = createGuard();
+    let runs = 0;
 
-    try {
+    const threw = settle(() => {
       fw.effect(() => {
-        iterations++;
-        const v = a.read();
-        if (v < 100) {
-          b.write(v);
-        }
+        guard.tick();
+        runs++;
+        b.write(a.read());
       });
       fw.effect(() => {
-        const v = c.read();
-        if (v < 100) {
-          a.write(v + 1);
-        }
+        guard.tick();
+        a.write(c.read() + 1);
       });
-    } catch {
-      // Expected: iteration limit reached
-    }
+    });
 
-    expect(iterations).toBeLessThanOrEqual(300);
+    expect(guard.tripped).toBe(false);
+    if (threw) return;
+    expectStillReactive(guard, () => runs, 1, () => a.write(-1));
   },
 };
