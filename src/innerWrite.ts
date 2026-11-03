@@ -441,38 +441,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *  S(a) → C(c) ═→ S(a) [increments a]
-   *
-   * Computed writes to its own dependency (self-cycle). Each read
-   * must re-evaluate (value is never stable). Framework may also
-   * detect the cycle and throw (both behaviors are valid).
-   */
-  "#172 computed writing to own dep: never caches"(fw: ReactiveFramework) {
-    const a = fw.signal(0);
-    let computeCalls = 0;
-
-    let c: { read(): number };
-    try {
-      c = fw.computed(() => {
-        computeCalls++;
-        a.write(a.read() + 1);
-        return a.read();
-      });
-      c.read();
-    } catch {
-      return; // cycle detection / forbidden computed writes are also valid
-    }
-    const callsAfterFirst = computeCalls;
-
-    try {
-      c.read();
-    } catch {
-      return; // cycle detection / forbidden computed writes are also valid
-    }
-    expect(computeCalls).toBeGreaterThan(callsAfterFirst);
-  },
-
-  /**
    *  S(s) → C(c) ← E(eff) ═→ S(s) writes false when c is true
    *
    * Effect resets s through a computed chain. Tests whether the
@@ -521,23 +489,28 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   /**
    *  S(s) → C(c) ═→ S(s) [writes s+1, returns s]
    *
-   * Computed increments its own source each read. The returned
-   * value and the signal must reflect the post-write state.
+   * Computed increments its own source while evaluating. The value
+   * it reads back and the signal must reflect the post-write state.
+   * (Whether the next read re-evaluates is #172's design difference.)
+   * Framework may also forbid the write and throw.
    */
   "#179 computed self-increment: intra-run read-after-write values correct"(
     fw: ReactiveFramework
   ) {
     const s = fw.signal(1);
-    const c = fw.computed(() => {
-      s.write(s.read() + 1);
-      return s.read();
-    });
+    let value: number;
+    try {
+      const c = fw.computed(() => {
+        s.write(s.read() + 1);
+        return s.read();
+      });
+      value = c.read();
+    } catch {
+      return; // computed side effects forbidden — valid
+    }
 
-    expect(c.read()).toBe(2);
+    expect(value).toBe(2);
     expect(s.read()).toBe(2);
-
-    expect(c.read()).toBe(3);
-    expect(s.read()).toBe(3);
   },
 
   /**
@@ -595,28 +568,35 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    *
    * Computed writes to a side-effect signal. An effect watching
    * that signal must observe the written value after c evaluates.
+   * Framework may also forbid the write and throw.
    */
   "#57 computed side effect triggers downstream"(fw: ReactiveFramework) {
     const src = fw.signal(0);
     const sideEffect = fw.signal(0);
 
-    const c = fw.computed(() => {
-      const v = src.read();
-      sideEffect.write(v * 10);
-      return v;
-    });
+    let c: { read(): number };
+    try {
+      c = fw.computed(() => {
+        const v = src.read();
+        sideEffect.write(v * 10);
+        return v;
+      });
+      c.read();
+    } catch {
+      return; // computed side effects forbidden — valid
+    }
 
     const values: number[] = [];
     fw.effect(() => {
       values.push(sideEffect.read());
     });
 
-    c.read();
     expect(sideEffect.read()).toBe(0);
 
     src.write(1);
     c.read();
     expect(sideEffect.read()).toBe(10);
+    expect(values[values.length - 1]).toBe(10);
   },
 
   /**

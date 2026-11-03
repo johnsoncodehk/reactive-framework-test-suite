@@ -519,4 +519,109 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     if (asStr === "1,2,3") return "FIFO";
     return `other (${asStr})`;
   },
+
+  /**
+   *  S(a) → C(c) ═→ S(a) [increments a]
+   *
+   * Computed writes to its own dependency. After the first read, c's
+   * value and a agree, so caching c and re-evaluating it on the next
+   * read are both consistent; forbidding the write is valid too.
+   * Returns "re-evaluates", "caches" or "throws".
+   */
+  "#172 computed writing to own dep: next read"(fw: ReactiveFramework) {
+    const a = fw.signal(0);
+    let computeCalls = 0;
+    try {
+      const c = fw.computed(() => {
+        computeCalls++;
+        a.write(a.read() + 1);
+        return a.read();
+      });
+      c.read();
+      const callsAfterFirst = computeCalls;
+      c.read();
+      return computeCalls > callsAfterFirst ? "re-evaluates" : "caches";
+    } catch {
+      return "throws";
+    }
+  },
+
+  /**
+   *  S(a) ─→ E_outer{ E_middle{ E_inner } }
+   *                ✕ dispose outer
+   *
+   * Three levels of nesting, all reading a. Hierarchical ownership
+   * disposes middle and inner with outer; a flat effect model keeps
+   * them running (see #244). Returns "cascades", "partial cascade" or
+   * "no cascade".
+   */
+  "#209 three-level nested effect: disposal"(fw: ReactiveFramework) {
+    const a = fw.signal(0);
+    let middleRuns = 0;
+    let innerRuns = 0;
+
+    const dispose = fw.effect(() => {
+      a.read();
+      fw.effect(() => {
+        a.read();
+        middleRuns++;
+        fw.effect(() => {
+          a.read();
+          innerRuns++;
+        });
+      });
+    });
+    if (middleRuns === 0 || innerRuns === 0) {
+      throw new Error("nested effects did not run");
+    }
+
+    dispose();
+    middleRuns = 0;
+    innerRuns = 0;
+    a.write(1);
+
+    if (middleRuns === 0 && innerRuns === 0) return "cascades";
+    if (middleRuns === 0 || innerRuns === 0) return "partial cascade";
+    return "no cascade";
+  },
+
+  /**
+   *  S(a) ─→ E_outer{ E_b ─→ S(b),  E_c ─→ S(c) }
+   *
+   * Outer effect creates two inner effects and then re-runs.
+   * Hierarchical ownership replaces the old inner effects; a flat
+   * effect model keeps them, so each change runs old and new ones.
+   * Returns "replaced" or "accumulates (<b runs>, <c runs>)".
+   */
+  "#210 inner effects on outer re-run"(fw: ReactiveFramework) {
+    const a = fw.signal(0);
+    const b = fw.signal(0);
+    const c = fw.signal(0);
+    let bRuns = 0;
+    let cRuns = 0;
+
+    fw.effect(() => {
+      a.read();
+      fw.effect(() => {
+        b.read();
+        bRuns++;
+      });
+      fw.effect(() => {
+        c.read();
+        cRuns++;
+      });
+    });
+    if (bRuns === 0 || cRuns === 0) {
+      throw new Error("inner effects did not run");
+    }
+
+    a.write(1);
+    bRuns = 0;
+    cRuns = 0;
+    b.write(1);
+    c.write(1);
+
+    if (bRuns === 1 && cRuns === 1) return "replaced";
+    return `accumulates (${bRuns}, ${cRuns})`;
+  },
 };

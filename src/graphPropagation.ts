@@ -689,41 +689,26 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    *      C(e)
    *
    * Two signals cross-feed two computeds joining at e.
-   * Both signals change — c, d, e each evaluate once.
+   * Both signals change — e reflects both writes. (How many times
+   * c, d and e evaluate is #146's design difference, not checked here.)
    */
   "#205 multi-source cross-diamond"(fw: ReactiveFramework) {
     const a = fw.signal(1);
     const b = fw.signal(10);
 
-    let cCalls = 0;
-    const c = fw.computed(() => {
-      cCalls++;
-      return a.read() + b.read();
-    });
+    const c = fw.computed(() => a.read() + b.read());
 
-    let dCalls = 0;
-    const d = fw.computed(() => {
-      dCalls++;
-      return a.read() * b.read();
-    });
+    const d = fw.computed(() => a.read() * b.read());
 
-    let eCalls = 0;
-    const e = fw.computed(() => {
-      eCalls++;
-      return c.read() + d.read();
-    });
+    const e = fw.computed(() => c.read() + d.read());
 
     expect(e.read()).toBe(21);
-    cCalls = 0;
-    dCalls = 0;
-    eCalls = 0;
 
     a.write(2);
     b.write(20);
     expect(e.read()).toBe(62);
-    expect(cCalls).toBe(1);
-    expect(dCalls).toBe(1);
-    expect(eCalls).toBe(1);
+    expect(c.read()).toBe(22);
+    expect(d.read()).toBe(40);
   },
 
   /**
