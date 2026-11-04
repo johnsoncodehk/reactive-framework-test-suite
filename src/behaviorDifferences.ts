@@ -371,9 +371,9 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    *
    * An effect reads a computed chain and writes back to the
    * root signal when the value is non-zero, creating a
-   * feedback loop. Checks how the framework handles the
-   * re-entry: number of re-runs per write and whether
-   * subsequent writes are blocked.
+   * feedback loop. Whether the effect re-runs after its own
+   * write varies; blocking later writes is a defect (#212).
+   * Returns "runs <n>x per write".
    */
   "#49 inner write re-run through computed chain"(fw: ReactiveFramework) {
     const s = fw.signal(0);
@@ -398,9 +398,9 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     const run2 = runs;
     const val2 = s.read();
 
-    if (run1 === 0) return "no re-run";
-    if (val1 !== 0) return "broken";
-    if (val2 !== 0 || run2 === 0) return `runs ${run1}x, then blocks`;
+    if (run1 === 0 || val1 !== 0 || run2 === 0 || val2 !== 0) {
+      throw new Error("self-correcting write did not settle (see #212)");
+    }
     return `runs ${run1}x per write`;
   },
 
@@ -828,5 +828,39 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     expect(c.read()).toBe(0);
 
     return cCalls === 0 ? "skipped" : "recomputed";
+  },
+
+  /**
+   *  E_outer{ E_child{ E_grandchild } } → dispose
+   *
+   * Order of cleanups when the outer effect is disposed. Owner trees
+   * may tear down children first (LIFO) or the owner first; flat
+   * effect models don't cascade at all.
+   * Returns "deepest first", "outermost first", "no cascade" or
+   * "partial cascade".
+   */
+  "#241 nested cleanup order on dispose"(fw: ReactiveFramework) {
+    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
+    const log: string[] = [];
+
+    const dispose = fw.effect(() => {
+      fw.effect(() => {
+        fw.effect(() => {
+          return () => log.push("grandchild");
+        });
+        return () => log.push("child");
+      });
+      return () => log.push("outer");
+    });
+    dispose();
+
+    const order = log.join(",");
+    if (order === "grandchild,child,outer") return "deepest first";
+    if (order === "outer,child,grandchild") return "outermost first";
+    if (order === "outer") return "no cascade";
+    if (!log.includes("outer")) {
+      throw new Error("outer cleanup did not run (see #238)");
+    }
+    return `partial cascade (${order})`;
   },
 };

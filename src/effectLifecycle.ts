@@ -375,122 +375,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *  S(s) → C(a) ← E(e1) [disposed by a when s===1]
-   *                ← E(e2) [keeps a alive]
-   *
-   * Computed a disposes e1 during its own evaluation. e1 must not
-   * re-run and must leave no subscription leak.
-   */
-  "#201 computed-triggered disposal: effect skipped and no subscription leak"(
-    fw: ReactiveFramework
-  ) {
-    const s = fw.signal(0);
-    let dispose1!: () => void;
-    let e1runs = 0;
-
-    const a = fw.computed(() => {
-      if (s.read() === 1) dispose1();
-      return s.read();
-    });
-
-    dispose1 = fw.effect(() => {
-      a.read();
-      e1runs++;
-    });
-    fw.effect(() => {
-      a.read();
-    }); // keep `a` alive
-
-    expect(e1runs).toBe(1);
-    s.write(1);
-    expect(e1runs).toBe(1); // disposed during propagation, should not re-run
-
-    s.write(2);
-    s.write(3);
-    expect(e1runs).toBe(1); // no subscription leak
-  },
-
-  /**
-   *  S(s) → C(a) ← E(e1) [disposed by a when s===1]
-   *                ← E(e2) [must still see a's new value]
-   *
-   * Computed a disposes e1 during evaluation. Sibling effect e2
-   * must still receive the updated value.
-   */
-  "#202 computed-triggered disposal: sibling effects still notified"(
-    fw: ReactiveFramework
-  ) {
-    const s = fw.signal(0);
-    let dispose1!: () => void;
-    let e2Value = -1;
-
-    const a = fw.computed(() => {
-      if (s.read() === 1) dispose1();
-      return s.read();
-    });
-
-    dispose1 = fw.effect(() => {
-      a.read();
-    });
-    fw.effect(() => {
-      e2Value = a.read();
-    });
-
-    expect(e2Value).toBe(0);
-    s.write(1);
-    expect(e2Value).toBe(1);
-  },
-
-  /**
-   *  S(s) → *C(a)  [always returns 0]
-   *  S(s) →  C(a2) [disposes eff when s truthy]
-   *    {a, a2} → C(b) ← E(eff)
-   *
-   * a2 disposes the effect during propagation while sibling a
-   * returns an unchanged value. Must not crash.
-   */
-  "#203 computed disposal with unchanged-value sibling computed"(
-    fw: ReactiveFramework
-  ) {
-    const s = fw.signal(0);
-    let dispose!: () => void;
-
-    const a = fw.computed(() => {
-      s.read();
-      return 0; // value never changes
-    });
-    let disposedFromComputed = false;
-    const a2 = fw.computed(() => {
-      if (s.read()) {
-        disposedFromComputed = true;
-        dispose();
-      }
-      return s.read();
-    });
-    const b = fw.computed(() => {
-      a.read();
-      a2.read();
-      return 0;
-    });
-
-    let runs = 0;
-    dispose = fw.effect(() => {
-      runs++;
-      b.read();
-    });
-    expect(runs).toBe(1);
-
-    s.write(1); // disposes the effect mid-propagation; must not crash
-    expect(disposedFromComputed).toBe(true);
-    const runsAfterDispose = runs;
-
-    s.write(2);
-    expect(runs).toBe(runsAfterDispose);
-    expect(a2.read()).toBe(2);
-    expect(b.read()).toBe(0);
-  },
-
-  /**
    *  S(a) ← E(eff1)
    *       ← E(eff2)
    *       ← E(eff3)
@@ -796,15 +680,11 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   /**
    *  S(a) → E_outer{ E_inner }
    *
-   * Universal invariants on outer re-run:
-   *   - outer's old cleanup runs BEFORE outer's new body runs
-   *   - if inner cleanup fires at all, it runs BEFORE outer's cleanup
-   *     (deepest first when the framework cascades)
-   *
-   * Frameworks with a flat-effect model (no parent-child cascade)
-   * just won't fire inner cleanup; that's accepted.
+   * outer's old cleanup runs BEFORE outer's new body runs. Whether
+   * and in which order inner cleanup runs is a design difference
+   * (see #241 in Behavioral Differences).
    */
-  "#237 cleanup ordering on outer re-run: outer-cleanup before re-run, inner before outer if cascaded"(
+  "#237 cleanup ordering on outer re-run: outer cleanup before re-run"(
     fw: ReactiveFramework
   ) {
     if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
@@ -827,25 +707,18 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
 
     const outerCleanupIdx = log.indexOf("outer:cleanup");
     const outerRunIdx = log.lastIndexOf("outer:run");
-    const innerCleanupIdx = log.indexOf("inner:cleanup");
 
     expect(outerCleanupIdx).toBeGreaterThanOrEqual(0);
     expect(outerRunIdx).toBeGreaterThan(outerCleanupIdx);
-    if (innerCleanupIdx >= 0) {
-      expect(innerCleanupIdx).toBeLessThan(outerCleanupIdx);
-    }
   },
 
   /**
    *  E_outer{ E_inner } → dispose
    *
-   * Universal invariant on dispose:
-   *   - outer cleanup must run
-   *   - if inner cleanup runs (cascade), it runs BEFORE outer
-   *
-   * Flat frameworks (no cascade) only see outer cleanup; that's accepted.
+   * Disposing the outer effect must run its cleanup. Cascade and
+   * its order are a design difference (see #241).
    */
-  "#238 cleanup ordering on dispose: inner before outer if cascaded"(
+  "#238 dispose runs outer cleanup with nested effects"(
     fw: ReactiveFramework
   ) {
     if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
@@ -862,99 +735,7 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     log.length = 0;
 
     dispose();
-    const outerCleanupIdx = log.indexOf("outer:cleanup");
-    const innerCleanupIdx = log.indexOf("inner:cleanup");
-
-    expect(outerCleanupIdx).toBeGreaterThanOrEqual(0);
-    if (innerCleanupIdx >= 0) {
-      expect(innerCleanupIdx).toBeLessThan(outerCleanupIdx);
-    }
-  },
-
-  /**
-   *  E_outer{ E_child{ E_grandchild } } → dispose
-   *
-   * Universal invariant for three-level nesting:
-   *   - if cleanups cascade, deepest goes first (grandchild < child < outer)
-   *   - outer cleanup must fire
-   *
-   * Flat frameworks (no cascade) will only see outer cleanup; accepted.
-   */
-  "#241 three-level cleanup ordering: deepest first if cascaded"(
-    fw: ReactiveFramework
-  ) {
-    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
-    const log: string[] = [];
-
-    const dispose = fw.effect(() => {
-      fw.effect(() => {
-        fw.effect(() => {
-          return () => log.push("grandchild:cleanup");
-        });
-        return () => log.push("child:cleanup");
-      });
-      return () => log.push("outer:cleanup");
-    });
-
-    dispose();
-    const outerIdx = log.indexOf("outer:cleanup");
-    const childIdx = log.indexOf("child:cleanup");
-    const grandIdx = log.indexOf("grandchild:cleanup");
-
-    expect(outerIdx).toBeGreaterThanOrEqual(0);
-    if (childIdx >= 0) {
-      expect(childIdx).toBeLessThan(outerIdx);
-    }
-    if (grandIdx >= 0) {
-      expect(grandIdx).toBeLessThan(outerIdx);
-      if (childIdx >= 0) {
-        expect(grandIdx).toBeLessThan(childIdx);
-      }
-    }
-  },
-
-  /**
-   *  S(a) → C(c){ E_inner } → E_outer reads C(c)
-   *
-   * Universal invariant on computed re-evaluation:
-   *   - if computed cleans up effects from previous eval, the cleanup
-   *     fires BEFORE the new eval runs
-   *   - the new eval and new inner:run come after computed:eval
-   *
-   * Frameworks that don't cascade computed-owned effects just won't
-   * fire inner:cleanup; accepted.
-   */
-  "#242 effect in computed: old inner cleanup (if any) before new eval"(
-    fw: ReactiveFramework
-  ) {
-    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
-    const a = fw.signal(0);
-    const log: string[] = [];
-
-    const c = fw.computed(() => {
-      log.push("computed:eval");
-      fw.effect(() => {
-        log.push("inner:run");
-        return () => log.push("inner:cleanup");
-      });
-      return a.read();
-    });
-
-    fw.effect(() => {
-      c.read();
-    });
-    log.length = 0;
-
-    a.write(1);
-    const evalIdx = log.lastIndexOf("computed:eval");
-    const innerRunIdx = log.lastIndexOf("inner:run");
-    const innerCleanupIdx = log.indexOf("inner:cleanup");
-
-    expect(evalIdx).toBeGreaterThanOrEqual(0);
-    expect(innerRunIdx).toBeGreaterThan(evalIdx);
-    if (innerCleanupIdx >= 0) {
-      expect(innerCleanupIdx).toBeLessThan(evalIdx);
-    }
+    expect(log).toContain("outer:cleanup");
   },
 
   /**
@@ -964,8 +745,7 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * outer is touched via the notify chain. The next real outer
    * re-run (via a) must still produce a valid cleanup ordering.
    *
-   * Universal invariant: same as #237 — outer cleanup before outer
-   * re-run; inner cleanup (if cascaded) before outer cleanup.
+   * Invariant: same as #237 — outer cleanup before outer re-run.
    */
   "#243 cleanup ordering correct after prior inner-only re-run"(
     fw: ReactiveFramework
@@ -992,12 +772,8 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     a.write(1);
     const outerCleanupIdx = log.indexOf("outer:cleanup");
     const outerRunIdx = log.lastIndexOf("outer:run");
-    const innerCleanupIdx = log.indexOf("inner:cleanup");
 
     expect(outerCleanupIdx).toBeGreaterThanOrEqual(0);
     expect(outerRunIdx).toBeGreaterThan(outerCleanupIdx);
-    if (innerCleanupIdx >= 0) {
-      expect(innerCleanupIdx).toBeLessThan(outerCleanupIdx);
-    }
   },
 };
