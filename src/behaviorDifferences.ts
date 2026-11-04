@@ -863,4 +863,37 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
     }
     return `partial cascade (${order})`;
   },
+
+  /**
+   *  S(a) ← E(eff1)
+   *       ← E(eff2)
+   *       ← E(eff3)
+   *
+   * Order in which independent sibling effects run on two successive
+   * writes. No library contract fixes it.
+   * Returns "creation order" or "varies (<first>; <second>)".
+   */
+  "#216 sibling effect order on shared signal"(fw: ReactiveFramework) {
+    const a = fw.signal(0);
+    const order: number[] = [];
+    for (const i of [1, 2, 3]) {
+      fw.effect(() => {
+        a.read();
+        order.push(i);
+      });
+    }
+
+    order.length = 0;
+    a.write(1);
+    const first = order.join(",");
+    order.length = 0;
+    a.write(2);
+    const second = order.join(",");
+
+    if ([first, second].some((o) => o.split(",").sort().join(",") !== "1,2,3")) {
+      throw new Error(`each effect must run once per write: ${first}; ${second}`);
+    }
+    if (first === "1,2,3" && second === "1,2,3") return "creation order";
+    return `varies (${first}; ${second})`;
+  },
 };

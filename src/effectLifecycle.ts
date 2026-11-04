@@ -375,42 +375,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *  S(a) ← E(eff1)
-   *       ← E(eff2)
-   *       ← E(eff3)
-   *
-   * Three effects subscribe to the same signal. On signal change
-   * they must fire in subscription (creation) order.
-   */
-  "#216 effects fire in creation order on shared signal"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal(0);
-    const order: number[] = [];
-
-    fw.effect(() => {
-      a.read();
-      order.push(1);
-    });
-    fw.effect(() => {
-      a.read();
-      order.push(2);
-    });
-    fw.effect(() => {
-      a.read();
-      order.push(3);
-    });
-    order.length = 0;
-
-    a.write(1);
-    expect(order).toEqual([1, 2, 3]);
-
-    order.length = 0;
-    a.write(2);
-    expect(order).toEqual([1, 2, 3]);
-  },
-
-  /**
    *  S(a) ← E1 → dispose
    *       ← E2  (created after E1 disposed)
    *

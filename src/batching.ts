@@ -72,17 +72,18 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   /**
    *  S(a) → E(eff)
    *
-   * Batch callback throws after writing. Pending effects must still
-   * run with the updated value despite the exception.
+   * Batch callback throws after writing. The framework may commit the
+   * write (effects then run with it) or roll it back (nothing runs).
+   * Either way the state must be consistent and later writes must
+   * still propagate.
    */
-  "#69 pending effects run even if batch callback throws"(
-    fw: ReactiveFramework
-  ) {
+  "#69 throwing batch leaves a consistent state"(fw: ReactiveFramework) {
     if (!fw.batch) throw new SkipTest("no batch");
     const a = fw.signal(0);
     let runs = 0;
+    let seen = -1;
     fw.effect(() => {
-      a.read();
+      seen = a.read();
       runs++;
     });
     expect(runs).toBe(1);
@@ -94,9 +95,16 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
       });
     } catch {}
 
-    // Effect should still have run with the updated value
-    expect(runs).toBe(2);
-    expect(a.read()).toBe(1);
+    if (a.read() === 1) {
+      expect(runs).toBe(2);
+      expect(seen).toBe(1);
+    } else {
+      expect(a.read()).toBe(0);
+      expect(runs).toBe(1);
+    }
+
+    a.write(2);
+    expect(seen).toBe(2);
   },
 
   /**
