@@ -1,4 +1,4 @@
-import type { ReactiveFramework } from "../../src/framework.js";
+import type { ReactiveFramework } from "../../src/framework.ts";
 import { signal, computed, untracked } from "@angular/core";
 import { createWatch, type Watch } from "@angular/core/primitives/signals";
 
@@ -23,6 +23,7 @@ function flushEffects(): void {
 
 export const angularSignalsFramework: ReactiveFramework = {
   name: "@angular/core",
+  effectCleanup: true,
   signal(initialValue) {
     const s = signal(initialValue);
     return {

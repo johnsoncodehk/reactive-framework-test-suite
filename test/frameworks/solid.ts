@@ -1,4 +1,4 @@
-import type { ReactiveFramework } from "../../src/framework.js";
+import type { ReactiveFramework } from "../../src/framework.ts";
 // Must import from dist/solid.cjs to get the client reactive runtime.
 // The default "solid-js" resolves to server build under Node condition,
 // which lacks the reactive runtime.
@@ -17,6 +17,7 @@ let effectDepth = 0;
 
 export const solidFramework: ReactiveFramework = {
   name: "solid-js",
+  effectCleanup: true,
   signal(initialValue) {
     const [read, write] = createSignal(initialValue);
     return {

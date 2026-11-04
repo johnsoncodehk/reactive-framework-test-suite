@@ -1,4 +1,4 @@
-import type { ReactiveFramework } from "../../src/framework.js";
+import type { ReactiveFramework } from "../../src/framework.ts";
 import { Signal } from "signal-polyfill";
 
 let needsEnqueue = true;
@@ -22,6 +22,7 @@ function processPending() {
 
 export const tc39SignalsFramework: ReactiveFramework = {
   name: "signal-polyfill (TC39)",
+  effectCleanup: true,
   signal(initialValue) {
     const s = new Signal.State(initialValue);
     return {

@@ -1,4 +1,4 @@
-import type { ReactiveFramework } from "../../src/framework.js";
+import type { ReactiveFramework } from "../../src/framework.ts";
 import {
   ref,
   computed,
@@ -26,6 +26,7 @@ function flush() {
 
 export const vueReactivityFramework: ReactiveFramework = {
   name: "@vue/reactivity",
+  effectCleanup: true,
   signal(initialValue) {
     const r = ref(initialValue);
     return {

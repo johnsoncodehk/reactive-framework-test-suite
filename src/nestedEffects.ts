@@ -1,6 +1,7 @@
-import { expect } from "./assert.js";
-import type { ReactiveFramework } from "./framework.js";
-import { SkipTest } from "./framework.js";
+import { expect } from "./assert.ts";
+import type { ReactiveFramework } from "./framework.ts";
+import type { TestCase } from "./suite.ts";
+import { SkipTest } from "./framework.ts";
 
 /**
  * Nested Effects & Ordering
@@ -18,28 +19,32 @@ import { SkipTest } from "./framework.js";
  *   ─→       dependency edge (downstream reads upstream)
  *   ✕        disposed / cleaned up
  */
-export const section = "Nested Effects & Ordering";
-export const cases: Record<string, (fw: ReactiveFramework) => any> = {
+export const name = "Nested Effects & Ordering";
+export const cases: TestCase[] = [
   /**
    *  S(a) ─→ E_outer{ E_inner }
    *
    * Outer effect and inner effect both read a.
    * Outer must execute before inner on initial run.
    */
-  "#43 outer effect runs before inner effect"(fw: ReactiveFramework) {
-    const order: string[] = [];
-    const a = fw.signal(0);
+  {
+    id: 43,
+    title: "outer effect runs before inner effect",
+    run(fw: ReactiveFramework) {
+      const order: string[] = [];
+      const a = fw.signal(0);
 
-    fw.effect(() => {
-      order.push("outer");
-      a.read();
       fw.effect(() => {
-        order.push("inner");
+        order.push("outer");
         a.read();
+        fw.effect(() => {
+          order.push("inner");
+          a.read();
+        });
       });
-    });
 
-    expect(order[0]).toBe("outer");
+      expect(order[0]).toBe("outer");
+    },
   },
 
   /**
@@ -49,32 +54,34 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * Outer effect must not subscribe to a's deps via untracked.
    * Inner effect still reads a directly and may re-run.
    */
-  "#45 untracked inner effect does not subscribe to deps"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.untracked) throw new SkipTest("no untracked");
-    const a = fw.signal(0);
-    let outerRuns = 0;
-    let innerRuns = 0;
+  {
+    id: 45,
+    title: "untracked inner effect does not subscribe to deps",
+    run(fw: ReactiveFramework) {
+      if (!fw.untracked) throw new SkipTest("no untracked");
+      const a = fw.signal(0);
+      let outerRuns = 0;
+      let innerRuns = 0;
 
-    fw.effect(() => {
-      outerRuns++;
-      fw.untracked!(() => {
-        fw.effect(() => {
-          a.read();
-          innerRuns++;
+      fw.effect(() => {
+        outerRuns++;
+        fw.untracked!(() => {
+          fw.effect(() => {
+            a.read();
+            innerRuns++;
+          });
         });
       });
-    });
-    expect(outerRuns).toBe(1);
-    expect(innerRuns).toBe(1);
-    innerRuns = 0;
+      expect(outerRuns).toBe(1);
+      expect(innerRuns).toBe(1);
+      innerRuns = 0;
 
-    a.write(1);
-    // The outer effect should not re-run since deps are untracked
-    // But the inner effect should re-run since it directly reads a
-    expect(outerRuns).toBe(1);
-    expect(innerRuns).toBe(1);
+      a.write(1);
+      // The outer effect should not re-run since deps are untracked
+      // But the inner effect should re-run since it directly reads a
+      expect(outerRuns).toBe(1);
+      expect(innerRuns).toBe(1);
+    },
   },
 
   /**
@@ -83,21 +90,23 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * Effect reads the same signal twice in one execution.
    * Must still fire only once per change, not once per read.
    */
-  "#46 duplicate subscribers don't cause duplicate notifications"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal(0);
-    let runs = 0;
+  {
+    id: 46,
+    title: "duplicate subscribers don't cause duplicate notifications",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
+      let runs = 0;
 
-    fw.effect(() => {
-      a.read();
-      a.read();
-      runs++;
-    });
-    expect(runs).toBe(1);
+      fw.effect(() => {
+        a.read();
+        a.read();
+        runs++;
+      });
+      expect(runs).toBe(1);
 
-    a.write(1);
-    expect(runs).toBe(2);
+      a.write(1);
+      expect(runs).toBe(2);
+    },
   },
 
   /**
@@ -106,22 +115,26 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * Effect writes to its own dependency on the first run.
    * Framework must handle the recursion without infinite looping.
    */
-  "#47 effect recursion handled on first execution"(fw: ReactiveFramework) {
-    const a = fw.signal(0);
-    let runs = 0;
+  {
+    id: 47,
+    title: "effect recursion handled on first execution",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
+      let runs = 0;
 
-    fw.effect(() => {
-      runs++;
-      if (runs === 1) {
-        a.write(1);
-      }
-      a.read();
-    });
+      fw.effect(() => {
+        runs++;
+        if (runs === 1) {
+          a.write(1);
+        }
+        a.read();
+      });
 
-    // Should not infinite loop — either runs once with final value
-    // or runs twice (initial + triggered by write)
-    expect(runs).toBeLessThanOrEqual(3);
-    expect(a.read()).toBe(1);
+      // Should not infinite loop — either runs once with final value
+      // or runs twice (initial + triggered by write)
+      expect(runs).toBeLessThanOrEqual(3);
+      expect(a.read()).toBe(1);
+    },
   },
 
   /**
@@ -132,27 +145,29 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * writes to the child signal. Parent must not re-trigger from
    * the child's signal write — only from a.
    */
-  "#163 parent effect not triggered by child's own signal"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal(0);
-    let parentRuns = 0;
+  {
+    id: 163,
+    title: "parent effect not triggered by child's own signal",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
+      let parentRuns = 0;
 
-    fw.effect(() => {
-      a.read();
-      parentRuns++;
-      const childSignal = fw.signal(0);
       fw.effect(() => {
-        childSignal.read();
+        a.read();
+        parentRuns++;
+        const childSignal = fw.signal(0);
+        fw.effect(() => {
+          childSignal.read();
+        });
+        childSignal.write(1);
       });
-      childSignal.write(1);
-    });
 
-    const runsAfterSetup = parentRuns;
-    expect(runsAfterSetup).toBeGreaterThanOrEqual(1);
+      const runsAfterSetup = parentRuns;
+      expect(runsAfterSetup).toBeGreaterThanOrEqual(1);
 
-    a.write(1);
-    expect(parentRuns).toBe(runsAfterSetup + 1);
+      a.write(1);
+      expect(parentRuns).toBe(runsAfterSetup + 1);
+    },
   },
 
   /**
@@ -161,28 +176,30 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * Inner effect reads b (not a). When b changes, the inner
    * effect must re-run independently of the outer effect.
    */
-  "#164 inner autorun created inside outer tracks own deps"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal(0);
-    const b = fw.signal(0);
-    let outerRuns = 0;
-    let innerRuns = 0;
+  {
+    id: 164,
+    title: "inner autorun created inside outer tracks own deps",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
+      const b = fw.signal(0);
+      let outerRuns = 0;
+      let innerRuns = 0;
 
-    fw.effect(() => {
-      a.read();
-      outerRuns++;
       fw.effect(() => {
-        b.read();
-        innerRuns++;
+        a.read();
+        outerRuns++;
+        fw.effect(() => {
+          b.read();
+          innerRuns++;
+        });
       });
-    });
 
-    innerRuns = 0;
-    outerRuns = 0;
+      innerRuns = 0;
+      outerRuns = 0;
 
-    b.write(1);
-    expect(innerRuns).toBeGreaterThanOrEqual(1);
+      b.write(1);
+      expect(innerRuns).toBeGreaterThanOrEqual(1);
+    },
   },
 
   /**
@@ -193,27 +210,29 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * a changes from 0 to 2 but b stays 0 (same parity).
    * Inner effect must NOT re-run (value-equality cut).
    */
-  "#170 inner effect not triggered when computed dep resolves unchanged"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal(0);
-    const b = fw.computed(() => a.read() % 2);
-    let innerRuns = 0;
+  {
+    id: 170,
+    title: "inner effect not triggered when computed dep resolves unchanged",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
+      const b = fw.computed(() => a.read() % 2);
+      let innerRuns = 0;
 
-    fw.effect(() => {
       fw.effect(() => {
-        b.read();
-        innerRuns++;
+        fw.effect(() => {
+          b.read();
+          innerRuns++;
+        });
       });
-    });
-    const initial = innerRuns;
-    expect(initial).toBe(1);
+      const initial = innerRuns;
+      expect(initial).toBe(1);
 
-    a.write(2);
-    expect(innerRuns).toBe(initial);
+      a.write(2);
+      expect(innerRuns).toBe(initial);
 
-    a.write(3);
-    expect(innerRuns).toBeGreaterThan(initial);
+      a.write(3);
+      expect(innerRuns).toBeGreaterThan(initial);
+    },
   },
 
   /**
@@ -222,20 +241,22 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * Inner effect captures a closure variable from the outer effect.
    * The observed value must reflect the outer's current execution.
    */
-  "#48 nested effects depend on state of outer effects"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal(0);
-    const observed: number[] = [];
+  {
+    id: 48,
+    title: "nested effects depend on state of outer effects",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
+      const observed: number[] = [];
 
-    fw.effect(() => {
-      const val = a.read();
       fw.effect(() => {
-        observed.push(val);
+        const val = a.read();
+        fw.effect(() => {
+          observed.push(val);
+        });
       });
-    });
 
-    expect(observed).toContain(0);
+      expect(observed).toContain(0);
+    },
   },
 
   /**
@@ -250,33 +271,35 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * to a is dropped and a.write no longer triggers it.
    * See https://github.com/stackblitz/alien-signals/issues/115
    */
-  "#226 outer keeps responding to own deps after inner re-runs"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal(0);
-    const b = fw.signal(0);
-    let outerRuns = 0;
-    let innerRuns = 0;
+  {
+    id: 226,
+    title: "outer keeps responding to own deps after inner re-runs",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
+      const b = fw.signal(0);
+      let outerRuns = 0;
+      let innerRuns = 0;
 
-    fw.effect(() => {
-      a.read();
-      outerRuns++;
       fw.effect(() => {
-        b.read();
-        innerRuns++;
+        a.read();
+        outerRuns++;
+        fw.effect(() => {
+          b.read();
+          innerRuns++;
+        });
       });
-    });
-    expect(outerRuns).toBe(1);
-    expect(innerRuns).toBe(1);
+      expect(outerRuns).toBe(1);
+      expect(innerRuns).toBe(1);
 
-    // Trigger inner via b — outer must NOT re-run (b is not its dep)
-    b.write(1);
-    expect(outerRuns).toBe(1);
-    expect(innerRuns).toBeGreaterThanOrEqual(2);
+      // Trigger inner via b — outer must NOT re-run (b is not its dep)
+      b.write(1);
+      expect(outerRuns).toBe(1);
+      expect(innerRuns).toBeGreaterThanOrEqual(2);
 
-    // Trigger outer via a — must re-run despite inner having re-run earlier
-    a.write(1);
-    expect(outerRuns).toBe(2);
+      // Trigger outer via a — must re-run despite inner having re-run earlier
+      a.write(1);
+      expect(outerRuns).toBe(2);
+    },
   },
 
   /**
@@ -288,40 +311,42 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * sibling inners — could expose bugs where one inner's re-run
    * corrupts the other or the parent's link.
    */
-  "#227 outer responds after one of multiple sibling inners re-runs"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal(0);
-    const b1 = fw.signal(0);
-    const b2 = fw.signal(0);
-    let outerRuns = 0;
-    let inner1Runs = 0;
-    let inner2Runs = 0;
+  {
+    id: 227,
+    title: "outer responds after one of multiple sibling inners re-runs",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
+      const b1 = fw.signal(0);
+      const b2 = fw.signal(0);
+      let outerRuns = 0;
+      let inner1Runs = 0;
+      let inner2Runs = 0;
 
-    fw.effect(() => {
-      a.read();
-      outerRuns++;
       fw.effect(() => {
-        b1.read();
-        inner1Runs++;
+        a.read();
+        outerRuns++;
+        fw.effect(() => {
+          b1.read();
+          inner1Runs++;
+        });
+        fw.effect(() => {
+          b2.read();
+          inner2Runs++;
+        });
       });
-      fw.effect(() => {
-        b2.read();
-        inner2Runs++;
-      });
-    });
-    expect(outerRuns).toBe(1);
-    expect(inner1Runs).toBe(1);
-    expect(inner2Runs).toBe(1);
+      expect(outerRuns).toBe(1);
+      expect(inner1Runs).toBe(1);
+      expect(inner2Runs).toBe(1);
 
-    // Only inner1 re-runs
-    b1.write(1);
-    expect(outerRuns).toBe(1);
-    expect(inner1Runs).toBeGreaterThanOrEqual(2);
+      // Only inner1 re-runs
+      b1.write(1);
+      expect(outerRuns).toBe(1);
+      expect(inner1Runs).toBeGreaterThanOrEqual(2);
 
-    // Outer must still respond to its own dep
-    a.write(1);
-    expect(outerRuns).toBe(2);
+      // Outer must still respond to its own dep
+      a.write(1);
+      expect(outerRuns).toBe(2);
+    },
   },
 
   /**
@@ -332,32 +357,34 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * the burst, the outer must still respond to a. Verifies the
    * parent-child link survives repeated inner re-runs, not just one.
    */
-  "#228 outer responds after inner re-runs multiple times"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal(0);
-    const b = fw.signal(0);
-    let outerRuns = 0;
-    let innerRuns = 0;
+  {
+    id: 228,
+    title: "outer responds after inner re-runs multiple times",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
+      const b = fw.signal(0);
+      let outerRuns = 0;
+      let innerRuns = 0;
 
-    fw.effect(() => {
-      a.read();
-      outerRuns++;
       fw.effect(() => {
-        b.read();
-        innerRuns++;
+        a.read();
+        outerRuns++;
+        fw.effect(() => {
+          b.read();
+          innerRuns++;
+        });
       });
-    });
-    expect(outerRuns).toBe(1);
-    expect(innerRuns).toBe(1);
+      expect(outerRuns).toBe(1);
+      expect(innerRuns).toBe(1);
 
-    b.write(1);
-    b.write(2);
-    b.write(3);
-    expect(outerRuns).toBe(1);
-    expect(innerRuns).toBeGreaterThanOrEqual(2);
+      b.write(1);
+      b.write(2);
+      b.write(3);
+      expect(outerRuns).toBe(1);
+      expect(innerRuns).toBeGreaterThanOrEqual(2);
 
-    a.write(1);
-    expect(outerRuns).toBe(2);
+      a.write(1);
+      expect(outerRuns).toBe(2);
+    },
   },
-};
+];

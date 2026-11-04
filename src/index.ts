@@ -1,37 +1,25 @@
-export type { ReactiveFramework, Signal, Computed } from "./framework.js";
-export { SkipTest } from "./framework.js";
-export { expect, setExpect } from "./assert.js";
+export type { ReactiveFramework, Signal, Computed } from "./framework.ts";
+export { SkipTest } from "./framework.ts";
+export type { TestCase, Probe, Section, CaseResult, ProbeResult } from "./suite.ts";
+export { runCase, runProbe } from "./suite.ts";
 
-import type { ReactiveFramework } from "./framework.js";
+import type { Section, TestCase, Probe } from "./suite.ts";
+import * as graphPropagation from "./graphPropagation.ts";
+import * as dynamicDeps from "./dynamicDeps.ts";
+import * as computedEval from "./computedEval.ts";
+import * as equality from "./equality.ts";
+import * as effectLifecycle from "./effectLifecycle.ts";
+import * as nestedEffects from "./nestedEffects.ts";
+import * as innerWrite from "./innerWrite.ts";
+import * as cycleDetection from "./cycleDetection.ts";
+import * as batching from "./batching.ts";
+import * as untracked from "./untracked.ts";
+import * as errorHandling from "./errorHandling.ts";
+import * as staleEvaluation from "./staleEvaluation.ts";
+import * as memoryGc from "./memoryGc.ts";
+import * as behaviorDifferences from "./behaviorDifferences.ts";
 
-import * as graphPropagation from "./graphPropagation.js";
-import * as dynamicDeps from "./dynamicDeps.js";
-import * as computedEval from "./computedEval.js";
-import * as equality from "./equality.js";
-import * as effectLifecycle from "./effectLifecycle.js";
-import * as nestedEffects from "./nestedEffects.js";
-import * as innerWrite from "./innerWrite.js";
-import * as cycleDetection from "./cycleDetection.js";
-import * as batching from "./batching.js";
-import * as untracked from "./untracked.js";
-import * as errorHandling from "./errorHandling.js";
-import * as staleEvaluation from "./staleEvaluation.js";
-import * as memoryGc from "./memoryGc.js";
-import * as behaviorDifferences from "./behaviorDifferences.js";
-
-export interface TestSection {
-  section: string;
-  cases: Record<string, (fw: ReactiveFramework) => any>;
-  type?: "behavioral";
-  /**
-   * Cases may run until their own guard trips, or exhaust memory first,
-   * in a library that doesn't bound the behavior under test. Run them in
-   * a separate process with a fixed heap limit.
-   */
-  mayNotTerminate?: boolean;
-}
-
-export const testSuite: TestSection[] = [
+export const correctness: readonly Section<TestCase>[] = [
   graphPropagation,
   dynamicDeps,
   computedEval,
@@ -45,5 +33,6 @@ export const testSuite: TestSection[] = [
   errorHandling,
   staleEvaluation,
   memoryGc,
-  { ...behaviorDifferences, type: "behavioral" },
 ];
+
+export const behaviors: Section<Probe> = behaviorDifferences;

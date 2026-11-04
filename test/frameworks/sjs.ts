@@ -1,10 +1,11 @@
-import type { ReactiveFramework } from "../../src/framework.js";
+import type { ReactiveFramework } from "../../src/framework.ts";
 import S from "s-js";
 
 let effectDepth = 0;
 
 export const sjsFramework: ReactiveFramework = {
   name: "S.js",
+  effectCleanup: true,
   signal(initialValue) {
     const s = S.data(initialValue);
     return {

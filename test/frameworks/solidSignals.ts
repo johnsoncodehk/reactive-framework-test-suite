@@ -1,10 +1,11 @@
-import type { ReactiveFramework } from "../../src/framework.js";
+import type { ReactiveFramework } from "../../src/framework.ts";
 import {
   createSignal,
   createMemo,
   createEffect,
   createRoot,
   flushSync,
+  onCleanup,
   untrack,
 } from "@solidjs/signals";
 
@@ -19,6 +20,7 @@ function safeFlush() {
 
 export const solidSignalsFramework: ReactiveFramework = {
   name: "@solidjs/signals",
+  effectCleanup: true,
   signal(initialValue) {
     const [read, write] = createSignal(initialValue as any);
     return {
@@ -37,7 +39,10 @@ export const solidSignalsFramework: ReactiveFramework = {
     createRoot((d) => {
       dispose = d;
       // @ts-ignore — runtime accepts 1 arg, types require 2
-      createEffect(fn);
+      createEffect(() => {
+        const cleanup = fn();
+        if (typeof cleanup === "function") onCleanup(cleanup);
+      });
       safeFlush();
     });
     return dispose;

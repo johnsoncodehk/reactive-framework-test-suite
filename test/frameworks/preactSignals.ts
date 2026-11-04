@@ -1,4 +1,4 @@
-import type { ReactiveFramework } from "../../src/framework.js";
+import type { ReactiveFramework } from "../../src/framework.ts";
 import {
   signal,
   computed,
@@ -9,6 +9,7 @@ import {
 
 export const preactSignalsFramework: ReactiveFramework = {
   name: "@preact/signals-core",
+  effectCleanup: true,
   signal(initialValue) {
     const s = signal(initialValue);
     return {

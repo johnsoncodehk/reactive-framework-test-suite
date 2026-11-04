@@ -1,6 +1,7 @@
-import { expect } from "./assert.js";
-import type { ReactiveFramework } from "./framework.js";
-import { SkipTest } from "./framework.js";
+import { expect } from "./assert.ts";
+import type { ReactiveFramework } from "./framework.ts";
+import type { TestCase } from "./suite.ts";
+import { SkipTest } from "./framework.ts";
 
 /**
  * Graph Propagation
@@ -16,8 +17,8 @@ import { SkipTest } from "./framework.js";
  *   E / eff  effect
  *   ─→       dependency edge (downstream reads upstream)
  */
-export const section = "Graph Propagation";
-export const cases: Record<string, (fw: ReactiveFramework) => any> = {
+export const name = "Graph Propagation";
+export const cases: TestCase[] = [
   /**
    *     S(a)
    *    /    \
@@ -27,23 +28,27 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    *
    * Classic diamond. d must evaluate only once per update.
    */
-  "#1 diamond"(fw: ReactiveFramework) {
-    const a = fw.signal("a");
-    const b = fw.computed(() => a.read());
-    const c = fw.computed(() => a.read());
+  {
+    id: 1,
+    title: "diamond",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal("a");
+      const b = fw.computed(() => a.read());
+      const c = fw.computed(() => a.read());
 
-    let dCalls = 0;
-    const d = fw.computed(() => {
-      dCalls++;
-      return b.read() + " " + c.read();
-    });
+      let dCalls = 0;
+      const d = fw.computed(() => {
+        dCalls++;
+        return b.read() + " " + c.read();
+      });
 
-    expect(d.read()).toBe("a a");
-    expect(dCalls).toBe(1);
+      expect(d.read()).toBe("a a");
+      expect(dCalls).toBe(1);
 
-    a.write("aa");
-    expect(d.read()).toBe("aa aa");
-    expect(dCalls).toBe(2);
+      a.write("aa");
+      expect(d.read()).toBe("aa aa");
+      expect(dCalls).toBe(2);
+    },
   },
 
   /**
@@ -57,24 +62,28 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    *
    * Diamond with a tail. e must evaluate only once.
    */
-  "#2 diamond + tail"(fw: ReactiveFramework) {
-    const a = fw.signal("a");
-    const b = fw.computed(() => a.read());
-    const c = fw.computed(() => a.read());
-    const d = fw.computed(() => b.read() + " " + c.read());
+  {
+    id: 2,
+    title: "diamond + tail",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal("a");
+      const b = fw.computed(() => a.read());
+      const c = fw.computed(() => a.read());
+      const d = fw.computed(() => b.read() + " " + c.read());
 
-    let eCalls = 0;
-    const e = fw.computed(() => {
-      eCalls++;
-      return d.read();
-    });
+      let eCalls = 0;
+      const e = fw.computed(() => {
+        eCalls++;
+        return d.read();
+      });
 
-    expect(e.read()).toBe("a a");
-    expect(eCalls).toBe(1);
+      expect(e.read()).toBe("a a");
+      expect(eCalls).toBe(1);
 
-    a.write("aa");
-    expect(e.read()).toBe("aa aa");
-    expect(eCalls).toBe(2);
+      a.write("aa");
+      expect(e.read()).toBe("aa aa");
+      expect(eCalls).toBe(2);
+    },
   },
 
   /**
@@ -91,44 +100,48 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * Asymmetric diamond (different depths) with fan-out at the bottom.
    * e, f, g each evaluate only once.
    */
-  "#3 jagged diamond + tails"(fw: ReactiveFramework) {
-    const a = fw.signal("a");
-    const b = fw.computed(() => a.read());
-    const c = fw.computed(() => a.read());
-    const d = fw.computed(() => c.read());
+  {
+    id: 3,
+    title: "jagged diamond + tails",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal("a");
+      const b = fw.computed(() => a.read());
+      const c = fw.computed(() => a.read());
+      const d = fw.computed(() => c.read());
 
-    let eCalls = 0;
-    const e = fw.computed(() => {
-      eCalls++;
-      return b.read() + " " + d.read();
-    });
+      let eCalls = 0;
+      const e = fw.computed(() => {
+        eCalls++;
+        return b.read() + " " + d.read();
+      });
 
-    let fCalls = 0;
-    const f = fw.computed(() => {
-      fCalls++;
-      return e.read();
-    });
+      let fCalls = 0;
+      const f = fw.computed(() => {
+        fCalls++;
+        return e.read();
+      });
 
-    let gCalls = 0;
-    const g = fw.computed(() => {
-      gCalls++;
-      return e.read();
-    });
+      let gCalls = 0;
+      const g = fw.computed(() => {
+        gCalls++;
+        return e.read();
+      });
 
-    expect(f.read()).toBe("a a");
-    expect(g.read()).toBe("a a");
+      expect(f.read()).toBe("a a");
+      expect(g.read()).toBe("a a");
 
-    eCalls = 0;
-    fCalls = 0;
-    gCalls = 0;
+      eCalls = 0;
+      fCalls = 0;
+      gCalls = 0;
 
-    a.write("b");
-    expect(e.read()).toBe("b b");
-    expect(eCalls).toBe(1);
-    expect(f.read()).toBe("b b");
-    expect(fCalls).toBe(1);
-    expect(g.read()).toBe("b b");
-    expect(gCalls).toBe(1);
+      a.write("b");
+      expect(e.read()).toBe("b b");
+      expect(eCalls).toBe(1);
+      expect(f.read()).toBe("b b");
+      expect(fCalls).toBe(1);
+      expect(g.read()).toBe("b b");
+      expect(gCalls).toBe(1);
+    },
   },
 
   /**
@@ -143,23 +156,27 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * Skip-connection: c reads both a and b (a's child).
    * d must evaluate only once despite two paths from a to c.
    */
-  "#5 drop A→B→A updates"(fw: ReactiveFramework) {
-    const a = fw.signal(2);
-    const b = fw.computed(() => a.read() - 1);
-    const c = fw.computed(() => a.read() + b.read());
+  {
+    id: 5,
+    title: "drop A→B→A updates",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(2);
+      const b = fw.computed(() => a.read() - 1);
+      const c = fw.computed(() => a.read() + b.read());
 
-    let dCalls = 0;
-    const d = fw.computed(() => {
-      dCalls++;
-      return "d: " + c.read();
-    });
+      let dCalls = 0;
+      const d = fw.computed(() => {
+        dCalls++;
+        return "d: " + c.read();
+      });
 
-    expect(d.read()).toBe("d: 3");
-    expect(dCalls).toBe(1);
+      expect(d.read()).toBe("d: 3");
+      expect(dCalls).toBe(1);
 
-    a.write(4);
-    expect(d.read()).toBe("d: 7");
-    expect(dCalls).toBe(2);
+      a.write(4);
+      expect(d.read()).toBe("d: 7");
+      expect(dCalls).toBe(2);
+    },
   },
 
   /**
@@ -171,28 +188,30 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    *
    * One branch unchanged. d must still update from b.
    */
-  "#6 one unchanged dep does not block update from changed dep"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal("a");
-    const b = fw.computed(() => a.read());
-    const c = fw.computed(() => {
-      a.read();
-      return "c";
-    });
+  {
+    id: 6,
+    title: "one unchanged dep does not block update from changed dep",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal("a");
+      const b = fw.computed(() => a.read());
+      const c = fw.computed(() => {
+        a.read();
+        return "c";
+      });
 
-    let dCalls = 0;
-    const d = fw.computed(() => {
-      dCalls++;
-      return b.read() + " " + c.read();
-    });
+      let dCalls = 0;
+      const d = fw.computed(() => {
+        dCalls++;
+        return b.read() + " " + c.read();
+      });
 
-    expect(d.read()).toBe("a c");
-    dCalls = 0;
+      expect(d.read()).toBe("a c");
+      dCalls = 0;
 
-    a.write("aa");
-    expect(d.read()).toBe("aa c");
-    expect(dCalls).toBe(1);
+      a.write("aa");
+      expect(d.read()).toBe("aa c");
+      expect(dCalls).toBe(1);
+    },
   },
 
   /**
@@ -204,31 +223,33 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    *
    * Both branches unchanged. d must NOT re-evaluate (propagation cut).
    */
-  "#7 unchanged computed values stop propagation to downstream"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal("a");
-    const b = fw.computed(() => {
-      a.read();
-      return "b";
-    });
-    const c = fw.computed(() => {
-      a.read();
-      return "c";
-    });
+  {
+    id: 7,
+    title: "unchanged computed values stop propagation to downstream",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal("a");
+      const b = fw.computed(() => {
+        a.read();
+        return "b";
+      });
+      const c = fw.computed(() => {
+        a.read();
+        return "c";
+      });
 
-    let dCalls = 0;
-    const d = fw.computed(() => {
-      dCalls++;
-      return b.read() + " " + c.read();
-    });
+      let dCalls = 0;
+      const d = fw.computed(() => {
+        dCalls++;
+        return b.read() + " " + c.read();
+      });
 
-    expect(d.read()).toBe("b c");
-    dCalls = 0;
+      expect(d.read()).toBe("b c");
+      dCalls = 0;
 
-    a.write("aa");
-    expect(d.read()).toBe("b c");
-    expect(dCalls).toBe(0);
+      a.write("aa");
+      expect(d.read()).toBe("b c");
+      expect(dCalls).toBe(0);
+    },
   },
 
   /**
@@ -240,34 +261,38 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    *
    * Diamond — verify evaluation order: d runs after both b and c.
    */
-  "#8 topological order"(fw: ReactiveFramework) {
-    const a = fw.signal(0);
-    const order: string[] = [];
+  {
+    id: 8,
+    title: "topological order",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
+      const order: string[] = [];
 
-    const b = fw.computed(() => {
-      const v = a.read();
-      order.push("b");
-      return v;
-    });
-    const c = fw.computed(() => {
-      const v = a.read();
-      order.push("c");
-      return v;
-    });
-    const d = fw.computed(() => {
-      const v = b.read() + c.read();
-      order.push("d");
-      return v;
-    });
+      const b = fw.computed(() => {
+        const v = a.read();
+        order.push("b");
+        return v;
+      });
+      const c = fw.computed(() => {
+        const v = a.read();
+        order.push("c");
+        return v;
+      });
+      const d = fw.computed(() => {
+        const v = b.read() + c.read();
+        order.push("d");
+        return v;
+      });
 
-    expect(d.read()).toBe(0);
-    order.length = 0;
+      expect(d.read()).toBe(0);
+      order.length = 0;
 
-    a.write(1);
-    expect(d.read()).toBe(2);
-    expect(order.indexOf("d")).toBeGreaterThan(order.indexOf("b"));
-    expect(order.indexOf("d")).toBeGreaterThan(order.indexOf("c"));
-    expect(order.filter((x) => x === "d")).toHaveLength(1);
+      a.write(1);
+      expect(d.read()).toBe(2);
+      expect(order.indexOf("d")).toBeGreaterThan(order.indexOf("b"));
+      expect(order.indexOf("d")).toBeGreaterThan(order.indexOf("c"));
+      expect(order.filter((x) => x === "d")).toHaveLength(1);
+    },
   },
 
   /**
@@ -281,30 +306,34 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    *
    * Increasing fan-in at each level. Each node evaluates once.
    */
-  "#9 linear convergence"(fw: ReactiveFramework) {
-    const a = fw.signal(0);
-    const b = fw.computed(() => a.read());
+  {
+    id: 9,
+    title: "linear convergence",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
+      const b = fw.computed(() => a.read());
 
-    let cCalls = 0;
-    const c = fw.computed(() => {
-      cCalls++;
-      return a.read() + b.read();
-    });
+      let cCalls = 0;
+      const c = fw.computed(() => {
+        cCalls++;
+        return a.read() + b.read();
+      });
 
-    let dCalls = 0;
-    const d = fw.computed(() => {
-      dCalls++;
-      return a.read() + c.read();
-    });
+      let dCalls = 0;
+      const d = fw.computed(() => {
+        dCalls++;
+        return a.read() + c.read();
+      });
 
-    expect(d.read()).toBe(0);
-    cCalls = 0;
-    dCalls = 0;
+      expect(d.read()).toBe(0);
+      cCalls = 0;
+      dCalls = 0;
 
-    a.write(1);
-    expect(d.read()).toBe(3);
-    expect(cCalls).toBe(1);
-    expect(dCalls).toBe(1);
+      a.write(1);
+      expect(d.read()).toBe(3);
+      expect(cCalls).toBe(1);
+      expect(dCalls).toBe(1);
+    },
   },
 
   /**
@@ -316,38 +345,42 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * Each level reads previous two. Naive impl is O(2^n).
    * Each node must evaluate exactly once.
    */
-  "#10 exponential convergence"(fw: ReactiveFramework) {
-    const a = fw.signal(0);
-    const b = fw.computed(() => a.read());
+  {
+    id: 10,
+    title: "exponential convergence",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
+      const b = fw.computed(() => a.read());
 
-    let cCalls = 0;
-    const c = fw.computed(() => {
-      cCalls++;
-      return b.read() + a.read();
-    });
+      let cCalls = 0;
+      const c = fw.computed(() => {
+        cCalls++;
+        return b.read() + a.read();
+      });
 
-    let dCalls = 0;
-    const d = fw.computed(() => {
-      dCalls++;
-      return c.read() + b.read();
-    });
+      let dCalls = 0;
+      const d = fw.computed(() => {
+        dCalls++;
+        return c.read() + b.read();
+      });
 
-    let eCalls = 0;
-    const e = fw.computed(() => {
-      eCalls++;
-      return d.read() + c.read();
-    });
+      let eCalls = 0;
+      const e = fw.computed(() => {
+        eCalls++;
+        return d.read() + c.read();
+      });
 
-    expect(e.read()).toBe(0);
-    cCalls = 0;
-    dCalls = 0;
-    eCalls = 0;
+      expect(e.read()).toBe(0);
+      cCalls = 0;
+      dCalls = 0;
+      eCalls = 0;
 
-    a.write(1);
-    expect(e.read()).toBe(5);
-    expect(cCalls).toBe(1);
-    expect(dCalls).toBe(1);
-    expect(eCalls).toBe(1);
+      a.write(1);
+      expect(e.read()).toBe(5);
+      expect(cCalls).toBe(1);
+      expect(dCalls).toBe(1);
+      expect(eCalls).toBe(1);
+    },
   },
 
   /**
@@ -357,36 +390,38 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * Two effects share one computed. After e1 disposes,
    * e2 must still receive updates.
    */
-  "#116 other listeners still notified after one disposes"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal(0);
-    const c = fw.computed(() => a.read() * 2);
-    let runs1 = 0;
-    let runs2 = 0;
+  {
+    id: 116,
+    title: "other listeners still notified after one disposes",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
+      const c = fw.computed(() => a.read() * 2);
+      let runs1 = 0;
+      let runs2 = 0;
 
-    const dispose1 = fw.effect(() => {
-      c.read();
-      runs1++;
-    });
+      const dispose1 = fw.effect(() => {
+        c.read();
+        runs1++;
+      });
 
-    fw.effect(() => {
-      c.read();
-      runs2++;
-    });
+      fw.effect(() => {
+        c.read();
+        runs2++;
+      });
 
-    expect(runs1).toBe(1);
-    expect(runs2).toBe(1);
+      expect(runs1).toBe(1);
+      expect(runs2).toBe(1);
 
-    dispose1();
+      dispose1();
 
-    a.write(1);
-    expect(runs1).toBe(1);
-    expect(runs2).toBe(2);
+      a.write(1);
+      expect(runs1).toBe(1);
+      expect(runs2).toBe(2);
 
-    a.write(2);
-    expect(runs1).toBe(1);
-    expect(runs2).toBe(3);
+      a.write(2);
+      expect(runs1).toBe(1);
+      expect(runs2).toBe(3);
+    },
   },
 
   /**
@@ -398,32 +433,34 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    *
    * Three-way diamond, two branches constant. e must still update from b.
    */
-  "#157 three-way diamond: sub updates when two of three deps unmark"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal("a");
-    const b = fw.computed(() => a.read());
-    const c = fw.computed(() => {
-      a.read();
-      return "c";
-    });
-    const d = fw.computed(() => {
-      a.read();
-      return "d";
-    });
+  {
+    id: 157,
+    title: "three-way diamond: sub updates when two of three deps unmark",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal("a");
+      const b = fw.computed(() => a.read());
+      const c = fw.computed(() => {
+        a.read();
+        return "c";
+      });
+      const d = fw.computed(() => {
+        a.read();
+        return "d";
+      });
 
-    let eCalls = 0;
-    const e = fw.computed(() => {
-      eCalls++;
-      return b.read() + " " + c.read() + " " + d.read();
-    });
+      let eCalls = 0;
+      const e = fw.computed(() => {
+        eCalls++;
+        return b.read() + " " + c.read() + " " + d.read();
+      });
 
-    expect(e.read()).toBe("a c d");
-    eCalls = 0;
+      expect(e.read()).toBe("a c d");
+      eCalls = 0;
 
-    a.write("aa");
-    expect(e.read()).toBe("aa c d");
-    expect(eCalls).toBe(1);
+      a.write("aa");
+      expect(e.read()).toBe("aa c d");
+      expect(eCalls).toBe(1);
+    },
   },
 
   /**
@@ -434,23 +471,25 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * Computed is read directly first, then an effect subscribes.
    * Effect must still be notified on subsequent changes.
    */
-  "#190 computed notifies newly-subscribed effect after prior read"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal(0);
-    const b = fw.computed(() => a.read());
-    const c = fw.computed(() => b.read());
-    c.read();
-
-    let runs = 0;
-    fw.effect(() => {
+  {
+    id: 190,
+    title: "computed notifies newly-subscribed effect after prior read",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
+      const b = fw.computed(() => a.read());
+      const c = fw.computed(() => b.read());
       c.read();
-      runs++;
-    });
-    expect(runs).toBe(1);
 
-    a.write(1);
-    expect(runs).toBe(2);
+      let runs = 0;
+      fw.effect(() => {
+        c.read();
+        runs++;
+      });
+      expect(runs).toBe(1);
+
+      a.write(1);
+      expect(runs).toBe(2);
+    },
   },
 
   /**
@@ -461,20 +500,22 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * Source changes before effect subscribes.
    * Effect must see the latest value, not stale.
    */
-  "#191 effect sees latest computed value when subscribing after source change"(
-    fw: ReactiveFramework
-  ) {
-    const s = fw.signal(0);
-    const c = fw.computed(() => s.read());
-    c.read();
+  {
+    id: 191,
+    title: "effect sees latest computed value when subscribing after source change",
+    run(fw: ReactiveFramework) {
+      const s = fw.signal(0);
+      const c = fw.computed(() => s.read());
+      c.read();
 
-    s.write(1);
+      s.write(1);
 
-    let seen: number | undefined;
-    fw.effect(() => {
-      seen = c.read();
-    });
-    expect(seen).toBe(1);
+      let seen: number | undefined;
+      fw.effect(() => {
+        seen = c.read();
+      });
+      expect(seen).toBe(1);
+    },
   },
 
   /**
@@ -488,23 +529,25 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * Effect must NOT re-run (propagation cut by value-equality),
    * but must re-run once the computed value actually changes.
    */
-  "#192 effect not re-run when computed dep value unchanged"(
-    fw: ReactiveFramework
-  ) {
-    const s = fw.signal(0);
-    const c = fw.computed(() => (s.read() >= 10 ? 1 : 0));
-    let runs = 0;
-    fw.effect(() => {
-      c.read();
-      runs++;
-    });
-    expect(runs).toBe(1);
+  {
+    id: 192,
+    title: "effect not re-run when computed dep value unchanged",
+    run(fw: ReactiveFramework) {
+      const s = fw.signal(0);
+      const c = fw.computed(() => (s.read() >= 10 ? 1 : 0));
+      let runs = 0;
+      fw.effect(() => {
+        c.read();
+        runs++;
+      });
+      expect(runs).toBe(1);
 
-    s.write(1);
-    expect(runs).toBe(1);
+      s.write(1);
+      expect(runs).toBe(1);
 
-    s.write(10);
-    expect(runs).toBe(2);
+      s.write(10);
+      expect(runs).toBe(2);
+    },
   },
 
   /**
@@ -517,34 +560,38 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * Two independent signals feed one computed.
    * Both change — c and effect must evaluate only once each.
    */
-  "#204 multi-source fan-in"(fw: ReactiveFramework) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(1);
-    const b = fw.signal(10);
+  {
+    id: 204,
+    title: "multi-source fan-in",
+    run(fw: ReactiveFramework) {
+      if (!fw.batch) throw new SkipTest("no batch");
+      const a = fw.signal(1);
+      const b = fw.signal(10);
 
-    let cCalls = 0;
-    const c = fw.computed(() => {
-      cCalls++;
-      return a.read() + b.read();
-    });
+      let cCalls = 0;
+      const c = fw.computed(() => {
+        cCalls++;
+        return a.read() + b.read();
+      });
 
-    let runs = 0;
-    fw.effect(() => {
-      c.read();
-      runs++;
-    });
-    expect(c.read()).toBe(11);
-    expect(runs).toBe(1);
-    cCalls = 0;
-    runs = 0;
+      let runs = 0;
+      fw.effect(() => {
+        c.read();
+        runs++;
+      });
+      expect(c.read()).toBe(11);
+      expect(runs).toBe(1);
+      cCalls = 0;
+      runs = 0;
 
-    fw.batch(() => {
-      a.write(2);
-      b.write(20);
-    });
-    expect(c.read()).toBe(22);
-    expect(cCalls).toBe(1);
-    expect(runs).toBe(1);
+      fw.batch(() => {
+        a.write(2);
+        b.write(20);
+      });
+      expect(c.read()).toBe(22);
+      expect(cCalls).toBe(1);
+      expect(runs).toBe(1);
+    },
   },
 
   /**
@@ -561,23 +608,27 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * Both signals change — e reflects both writes. (How many times
    * c, d and e evaluate is #146's design difference, not checked here.)
    */
-  "#205 multi-source cross-diamond"(fw: ReactiveFramework) {
-    const a = fw.signal(1);
-    const b = fw.signal(10);
+  {
+    id: 205,
+    title: "multi-source cross-diamond",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(1);
+      const b = fw.signal(10);
 
-    const c = fw.computed(() => a.read() + b.read());
+      const c = fw.computed(() => a.read() + b.read());
 
-    const d = fw.computed(() => a.read() * b.read());
+      const d = fw.computed(() => a.read() * b.read());
 
-    const e = fw.computed(() => c.read() + d.read());
+      const e = fw.computed(() => c.read() + d.read());
 
-    expect(e.read()).toBe(21);
+      expect(e.read()).toBe(21);
 
-    a.write(2);
-    b.write(20);
-    expect(e.read()).toBe(62);
-    expect(c.read()).toBe(22);
-    expect(d.read()).toBe(40);
+      a.write(2);
+      b.write(20);
+      expect(e.read()).toBe(62);
+      expect(c.read()).toBe(22);
+      expect(d.read()).toBe(40);
+    },
   },
 
   /**
@@ -593,34 +644,38 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    *
    * Two diamonds stacked. Each node evaluates once.
    */
-  "#206 stacked diamonds"(fw: ReactiveFramework) {
-    const a = fw.signal(1);
-    const b = fw.computed(() => a.read());
-    const c = fw.computed(() => a.read());
+  {
+    id: 206,
+    title: "stacked diamonds",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(1);
+      const b = fw.computed(() => a.read());
+      const c = fw.computed(() => a.read());
 
-    let dCalls = 0;
-    const d = fw.computed(() => {
-      dCalls++;
-      return b.read() + c.read();
-    });
+      let dCalls = 0;
+      const d = fw.computed(() => {
+        dCalls++;
+        return b.read() + c.read();
+      });
 
-    const e = fw.computed(() => d.read());
-    const f = fw.computed(() => d.read());
+      const e = fw.computed(() => d.read());
+      const f = fw.computed(() => d.read());
 
-    let gCalls = 0;
-    const g = fw.computed(() => {
-      gCalls++;
-      return e.read() + f.read();
-    });
+      let gCalls = 0;
+      const g = fw.computed(() => {
+        gCalls++;
+        return e.read() + f.read();
+      });
 
-    expect(g.read()).toBe(4);
-    dCalls = 0;
-    gCalls = 0;
+      expect(g.read()).toBe(4);
+      dCalls = 0;
+      gCalls = 0;
 
-    a.write(2);
-    expect(g.read()).toBe(8);
-    expect(dCalls).toBe(1);
-    expect(gCalls).toBe(1);
+      a.write(2);
+      expect(g.read()).toBe(8);
+      expect(dCalls).toBe(1);
+      expect(gCalls).toBe(1);
+    },
   },
 
   /**
@@ -633,27 +688,31 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * Wide fan-out: one signal, many computed+effect pairs.
    * All effects fire exactly once.
    */
-  "#207 wide fan-out: all effects fire once"(fw: ReactiveFramework) {
-    const a = fw.signal(0);
-    const N = 6;
-    const runs = new Array(N).fill(0);
+  {
+    id: 207,
+    title: "wide fan-out: all effects fire once",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
+      const N = 6;
+      const runs = new Array(N).fill(0);
 
-    for (let i = 0; i < N; i++) {
-      const c = fw.computed(() => a.read() + i);
-      const idx = i;
-      fw.effect(() => {
-        c.read();
-        runs[idx]++;
-      });
-    }
+      for (let i = 0; i < N; i++) {
+        const c = fw.computed(() => a.read() + i);
+        const idx = i;
+        fw.effect(() => {
+          c.read();
+          runs[idx]++;
+        });
+      }
 
-    for (let i = 0; i < N; i++) expect(runs[i]).toBe(1);
+      for (let i = 0; i < N; i++) expect(runs[i]).toBe(1);
 
-    a.write(1);
-    for (let i = 0; i < N; i++) expect(runs[i]).toBe(2);
+      a.write(1);
+      for (let i = 0; i < N; i++) expect(runs[i]).toBe(2);
 
-    a.write(2);
-    for (let i = 0; i < N; i++) expect(runs[i]).toBe(3);
+      a.write(2);
+      for (let i = 0; i < N; i++) expect(runs[i]).toBe(3);
+    },
   },
 
   /**
@@ -664,25 +723,29 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    *  depth-3 path and depth-1 path join at f.
    *  f must evaluate only once despite large depth difference.
    */
-  "#208 deep asymmetric join (depth 3 vs 1)"(fw: ReactiveFramework) {
-    const a = fw.signal(1);
-    const b = fw.computed(() => a.read());
-    const c = fw.computed(() => b.read());
-    const d = fw.computed(() => c.read());
-    const e = fw.computed(() => a.read());
+  {
+    id: 208,
+    title: "deep asymmetric join (depth 3 vs 1)",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(1);
+      const b = fw.computed(() => a.read());
+      const c = fw.computed(() => b.read());
+      const d = fw.computed(() => c.read());
+      const e = fw.computed(() => a.read());
 
-    let fCalls = 0;
-    const f = fw.computed(() => {
-      fCalls++;
-      return d.read() + e.read();
-    });
+      let fCalls = 0;
+      const f = fw.computed(() => {
+        fCalls++;
+        return d.read() + e.read();
+      });
 
-    expect(f.read()).toBe(2);
-    fCalls = 0;
+      expect(f.read()).toBe(2);
+      fCalls = 0;
 
-    a.write(2);
-    expect(f.read()).toBe(4);
-    expect(fCalls).toBe(1);
+      a.write(2);
+      expect(f.read()).toBe(4);
+      expect(fCalls).toBe(1);
+    },
   },
 
   /**
@@ -695,30 +758,32 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * Three unbatched writes, then one read of e. d is reachable and
    * stale, so it is evaluated exactly once before e uses it.
    */
-  "#189 multi-signal change: reachable computed evaluated once"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal(1);
-    const b = fw.signal(1);
-    const c = fw.signal(1);
+  {
+    id: 189,
+    title: "multi-signal change: reachable computed evaluated once",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(1);
+      const b = fw.signal(1);
+      const c = fw.signal(1);
 
-    let dCalls = 0;
-    const d = fw.computed(() => {
-      dCalls++;
-      return c.read();
-    });
-    const e = fw.computed(() => {
-      b.read();
-      return a.read() > 0 ? d.read() : 0;
-    });
+      let dCalls = 0;
+      const d = fw.computed(() => {
+        dCalls++;
+        return c.read();
+      });
+      const e = fw.computed(() => {
+        b.read();
+        return a.read() > 0 ? d.read() : 0;
+      });
 
-    expect(e.read()).toBe(1);
-    dCalls = 0;
+      expect(e.read()).toBe(1);
+      dCalls = 0;
 
-    a.write(2);
-    b.write(2);
-    c.write(2);
-    expect(e.read()).toBe(2);
-    expect(dCalls).toBe(1);
+      a.write(2);
+      b.write(2);
+      c.write(2);
+      expect(e.read()).toBe(2);
+      expect(dCalls).toBe(1);
+    },
   },
-};
+];

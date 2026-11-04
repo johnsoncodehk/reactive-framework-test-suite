@@ -1,10 +1,11 @@
-import { ReactiveFramework } from "../../src/framework.js"
+import type { ReactiveFramework } from "../../src/framework.ts"
 import { ReactiveEngineCore } from '@pravosleva/reactive-engine'
 
 const engine = new ReactiveEngineCore()
 
 export const reactiveEngineFramework: ReactiveFramework = {
   name: "@pravosleva/reactive-engine",
+  effectCleanup: true,
 
   signal<T>(initialValue: T) {
     const sig = engine.signal(initialValue)

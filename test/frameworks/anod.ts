@@ -1,4 +1,4 @@
-import type { ReactiveFramework } from "../../src/framework.js";
+import type { ReactiveFramework } from "../../src/framework.ts";
 import {
   signal as createSignal,
   c as globalFactory,
@@ -11,6 +11,7 @@ let currentFactory: any = globalFactory;
 
 export const anodFramework: ReactiveFramework = {
   name: "anod",
+  effectCleanup: true,
   signal(initialValue) {
     const s = createSignal(initialValue);
     return {

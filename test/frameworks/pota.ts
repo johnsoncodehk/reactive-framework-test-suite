@@ -1,4 +1,4 @@
-import type { ReactiveFramework } from "../../src/framework.js";
+import type { ReactiveFramework } from "../../src/framework.ts";
 // Pota's main entry loads CustomElement.js which references HTMLElement at
 // module load. Import from the reactive submodule to keep this Node-friendly.
 // @ts-ignore — types only resolve from the main entry
@@ -10,6 +10,7 @@ let runDisposers: (() => void)[] | null = null;
 
 export const potaFramework: ReactiveFramework = {
   name: "pota",
+  effectCleanup: true,
   signal(initialValue) {
     const [read, write] = createSignal(initialValue);
     return { read, write };

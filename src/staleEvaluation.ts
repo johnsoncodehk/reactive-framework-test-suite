@@ -1,5 +1,6 @@
-import { expect } from "./assert.js";
-import type { ReactiveFramework } from "./framework.js";
+import { expect } from "./assert.ts";
+import type { ReactiveFramework } from "./framework.ts";
+import type { TestCase } from "./suite.ts";
 
 /**
  * Stale Evaluation Order
@@ -15,8 +16,8 @@ import type { ReactiveFramework } from "./framework.js";
  *   E / eff  effect
  *   ─→       dependency edge
  */
-export const section = "Stale Evaluation Order";
-export const cases: Record<string, (fw: ReactiveFramework) => any> = {
+export const name = "Stale Evaluation Order";
+export const cases: TestCase[] = [
   /**
    *  S(a) ─→ C(b) ─→ C(d)
    *  S(a) ─→ C(c) ─→ C(d)
@@ -25,33 +26,35 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * and C(d) depends on both. After a single write to S(a),
    * C(b) should re-evaluate exactly once and C(d) exactly once.
    */
-  "#94 stale invocation does not trigger pending computations"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal(0);
-    let bCalls = 0;
-    const b = fw.computed(() => {
-      bCalls++;
-      return a.read();
-    });
-    const c = fw.computed(() => {
-      a.read();
-      return "c";
-    });
-    let dCalls = 0;
-    const d = fw.computed(() => {
-      dCalls++;
-      return b.read() + " " + c.read();
-    });
+  {
+    id: 94,
+    title: "stale invocation does not trigger pending computations",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
+      let bCalls = 0;
+      const b = fw.computed(() => {
+        bCalls++;
+        return a.read();
+      });
+      const c = fw.computed(() => {
+        a.read();
+        return "c";
+      });
+      let dCalls = 0;
+      const d = fw.computed(() => {
+        dCalls++;
+        return b.read() + " " + c.read();
+      });
 
-    expect(d.read()).toBe("0 c");
-    bCalls = 0;
-    dCalls = 0;
+      expect(d.read()).toBe("0 c");
+      bCalls = 0;
+      dCalls = 0;
 
-    a.write(1);
-    expect(d.read()).toBe("1 c");
-    expect(bCalls).toBe(1);
-    expect(dCalls).toBe(1);
+      a.write(1);
+      expect(d.read()).toBe("1 c");
+      expect(bCalls).toBe(1);
+      expect(dCalls).toBe(1);
+    },
   },
 
   /**
@@ -61,26 +64,28 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * re-evaluated before C(c) so that C(c) never sees a
    * stale intermediate value.
    */
-  "#95 stale computations evaluated before their dependees"(
-    fw: ReactiveFramework
-  ) {
-    const order: string[] = [];
-    const a = fw.signal(0);
-    const b = fw.computed(() => {
-      order.push("b");
-      return a.read();
-    });
-    const c = fw.computed(() => {
-      order.push("c");
-      return b.read();
-    });
+  {
+    id: 95,
+    title: "stale computations evaluated before their dependees",
+    run(fw: ReactiveFramework) {
+      const order: string[] = [];
+      const a = fw.signal(0);
+      const b = fw.computed(() => {
+        order.push("b");
+        return a.read();
+      });
+      const c = fw.computed(() => {
+        order.push("c");
+        return b.read();
+      });
 
-    expect(c.read()).toBe(0);
-    order.length = 0;
+      expect(c.read()).toBe(0);
+      order.length = 0;
 
-    a.write(1);
-    expect(c.read()).toBe(1);
-    expect(order.indexOf("b")).toBeLessThan(order.indexOf("c"));
+      a.write(1);
+      expect(c.read()).toBe(1);
+      expect(order.indexOf("b")).toBeLessThan(order.indexOf("c"));
+    },
   },
 
   /**
@@ -91,21 +96,23 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * (b, c, d) must return the fully updated value — no
    * stale intermediate results.
    */
-  "#158 stale chained computed accessed after update: values fresh"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal(0);
-    const b = fw.computed(() => a.read() + 1);
-    const c = fw.computed(() => b.read() + 1);
-    const d = fw.computed(() => c.read() + 1);
+  {
+    id: 158,
+    title: "stale chained computed accessed after update: values fresh",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
+      const b = fw.computed(() => a.read() + 1);
+      const c = fw.computed(() => b.read() + 1);
+      const d = fw.computed(() => c.read() + 1);
 
-    expect(d.read()).toBe(3);
+      expect(d.read()).toBe(3);
 
-    a.write(10);
+      a.write(10);
 
-    expect(b.read()).toBe(11);
-    expect(c.read()).toBe(12);
-    expect(d.read()).toBe(13);
+      expect(b.read()).toBe(11);
+      expect(c.read()).toBe(12);
+      expect(d.read()).toBe(13);
+    },
   },
 
   /**
@@ -117,19 +124,21 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * been written must still pick up the dirty value on first
    * read and remain reactive to further writes.
    */
-  "#159 pending computation created after dirty signal still updates"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal(0);
-    const b = fw.computed(() => a.read() * 2);
+  {
+    id: 159,
+    title: "pending computation created after dirty signal still updates",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
+      const b = fw.computed(() => a.read() * 2);
 
-    a.write(5);
+      a.write(5);
 
-    const c = fw.computed(() => b.read() + 1);
-    expect(c.read()).toBe(11);
+      const c = fw.computed(() => b.read() + 1);
+      expect(c.read()).toBe(11);
 
-    a.write(10);
-    expect(c.read()).toBe(21);
+      a.write(10);
+      expect(c.read()).toBe(21);
+    },
   },
 
   /**
@@ -142,20 +151,22 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * refresh the indirect path (b → c) so that C(d) sees
    * consistent values from both branches.
    */
-  "#97 flags indirectly updated during dirty-checking"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal(0);
-    const b = fw.computed(() => a.read());
-    const c = fw.computed(() => b.read());
-    const d = fw.computed(() => {
-      // d depends on both a and c
-      return a.read() + c.read();
-    });
+  {
+    id: 97,
+    title: "flags indirectly updated during dirty-checking",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
+      const b = fw.computed(() => a.read());
+      const c = fw.computed(() => b.read());
+      const d = fw.computed(() => {
+        // d depends on both a and c
+        return a.read() + c.read();
+      });
 
-    expect(d.read()).toBe(0);
-    a.write(1);
-    // a=1, b=1, c=1, d=1+1=2
-    expect(d.read()).toBe(2);
+      expect(d.read()).toBe(0);
+      a.write(1);
+      // a=1, b=1, c=1, d=1+1=2
+      expect(d.read()).toBe(2);
+    },
   },
-};
+];

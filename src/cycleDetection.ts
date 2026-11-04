@@ -1,5 +1,6 @@
-import { expect } from "./assert.js";
-import type { ReactiveFramework } from "./framework.js";
+import { expect } from "./assert.ts";
+import type { ReactiveFramework } from "./framework.ts";
+import type { TestCase } from "./suite.ts";
 
 /**
  * Cycle & Infinite Loop Detection
@@ -29,8 +30,8 @@ import type { ReactiveFramework } from "./framework.js";
  *   ─→       dependency edge (downstream reads upstream)
  *   ↔ / ⟳   cyclic dependency
  */
-export const section = "Cycle & Infinite Loop Detection";
-export const mayNotTerminate = true;
+export const name = "Cycle & Infinite Loop Detection";
+export const mayNotTerminate: true = true;
 
 // Above the largest built-in limit among the libraries under test:
 // solid-js throws "Potential Infinite Loop" after 10^6 queued updates.
@@ -86,29 +87,33 @@ function expectStillReactive(
   expect(threw || runs() > before).toBe(true);
 }
 
-export const cases: Record<string, (fw: ReactiveFramework) => any> = {
+export const cases: TestCase[] = [
   /**
    *  S(a) → E(eff) → S(a)  ⟳
    *
    * An effect reads a signal then writes back to it, unconditionally.
    * The framework must either throw or stop the loop by itself.
    */
-  "#61 indirect cycle through effects"(fw: ReactiveFramework) {
-    const a = fw.signal(0);
-    const guard = createGuard();
-    let runs = 0;
+  {
+    id: 61,
+    title: "indirect cycle through effects",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
+      const guard = createGuard();
+      let runs = 0;
 
-    const threw = settle(() => {
-      fw.effect(() => {
-        guard.tick();
-        runs++;
-        a.write(a.read() + 1);
+      const threw = settle(() => {
+        fw.effect(() => {
+          guard.tick();
+          runs++;
+          a.write(a.read() + 1);
+        });
       });
-    });
 
-    expect(guard.tripped).toBe(false);
-    if (threw) return;
-    expectStillReactive(guard, () => runs, 1, () => a.write(-1));
+      expect(guard.tripped).toBe(false);
+      if (threw) return;
+      expectStillReactive(guard, () => runs, 1, () => a.write(-1));
+    },
   },
 
   /**
@@ -122,32 +127,34 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * unbounded read-write cycle on a. The framework must either throw
    * or stop the loop by itself.
    */
-  "#63 cycle from modifying a branch (dynamic cycle creation)"(
-    fw: ReactiveFramework
-  ) {
-    const cond = fw.signal(false);
-    const a = fw.signal(0);
-    const guard = createGuard();
-    let runs = 0;
+  {
+    id: 63,
+    title: "cycle from modifying a branch (dynamic cycle creation)",
+    run(fw: ReactiveFramework) {
+      const cond = fw.signal(false);
+      const a = fw.signal(0);
+      const guard = createGuard();
+      let runs = 0;
 
-    fw.effect(() => {
-      guard.tick();
-      runs++;
-      if (cond.read()) {
-        a.write(a.read() + 1);
-      } else {
-        a.read();
-      }
-    });
+      fw.effect(() => {
+        guard.tick();
+        runs++;
+        if (cond.read()) {
+          a.write(a.read() + 1);
+        } else {
+          a.read();
+        }
+      });
 
-    a.write(1);
-    expect(runs).toBe(2);
+      a.write(1);
+      expect(runs).toBe(2);
 
-    const threw = settle(() => cond.write(true));
+      const threw = settle(() => cond.write(true));
 
-    expect(guard.tripped).toBe(false);
-    if (threw) return;
-    expectStillReactive(guard, () => runs, 2, () => a.write(-1));
+      expect(guard.tripped).toBe(false);
+      if (threw) return;
+      expectStillReactive(guard, () => runs, 2, () => a.write(-1));
+    },
   },
 
   /**
@@ -158,28 +165,30 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * When a=0, c tries to read itself (cycle) and catches the error.
    * After setting a=1, c must recover and return a's value.
    */
-  "#153 computed self-dep recovery after catching cycle error"(
-    fw: ReactiveFramework
-  ) {
-    const a = fw.signal(0);
+  {
+    id: 153,
+    title: "computed self-dep recovery after catching cycle error",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
 
-    const c: { read(): number } = fw.computed(() => {
-      if (a.read() === 0) {
-        try {
-          return (c as any).read();
-        } catch {
-          return -1;
+      const c: { read(): number } = fw.computed(() => {
+        if (a.read() === 0) {
+          try {
+            return (c as any).read();
+          } catch {
+            return -1;
+          }
         }
-      }
-      return a.read();
-    });
+        return a.read();
+      });
 
-    try {
-      c.read();
-    } catch {}
+      try {
+        c.read();
+      } catch {}
 
-    a.write(1);
-    expect(c.read()).toBe(1);
+      a.write(1);
+      expect(c.read()).toBe(1);
+    },
   },
 
   /**
@@ -190,27 +199,31 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * condition. The framework must cap iterations (throw or stop)
    * instead of looping forever.
    */
-  "#64 max iteration limit reached"(fw: ReactiveFramework) {
-    const a = fw.signal(0);
-    const b = fw.signal(0);
-    const guard = createGuard();
-    let runs = 0;
+  {
+    id: 64,
+    title: "max iteration limit reached",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
+      const b = fw.signal(0);
+      const guard = createGuard();
+      let runs = 0;
 
-    const threw = settle(() => {
-      fw.effect(() => {
-        guard.tick();
-        runs++;
-        b.write(a.read());
+      const threw = settle(() => {
+        fw.effect(() => {
+          guard.tick();
+          runs++;
+          b.write(a.read());
+        });
+        fw.effect(() => {
+          guard.tick();
+          a.write(b.read() + 1);
+        });
       });
-      fw.effect(() => {
-        guard.tick();
-        a.write(b.read() + 1);
-      });
-    });
 
-    expect(guard.tripped).toBe(false);
-    if (threw) return;
-    expectStillReactive(guard, () => runs, 1, () => a.write(-1));
+      expect(guard.tripped).toBe(false);
+      if (threw) return;
+      expectStillReactive(guard, () => runs, 1, () => a.write(-1));
+    },
   },
 
   /**
@@ -222,32 +235,36 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * longer cycles too — frameworks that detect direct (length-2) loops
    * may miss longer paths.
    */
-  "#221 three-effect cycle stays bounded"(fw: ReactiveFramework) {
-    const a = fw.signal(0);
-    const b = fw.signal(0);
-    const c = fw.signal(0);
-    const guard = createGuard();
-    let runs = 0;
+  {
+    id: 221,
+    title: "three-effect cycle stays bounded",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
+      const b = fw.signal(0);
+      const c = fw.signal(0);
+      const guard = createGuard();
+      let runs = 0;
 
-    const threw = settle(() => {
-      fw.effect(() => {
-        guard.tick();
-        runs++;
-        b.write(a.read());
+      const threw = settle(() => {
+        fw.effect(() => {
+          guard.tick();
+          runs++;
+          b.write(a.read());
+        });
+        fw.effect(() => {
+          guard.tick();
+          c.write(b.read());
+        });
+        fw.effect(() => {
+          guard.tick();
+          a.write(c.read() + 1);
+        });
       });
-      fw.effect(() => {
-        guard.tick();
-        c.write(b.read());
-      });
-      fw.effect(() => {
-        guard.tick();
-        a.write(c.read() + 1);
-      });
-    });
 
-    expect(guard.tripped).toBe(false);
-    if (threw) return;
-    expectStillReactive(guard, () => runs, 1, () => a.write(-1));
+      expect(guard.tripped).toBe(false);
+      if (threw) return;
+      expectStillReactive(guard, () => runs, 1, () => a.write(-1));
+    },
   },
 
   /**
@@ -258,27 +275,31 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * (direct effect-effect) and #221 (effect-effect chain) — verifies
    * the bound holds when the cycle passes through a computed.
    */
-  "#223 cycle through computed stays bounded"(fw: ReactiveFramework) {
-    const a = fw.signal(0);
-    const b = fw.signal(0);
-    const c = fw.computed(() => b.read());
-    const guard = createGuard();
-    let runs = 0;
+  {
+    id: 223,
+    title: "cycle through computed stays bounded",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
+      const b = fw.signal(0);
+      const c = fw.computed(() => b.read());
+      const guard = createGuard();
+      let runs = 0;
 
-    const threw = settle(() => {
-      fw.effect(() => {
-        guard.tick();
-        runs++;
-        b.write(a.read());
+      const threw = settle(() => {
+        fw.effect(() => {
+          guard.tick();
+          runs++;
+          b.write(a.read());
+        });
+        fw.effect(() => {
+          guard.tick();
+          a.write(c.read() + 1);
+        });
       });
-      fw.effect(() => {
-        guard.tick();
-        a.write(c.read() + 1);
-      });
-    });
 
-    expect(guard.tripped).toBe(false);
-    if (threw) return;
-    expectStillReactive(guard, () => runs, 1, () => a.write(-1));
+      expect(guard.tripped).toBe(false);
+      if (threw) return;
+      expectStillReactive(guard, () => runs, 1, () => a.write(-1));
+    },
   },
-};
+];

@@ -1,6 +1,4 @@
-type ExpectFn = (actual: unknown) => any;
-
-const defaultExpect: ExpectFn = (actual) => {
+export function expect(actual: unknown) {
   return {
     toBe(expected: unknown) {
       if (!Object.is(actual, expected)) {
@@ -88,19 +86,4 @@ const defaultExpect: ExpectFn = (actual) => {
       },
     },
   };
-};
-
-let activeExpect: ExpectFn = defaultExpect;
-
-/**
- * Replace the built-in expect with one from your test runner
- * (e.g. vitest's `expect`) for richer error messages and tighter
- * integration. Pass nothing to restore the built-in implementation.
- */
-export function setExpect(fn?: ExpectFn): void {
-  activeExpect = fn ?? defaultExpect;
-}
-
-export function expect(actual: unknown) {
-  return activeExpect(actual);
 }

@@ -1,4 +1,4 @@
-import type { ReactiveFramework } from "../../src/framework.js";
+import type { ReactiveFramework } from "../../src/framework.ts";
 import { writable, computed, derived, get, batch, untrack } from "@amadeus-it-group/tansu";
 
 export const tansuFramework: ReactiveFramework = {

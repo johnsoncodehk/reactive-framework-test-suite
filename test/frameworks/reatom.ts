@@ -1,4 +1,4 @@
-import type { ReactiveFramework } from "../../src/framework.js";
+import type { ReactiveFramework } from "../../src/framework.ts";
 import {
   abortVar,
   atom,
@@ -11,6 +11,7 @@ import {
 
 export const reatomFramework: ReactiveFramework = {
   name: "@reatom/core",
+  effectCleanup: true,
   signal<T>(initialValue: T) {
     const stateAtom = atom(initialValue);
     return {

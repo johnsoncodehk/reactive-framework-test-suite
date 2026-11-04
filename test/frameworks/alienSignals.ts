@@ -1,4 +1,4 @@
-import type { ReactiveFramework } from "../../src/framework.js";
+import type { ReactiveFramework } from "../../src/framework.ts";
 import {
   signal,
   computed,
@@ -10,6 +10,7 @@ import {
 } from "alien-signals";
 export const alienSignalsFramework: ReactiveFramework = {
   name: "alien-signals",
+  effectCleanup: true,
   signal(initialValue) {
     const s = signal(initialValue);
     return {

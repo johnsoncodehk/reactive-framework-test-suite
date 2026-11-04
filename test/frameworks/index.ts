@@ -1,37 +1,30 @@
-import type { ReactiveFramework } from "../../src/framework.js";
+import type { AdapterModule } from "../../src/node/index.ts";
 
-import { alienSignalsFramework } from "./alienSignals.js";
-import { angularSignalsFramework } from "./angularSignals.js";
-import { anodFramework } from "./anod.js";
-import { mobxFramework } from "./mobx.js";
-import { potaFramework } from "./pota.js";
-import { preactSignalsFramework } from "./preactSignals.js";
-import { reactivelyFramework } from "./reactively.js";
-import { reatomFramework } from "./reatom.js";
-import { sjsFramework } from "./sjs.js";
-import { solidFramework } from "./solid.js";
-import { svelteFramework } from "./svelte.js";
-import { tansuFramework } from "./tansu.js";
-import { tc39SignalsFramework } from "./tc39Signals.js";
-import { vueReactivityFramework } from "./vueReactivity.js";
-import { solidSignalsFramework } from "./solidSignals.js";
-import { reactiveEngineFramework } from './reactiveEngine.js';
+// Adapters load in plain Node too (cycle cases run in separate processes);
+// these conditions select the libraries' reactive client builds.
+const execArgv = ["--conditions=browser", "--conditions=development"];
 
-export const frameworks: ReactiveFramework[] = [
-  alienSignalsFramework,
-  preactSignalsFramework,
-  reactivelyFramework,
-  tansuFramework,
-  tc39SignalsFramework,
-  vueReactivityFramework,
-  mobxFramework,
-  reatomFramework,
-  svelteFramework,
-  solidFramework,
-  solidSignalsFramework,
-  sjsFramework,
-  potaFramework,
-  angularSignalsFramework,
-  anodFramework,
-  reactiveEngineFramework,
+const adapter = (file: string, name: string): AdapterModule => ({
+  module: new URL(`./${file}`, import.meta.url),
+  export: name,
+  execArgv,
+});
+
+export const adapters: AdapterModule[] = [
+  adapter("alienSignals.ts", "alienSignalsFramework"),
+  adapter("preactSignals.ts", "preactSignalsFramework"),
+  adapter("reactively.ts", "reactivelyFramework"),
+  adapter("tansu.ts", "tansuFramework"),
+  adapter("tc39Signals.ts", "tc39SignalsFramework"),
+  adapter("vueReactivity.ts", "vueReactivityFramework"),
+  adapter("mobx.ts", "mobxFramework"),
+  adapter("reatom.ts", "reatomFramework"),
+  adapter("svelte.ts", "svelteFramework"),
+  adapter("solid.ts", "solidFramework"),
+  adapter("solidSignals.ts", "solidSignalsFramework"),
+  adapter("sjs.ts", "sjsFramework"),
+  adapter("pota.ts", "potaFramework"),
+  adapter("angularSignals.ts", "angularSignalsFramework"),
+  adapter("anod.ts", "anodFramework"),
+  adapter("reactiveEngine.ts", "reactiveEngineFramework"),
 ];

@@ -1,6 +1,7 @@
-import { expect } from "./assert.js";
-import type { ReactiveFramework } from "./framework.js";
-import { SkipTest, hasEffectCleanup } from "./framework.js";
+import { expect } from "./assert.ts";
+import type { ReactiveFramework } from "./framework.ts";
+import type { TestCase } from "./suite.ts";
+import { SkipTest } from "./framework.ts";
 
 /**
  * Batching / Transaction
@@ -17,37 +18,39 @@ import { SkipTest, hasEffectCleanup } from "./framework.js";
  *   E / eff  effect
  *   ─→       dependency edge (downstream reads upstream)
  */
-export const section = "Batching / Transaction";
-export const cases: Record<string, (fw: ReactiveFramework) => any> = {
+export const name = "Batching / Transaction";
+export const cases: TestCase[] = [
   /**
    *  S(a) → E(eff)
    *
    * Nested batch: inner batch completes but outer is still open.
    * Effect fires only once when the outermost batch ends.
    */
-  "#66 nested batches: outer completion triggers propagation"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    let runs = 0;
-    fw.effect(() => {
-      a.read();
-      runs++;
-    });
-    expect(runs).toBe(1);
-
-    fw.batch(() => {
-      a.write(1);
-      fw.batch!(() => {
-        a.write(2);
+  {
+    id: 66,
+    title: "nested batches: outer completion triggers propagation",
+    run(fw: ReactiveFramework) {
+      if (!fw.batch) throw new SkipTest("no batch");
+      const a = fw.signal(0);
+      let runs = 0;
+      fw.effect(() => {
+        a.read();
+        runs++;
       });
-      // Inner batch complete but outer still open
       expect(runs).toBe(1);
-      a.write(3);
-    });
-    expect(runs).toBe(2);
-    expect(a.read()).toBe(3);
+
+      fw.batch(() => {
+        a.write(1);
+        fw.batch!(() => {
+          a.write(2);
+        });
+        // Inner batch complete but outer still open
+        expect(runs).toBe(1);
+        a.write(3);
+      });
+      expect(runs).toBe(2);
+      expect(a.read()).toBe(3);
+    },
   },
 
   /**
@@ -56,17 +59,19 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * Signal reads inside a batch reflect the latest written value
    * immediately (write-then-read consistency within the batch).
    */
-  "#67 signals readable with updated value inside batch"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    fw.batch(() => {
-      a.write(1);
-      expect(a.read()).toBe(1);
-      a.write(2);
-      expect(a.read()).toBe(2);
-    });
+  {
+    id: 67,
+    title: "signals readable with updated value inside batch",
+    run(fw: ReactiveFramework) {
+      if (!fw.batch) throw new SkipTest("no batch");
+      const a = fw.signal(0);
+      fw.batch(() => {
+        a.write(1);
+        expect(a.read()).toBe(1);
+        a.write(2);
+        expect(a.read()).toBe(2);
+      });
+    },
   },
 
   /**
@@ -77,34 +82,38 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * Either way the state must be consistent and later writes must
    * still propagate.
    */
-  "#69 throwing batch leaves a consistent state"(fw: ReactiveFramework) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    let runs = 0;
-    let seen = -1;
-    fw.effect(() => {
-      seen = a.read();
-      runs++;
-    });
-    expect(runs).toBe(1);
-
-    try {
-      fw.batch(() => {
-        a.write(1);
-        throw new Error("batch error");
+  {
+    id: 69,
+    title: "throwing batch leaves a consistent state",
+    run(fw: ReactiveFramework) {
+      if (!fw.batch) throw new SkipTest("no batch");
+      const a = fw.signal(0);
+      let runs = 0;
+      let seen = -1;
+      fw.effect(() => {
+        seen = a.read();
+        runs++;
       });
-    } catch {}
-
-    if (a.read() === 1) {
-      expect(runs).toBe(2);
-      expect(seen).toBe(1);
-    } else {
-      expect(a.read()).toBe(0);
       expect(runs).toBe(1);
-    }
 
-    a.write(2);
-    expect(seen).toBe(2);
+      try {
+        fw.batch(() => {
+          a.write(1);
+          throw new Error("batch error");
+        });
+      } catch {}
+
+      if (a.read() === 1) {
+        expect(runs).toBe(2);
+        expect(seen).toBe(1);
+      } else {
+        expect(a.read()).toBe(0);
+        expect(runs).toBe(1);
+      }
+
+      a.write(2);
+      expect(seen).toBe(2);
+    },
   },
 
   /**
@@ -113,20 +122,22 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * An effect created inside a batch runs its initial execution
    * immediately (synchronously), not deferred to batch end.
    */
-  "#70 effect first run is immediate even inside batch"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    let runs = 0;
+  {
+    id: 70,
+    title: "effect first run is immediate even inside batch",
+    run(fw: ReactiveFramework) {
+      if (!fw.batch) throw new SkipTest("no batch");
+      const a = fw.signal(0);
+      let runs = 0;
 
-    fw.batch(() => {
-      fw.effect(() => {
-        a.read();
-        runs++;
+      fw.batch(() => {
+        fw.effect(() => {
+          a.read();
+          runs++;
+        });
+        expect(runs).toBe(1);
       });
-      expect(runs).toBe(1);
-    });
+    },
   },
 
   /**
@@ -135,23 +146,25 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * batch { a.write(1); a.write(2); a.write(3) } — effect observes
    * [0, 3] only; intermediate values 1 and 2 are never seen.
    */
-  "#72 intermediate values skipped (only final value observed)"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    const values: number[] = [];
-    fw.effect(() => {
-      values.push(a.read());
-    });
-    expect(values).toEqual([0]);
+  {
+    id: 72,
+    title: "intermediate values skipped (only final value observed)",
+    run(fw: ReactiveFramework) {
+      if (!fw.batch) throw new SkipTest("no batch");
+      const a = fw.signal(0);
+      const values: number[] = [];
+      fw.effect(() => {
+        values.push(a.read());
+      });
+      expect(values).toEqual([0]);
 
-    fw.batch(() => {
-      a.write(1);
-      a.write(2);
-      a.write(3);
-    });
-    expect(values).toEqual([0, 3]);
+      fw.batch(() => {
+        a.write(1);
+        a.write(2);
+        a.write(3);
+      });
+      expect(values).toEqual([0, 3]);
+    },
   },
 
   /**
@@ -161,28 +174,30 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * batch { a.write(1); b.write(-1) } — c = a+b still equals 0.
    * Effect must NOT re-run (computed value unchanged).
    */
-  "#119 batch: computed same result despite source change — no effect run"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    const b = fw.signal(0);
-    const c = fw.computed(() => a.read() + b.read());
-    let runs = 0;
-    fw.effect(() => {
-      c.read();
-      runs++;
-    });
-    expect(runs).toBe(1);
-    expect(c.read()).toBe(0);
+  {
+    id: 119,
+    title: "batch: computed same result despite source change — no effect run",
+    run(fw: ReactiveFramework) {
+      if (!fw.batch) throw new SkipTest("no batch");
+      const a = fw.signal(0);
+      const b = fw.signal(0);
+      const c = fw.computed(() => a.read() + b.read());
+      let runs = 0;
+      fw.effect(() => {
+        c.read();
+        runs++;
+      });
+      expect(runs).toBe(1);
+      expect(c.read()).toBe(0);
 
-    fw.batch(() => {
-      a.write(1);
-      b.write(-1);
-    });
+      fw.batch(() => {
+        a.write(1);
+        b.write(-1);
+      });
 
-    expect(c.read()).toBe(0);
-    expect(runs).toBe(1);
+      expect(c.read()).toBe(0);
+      expect(runs).toBe(1);
+    },
   },
 
   /**
@@ -193,30 +208,32 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * value of b. (Only the final value is checked, not the number of
    * notifications.)
    */
-  "#120 cleanup writes inside effect: downstream settles on final value"(
-    fw: ReactiveFramework
-  ) {
-    if (!hasEffectCleanup(fw)) throw new SkipTest("no effectCleanup");
-    const a = fw.signal(0);
-    const b = fw.signal(0);
-    const log: string[] = [];
+  {
+    id: 120,
+    title: "cleanup writes inside effect: downstream settles on final value",
+    run(fw: ReactiveFramework) {
+      if (!fw.effectCleanup) throw new SkipTest("no effectCleanup");
+      const a = fw.signal(0);
+      const b = fw.signal(0);
+      const log: string[] = [];
 
-    fw.effect(() => {
-      a.read();
-      return () => {
-        b.write(a.read());
-      };
-    });
+      fw.effect(() => {
+        a.read();
+        return () => {
+          b.write(a.read());
+        };
+      });
 
-    fw.effect(() => {
-      log.push("b:" + b.read());
-    });
+      fw.effect(() => {
+        log.push("b:" + b.read());
+      });
 
-    log.length = 0;
-    a.write(1);
+      log.length = 0;
+      a.write(1);
 
-    expect(log.length).toBeGreaterThanOrEqual(1);
-    expect(log[log.length - 1]).toBe("b:1");
+      expect(log.length).toBeGreaterThanOrEqual(1);
+      expect(log[log.length - 1]).toBe("b:1");
+    },
   },
 
   /**
@@ -226,33 +243,35 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * One effect throws during batch flush. The other (good) effect
    * must still run with the updated value.
    */
-  "#121 pending effects run even if some effects throw during batch"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    let goodRuns = 0;
+  {
+    id: 121,
+    title: "pending effects run even if some effects throw during batch",
+    run(fw: ReactiveFramework) {
+      if (!fw.batch) throw new SkipTest("no batch");
+      const a = fw.signal(0);
+      let goodRuns = 0;
 
-    fw.effect(() => {
-      a.read();
-      goodRuns++;
-    });
-
-    try {
       fw.effect(() => {
-        if (a.read() > 0) throw new Error("bad effect");
+        a.read();
+        goodRuns++;
       });
-    } catch {}
 
-    expect(goodRuns).toBe(1);
+      try {
+        fw.effect(() => {
+          if (a.read() > 0) throw new Error("bad effect");
+        });
+      } catch {}
 
-    try {
-      fw.batch(() => {
-        a.write(1);
-      });
-    } catch {}
+      expect(goodRuns).toBe(1);
 
-    expect(goodRuns).toBeGreaterThanOrEqual(2);
+      try {
+        fw.batch(() => {
+          a.write(1);
+        });
+      } catch {}
+
+      expect(goodRuns).toBeGreaterThanOrEqual(2);
+    },
   },
 
   /**
@@ -261,24 +280,28 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * After a batch completes, subsequent writes propagate normally
    * (one write = one effect run), verifying batch state is fully reset.
    */
-  "#122 post-batch writes work normally"(fw: ReactiveFramework) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    let runs = 0;
-    fw.effect(() => {
-      a.read();
-      runs++;
-    });
-    expect(runs).toBe(1);
+  {
+    id: 122,
+    title: "post-batch writes work normally",
+    run(fw: ReactiveFramework) {
+      if (!fw.batch) throw new SkipTest("no batch");
+      const a = fw.signal(0);
+      let runs = 0;
+      fw.effect(() => {
+        a.read();
+        runs++;
+      });
+      expect(runs).toBe(1);
 
-    fw.batch(() => {
-      a.write(1);
-    });
-    expect(runs).toBe(2);
+      fw.batch(() => {
+        a.write(1);
+      });
+      expect(runs).toBe(2);
 
-    a.write(2);
-    expect(runs).toBe(3);
-    expect(a.read()).toBe(2);
+      a.write(2);
+      expect(runs).toBe(3);
+      expect(a.read()).toBe(2);
+    },
   },
 
   /**
@@ -287,38 +310,40 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * Multiple consecutive batches that each write then revert to the
    * original value. Effect must never re-run (all batches are no-ops).
    */
-  "#123 repeated no-op batches don't re-trigger effects"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    let runs = 0;
-    fw.effect(() => {
-      a.read();
-      runs++;
-    });
-    expect(runs).toBe(1);
+  {
+    id: 123,
+    title: "repeated no-op batches don't re-trigger effects",
+    run(fw: ReactiveFramework) {
+      if (!fw.batch) throw new SkipTest("no batch");
+      const a = fw.signal(0);
+      let runs = 0;
+      fw.effect(() => {
+        a.read();
+        runs++;
+      });
+      expect(runs).toBe(1);
 
-    fw.batch(() => {
-      a.write(1);
-      a.write(0);
-    });
-    expect(runs).toBe(1);
+      fw.batch(() => {
+        a.write(1);
+        a.write(0);
+      });
+      expect(runs).toBe(1);
 
-    fw.batch(() => {
-      a.write(2);
-      a.write(0);
-    });
-    expect(runs).toBe(1);
+      fw.batch(() => {
+        a.write(2);
+        a.write(0);
+      });
+      expect(runs).toBe(1);
 
-    fw.batch(() => {
-      a.write(3);
-      a.write(0);
-    });
-    expect(runs).toBe(1);
+      fw.batch(() => {
+        a.write(3);
+        a.write(0);
+      });
+      expect(runs).toBe(1);
 
-    a.write(5);
-    expect(runs).toBe(2);
+      a.write(5);
+      expect(runs).toBe(2);
+    },
   },
 
   /**
@@ -327,27 +352,31 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * batch { a.write(1); dispose(); a.write(2) } — effect is disposed
    * mid-batch. It must NOT run at batch end despite pending notification.
    */
-  "#124 trigger+dispose+retrigger in batch = no run"(fw: ReactiveFramework) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    let runs = 0;
-    const dispose = fw.effect(() => {
-      a.read();
-      runs++;
-    });
-    expect(runs).toBe(1);
+  {
+    id: 124,
+    title: "trigger+dispose+retrigger in batch = no run",
+    run(fw: ReactiveFramework) {
+      if (!fw.batch) throw new SkipTest("no batch");
+      const a = fw.signal(0);
+      let runs = 0;
+      const dispose = fw.effect(() => {
+        a.read();
+        runs++;
+      });
+      expect(runs).toBe(1);
 
-    fw.batch(() => {
-      a.write(1);
-    });
-    expect(runs).toBe(2);
+      fw.batch(() => {
+        a.write(1);
+      });
+      expect(runs).toBe(2);
 
-    fw.batch(() => {
-      a.write(2);
-      dispose();
-      a.write(3);
-    });
-    expect(runs).toBe(2);
+      fw.batch(() => {
+        a.write(2);
+        dispose();
+        a.write(3);
+      });
+      expect(runs).toBe(2);
+    },
   },
 
   /**
@@ -356,25 +385,27 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * batch { a.write(5); a.write(0) } — source reverts to original.
    * Computed and effect must NOT re-evaluate.
    */
-  "#125 batch: source reverts → computed not notified"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    const c = fw.computed(() => a.read() * 2);
-    let runs = 0;
-    fw.effect(() => {
-      c.read();
-      runs++;
-    });
-    expect(runs).toBe(1);
+  {
+    id: 125,
+    title: "batch: source reverts → computed not notified",
+    run(fw: ReactiveFramework) {
+      if (!fw.batch) throw new SkipTest("no batch");
+      const a = fw.signal(0);
+      const c = fw.computed(() => a.read() * 2);
+      let runs = 0;
+      fw.effect(() => {
+        c.read();
+        runs++;
+      });
+      expect(runs).toBe(1);
 
-    fw.batch(() => {
-      a.write(5);
-      a.write(0);
-    });
-    expect(runs).toBe(1);
-    expect(c.read()).toBe(0);
+      fw.batch(() => {
+        a.write(5);
+        a.write(0);
+      });
+      expect(runs).toBe(1);
+      expect(c.read()).toBe(0);
+    },
   },
 
   /**
@@ -383,21 +414,23 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * batch { a.write(42); effect(...) } — effect created after the
    * write sees the updated value 42 on its initial run.
    */
-  "#126 new effect inside batch after write sees updated value"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    let seen = -1;
+  {
+    id: 126,
+    title: "new effect inside batch after write sees updated value",
+    run(fw: ReactiveFramework) {
+      if (!fw.batch) throw new SkipTest("no batch");
+      const a = fw.signal(0);
+      let seen = -1;
 
-    fw.batch(() => {
-      a.write(42);
-      fw.effect(() => {
-        seen = a.read();
+      fw.batch(() => {
+        a.write(42);
+        fw.effect(() => {
+          seen = a.read();
+        });
       });
-    });
 
-    expect(seen).toBe(42);
+      expect(seen).toBe(42);
+    },
   },
 
   /**
@@ -406,19 +439,21 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * batch { a.write(5); c.read() } — pulling c inside the batch
    * forces eager evaluation of the entire upstream chain (b and c).
    */
-  "#128 reading computed in batch forces upstream evaluation"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    const b = fw.computed(() => a.read() + 1);
-    const c = fw.computed(() => b.read() * 2);
+  {
+    id: 128,
+    title: "reading computed in batch forces upstream evaluation",
+    run(fw: ReactiveFramework) {
+      if (!fw.batch) throw new SkipTest("no batch");
+      const a = fw.signal(0);
+      const b = fw.computed(() => a.read() + 1);
+      const c = fw.computed(() => b.read() * 2);
 
-    fw.batch(() => {
-      a.write(5);
-      expect(c.read()).toBe(12);
-      expect(b.read()).toBe(6);
-    });
+      fw.batch(() => {
+        a.write(5);
+        expect(c.read()).toBe(12);
+        expect(b.read()).toBe(6);
+      });
+    },
   },
 
   /**
@@ -430,27 +465,29 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * the batch must NOT trigger c2's effect early; effect fires
    * only when the batch completes.
    */
-  "#129 reading one computed doesn't notify sibling effect early"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    const c1 = fw.computed(() => a.read() + 1);
-    const c2 = fw.computed(() => a.read() * 2);
-    let c2Runs = 0;
+  {
+    id: 129,
+    title: "reading one computed doesn't notify sibling effect early",
+    run(fw: ReactiveFramework) {
+      if (!fw.batch) throw new SkipTest("no batch");
+      const a = fw.signal(0);
+      const c1 = fw.computed(() => a.read() + 1);
+      const c2 = fw.computed(() => a.read() * 2);
+      let c2Runs = 0;
 
-    fw.effect(() => {
-      c2.read();
-      c2Runs++;
-    });
-    expect(c2Runs).toBe(1);
-
-    fw.batch(() => {
-      a.write(5);
-      c1.read();
+      fw.effect(() => {
+        c2.read();
+        c2Runs++;
+      });
       expect(c2Runs).toBe(1);
-    });
-    expect(c2Runs).toBe(2);
+
+      fw.batch(() => {
+        a.write(5);
+        c1.read();
+        expect(c2Runs).toBe(1);
+      });
+      expect(c2Runs).toBe(2);
+    },
   },
 
   /**
@@ -462,26 +499,30 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * values of both b and c. (Only the final value is checked, not the
    * number of notifications.)
    */
-  "#130 effect inner writes: downstream settles on final values"(fw: ReactiveFramework) {
-    const a = fw.signal(0);
-    const b = fw.signal(0);
-    const c = fw.signal(0);
-    const log: string[] = [];
+  {
+    id: 130,
+    title: "effect inner writes: downstream settles on final values",
+    run(fw: ReactiveFramework) {
+      const a = fw.signal(0);
+      const b = fw.signal(0);
+      const c = fw.signal(0);
+      const log: string[] = [];
 
-    fw.effect(() => {
-      const v = a.read();
-      b.write(v + 1);
-      c.write(v + 2);
-    });
+      fw.effect(() => {
+        const v = a.read();
+        b.write(v + 1);
+        c.write(v + 2);
+      });
 
-    fw.effect(() => {
-      log.push(b.read() + "," + c.read());
-    });
+      fw.effect(() => {
+        log.push(b.read() + "," + c.read());
+      });
 
-    log.length = 0;
-    a.write(10);
+      log.length = 0;
+      a.write(10);
 
-    expect(log[log.length - 1]).toBe("11,12");
+      expect(log[log.length - 1]).toBe("11,12");
+    },
   },
 
   /**
@@ -491,27 +532,31 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * batch { a.write(5); a.write(0); b.write(20) } — a reverts but b
    * changes. c2 = c1 + b must still update because b changed.
    */
-  "#131 derived-of-derived: source reverts in batch"(fw: ReactiveFramework) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    const b = fw.signal(10);
-    const c1 = fw.computed(() => a.read() * 2);
-    const c2 = fw.computed(() => c1.read() + b.read());
-    let runs = 0;
-    fw.effect(() => {
-      c2.read();
-      runs++;
-    });
-    expect(runs).toBe(1);
+  {
+    id: 131,
+    title: "derived-of-derived: source reverts in batch",
+    run(fw: ReactiveFramework) {
+      if (!fw.batch) throw new SkipTest("no batch");
+      const a = fw.signal(0);
+      const b = fw.signal(10);
+      const c1 = fw.computed(() => a.read() * 2);
+      const c2 = fw.computed(() => c1.read() + b.read());
+      let runs = 0;
+      fw.effect(() => {
+        c2.read();
+        runs++;
+      });
+      expect(runs).toBe(1);
 
-    fw.batch(() => {
-      a.write(5);
-      a.write(0);
-      b.write(20);
-    });
+      fw.batch(() => {
+        a.write(5);
+        a.write(0);
+        b.write(20);
+      });
 
-    expect(c2.read()).toBe(20);
-    expect(runs).toBe(2);
+      expect(c2.read()).toBe(20);
+      expect(runs).toBe(2);
+    },
   },
 
   /**
@@ -521,24 +566,28 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * Two independent signals change inside one batch. Effect fires
    * exactly once and both signals have their final values.
    */
-  "#74 multiple signals grouped in single update"(fw: ReactiveFramework) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    const b = fw.signal(0);
-    let runs = 0;
-    fw.effect(() => {
-      a.read();
-      b.read();
-      runs++;
-    });
-    expect(runs).toBe(1);
+  {
+    id: 74,
+    title: "multiple signals grouped in single update",
+    run(fw: ReactiveFramework) {
+      if (!fw.batch) throw new SkipTest("no batch");
+      const a = fw.signal(0);
+      const b = fw.signal(0);
+      let runs = 0;
+      fw.effect(() => {
+        a.read();
+        b.read();
+        runs++;
+      });
+      expect(runs).toBe(1);
 
-    fw.batch(() => {
-      a.write(1);
-      b.write(1);
-    });
-    expect(runs).toBe(2);
-    expect(a.read()).toBe(1);
-    expect(b.read()).toBe(1);
+      fw.batch(() => {
+        a.write(1);
+        b.write(1);
+      });
+      expect(runs).toBe(2);
+      expect(a.read()).toBe(1);
+      expect(b.read()).toBe(1);
+    },
   },
-};
+];

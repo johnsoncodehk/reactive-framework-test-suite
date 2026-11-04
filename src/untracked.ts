@@ -1,6 +1,7 @@
-import { expect } from "./assert.js";
-import type { ReactiveFramework } from "./framework.js";
-import { SkipTest } from "./framework.js";
+import { expect } from "./assert.ts";
+import type { ReactiveFramework } from "./framework.ts";
+import type { TestCase } from "./suite.ts";
+import { SkipTest } from "./framework.ts";
 
 /**
  * Untracked / Unsampled Reads
@@ -16,8 +17,8 @@ import { SkipTest } from "./framework.js";
  *   ─→       dependency edge
  *   ╌╌→      untracked read (no dependency created)
  */
-export const section = "Untracked / Unsampled Reads";
-export const cases: Record<string, (fw: ReactiveFramework) => any> = {
+export const name = "Untracked / Unsampled Reads";
+export const cases: TestCase[] = [
   /**
    *  S(a) ─→ E(eff)
    *  S(b) ╌╌→ E(eff)   (untracked)
@@ -25,28 +26,30 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * Effect tracks S(a) normally but reads S(b) inside
    * `untracked`. Changing S(b) must not re-run the effect.
    */
-  "#75 untracked read in effect does not create dependency"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.untracked) throw new SkipTest("no untracked");
-    const a = fw.signal(0);
-    const b = fw.signal(0);
-    let runs = 0;
+  {
+    id: 75,
+    title: "untracked read in effect does not create dependency",
+    run(fw: ReactiveFramework) {
+      if (!fw.untracked) throw new SkipTest("no untracked");
+      const a = fw.signal(0);
+      const b = fw.signal(0);
+      let runs = 0;
 
-    fw.effect(() => {
-      a.read();
-      fw.untracked!(() => b.read());
-      runs++;
-    });
-    expect(runs).toBe(1);
+      fw.effect(() => {
+        a.read();
+        fw.untracked!(() => b.read());
+        runs++;
+      });
+      expect(runs).toBe(1);
 
-    // a is tracked — should trigger
-    a.write(1);
-    expect(runs).toBe(2);
+      // a is tracked — should trigger
+      a.write(1);
+      expect(runs).toBe(2);
 
-    // b is untracked — should NOT trigger
-    b.write(1);
-    expect(runs).toBe(2);
+      // b is untracked — should NOT trigger
+      b.write(1);
+      expect(runs).toBe(2);
+    },
   },
 
   /**
@@ -56,26 +59,28 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * Computed tracks S(a) but reads S(b) inside `untracked`.
    * Changing S(b) must not invalidate C(c).
    */
-  "#76 untracked read in computed does not create dependency"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.untracked) throw new SkipTest("no untracked");
-    const a = fw.signal(0);
-    const b = fw.signal(10);
+  {
+    id: 76,
+    title: "untracked read in computed does not create dependency",
+    run(fw: ReactiveFramework) {
+      if (!fw.untracked) throw new SkipTest("no untracked");
+      const a = fw.signal(0);
+      const b = fw.signal(10);
 
-    const c = fw.computed(() => {
-      return a.read() + fw.untracked!(() => b.read());
-    });
+      const c = fw.computed(() => {
+        return a.read() + fw.untracked!(() => b.read());
+      });
 
-    expect(c.read()).toBe(10);
+      expect(c.read()).toBe(10);
 
-    // a is tracked
-    a.write(1);
-    expect(c.read()).toBe(11);
+      // a is tracked
+      a.write(1);
+      expect(c.read()).toBe(11);
 
-    // b is untracked — c should not re-evaluate
-    b.write(20);
-    expect(c.read()).toBe(11);
+      // b is untracked — c should not re-evaluate
+      b.write(20);
+      expect(c.read()).toBe(11);
+    },
   },
 
   /**
@@ -86,19 +91,21 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * must still return the up-to-date value (lazy re-evaluation)
    * even though no dependency edge is created.
    */
-  "#117 untracked read of stale computed returns fresh value"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.untracked) throw new SkipTest("no untracked");
-    const a = fw.signal(0);
-    const b = fw.computed(() => a.read() * 2);
+  {
+    id: 117,
+    title: "untracked read of stale computed returns fresh value",
+    run(fw: ReactiveFramework) {
+      if (!fw.untracked) throw new SkipTest("no untracked");
+      const a = fw.signal(0);
+      const b = fw.computed(() => a.read() * 2);
 
-    expect(b.read()).toBe(0);
+      expect(b.read()).toBe(0);
 
-    a.write(5);
+      a.write(5);
 
-    const result = fw.untracked!(() => b.read());
-    expect(result).toBe(10);
+      const result = fw.untracked!(() => b.read());
+      expect(result).toBe(10);
+    },
   },
 
   /**
@@ -109,25 +116,27 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * S(a) changes — the untracked scope blocks the entire
    * transitive chain.
    */
-  "#118 untracked transitively doesn't track through nested deps"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.untracked) throw new SkipTest("no untracked");
-    const a = fw.signal(0);
-    const b = fw.computed(() => a.read() * 2);
+  {
+    id: 118,
+    title: "untracked transitively doesn't track through nested deps",
+    run(fw: ReactiveFramework) {
+      if (!fw.untracked) throw new SkipTest("no untracked");
+      const a = fw.signal(0);
+      const b = fw.computed(() => a.read() * 2);
 
-    let effectRuns = 0;
-    fw.effect(() => {
-      fw.untracked!(() => b.read());
-      effectRuns++;
-    });
-    expect(effectRuns).toBe(1);
+      let effectRuns = 0;
+      fw.effect(() => {
+        fw.untracked!(() => b.read());
+        effectRuns++;
+      });
+      expect(effectRuns).toBe(1);
 
-    a.write(1);
-    expect(effectRuns).toBe(1);
+      a.write(1);
+      expect(effectRuns).toBe(1);
 
-    a.write(2);
-    expect(effectRuns).toBe(1);
+      a.write(2);
+      expect(effectRuns).toBe(1);
+    },
   },
 
   /**
@@ -138,31 +147,33 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * should not throw. The write is performed but does not
    * create a dependency back to the effect.
    */
-  "#156 untracked write inside effect doesn't throw"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.untracked) throw new SkipTest("no untracked");
-    const a = fw.signal(0);
-    const b = fw.signal(0);
-    let threw = false;
+  {
+    id: 156,
+    title: "untracked write inside effect doesn't throw",
+    run(fw: ReactiveFramework) {
+      if (!fw.untracked) throw new SkipTest("no untracked");
+      const a = fw.signal(0);
+      const b = fw.signal(0);
+      let threw = false;
 
-    try {
-      fw.effect(() => {
-        a.read();
-        fw.untracked!(() => {
-          b.write(a.read() * 10);
+      try {
+        fw.effect(() => {
+          a.read();
+          fw.untracked!(() => {
+            b.write(a.read() * 10);
+          });
         });
-      });
-    } catch {
-      threw = true;
-    }
+      } catch {
+        threw = true;
+      }
 
-    if (!threw) {
-      expect(b.read()).toBe(0);
-      a.write(1);
-      expect(b.read()).toBe(10);
-    }
-    expect(true).toBe(true);
+      if (!threw) {
+        expect(b.read()).toBe(0);
+        a.write(1);
+        expect(b.read()).toBe(10);
+      }
+      expect(true).toBe(true);
+    },
   },
 
   /**
@@ -174,31 +185,33 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * a dependency, so writing only b inside a batch must not
    * trigger the effect.
    */
-  "#218 untracked read survives across batched writes"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.untracked || !fw.batch) throw new SkipTest("no untracked or batch");
-    const a = fw.signal(0);
-    const b = fw.signal(0);
-    let runs = 0;
+  {
+    id: 218,
+    title: "untracked read survives across batched writes",
+    run(fw: ReactiveFramework) {
+      if (!fw.untracked || !fw.batch) throw new SkipTest("no untracked or batch");
+      const a = fw.signal(0);
+      const b = fw.signal(0);
+      let runs = 0;
 
-    fw.effect(() => {
-      a.read();
-      fw.untracked!(() => b.read());
-      runs++;
-    });
-    expect(runs).toBe(1);
+      fw.effect(() => {
+        a.read();
+        fw.untracked!(() => b.read());
+        runs++;
+      });
+      expect(runs).toBe(1);
 
-    fw.batch(() => {
-      b.write(1);
-    });
-    expect(runs).toBe(1);
+      fw.batch(() => {
+        b.write(1);
+      });
+      expect(runs).toBe(1);
 
-    fw.batch(() => {
-      b.write(2);
-      a.write(1);
-    });
-    expect(runs).toBe(2);
+      fw.batch(() => {
+        b.write(2);
+        a.write(1);
+      });
+      expect(runs).toBe(2);
+    },
   },
 
   /**
@@ -208,27 +221,29 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
    * writes and deliver a single notification to a tracked
    * effect outside the untracked scope.
    */
-  "#219 batch inside untracked still coalesces writes"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.untracked || !fw.batch) throw new SkipTest("no untracked or batch");
-    const a = fw.signal(0);
-    let runs = 0;
+  {
+    id: 219,
+    title: "batch inside untracked still coalesces writes",
+    run(fw: ReactiveFramework) {
+      if (!fw.untracked || !fw.batch) throw new SkipTest("no untracked or batch");
+      const a = fw.signal(0);
+      let runs = 0;
 
-    fw.effect(() => {
-      a.read();
-      runs++;
-    });
-    expect(runs).toBe(1);
-
-    fw.untracked!(() => {
-      fw.batch!(() => {
-        a.write(1);
-        a.write(2);
-        a.write(3);
+      fw.effect(() => {
+        a.read();
+        runs++;
       });
-    });
-    expect(runs).toBe(2);
-    expect(a.read()).toBe(3);
+      expect(runs).toBe(1);
+
+      fw.untracked!(() => {
+        fw.batch!(() => {
+          a.write(1);
+          a.write(2);
+          a.write(3);
+        });
+      });
+      expect(runs).toBe(2);
+      expect(a.read()).toBe(3);
+    },
   },
-};
+];

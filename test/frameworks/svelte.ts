@@ -1,9 +1,10 @@
-import type { ReactiveFramework } from "../../src/framework.js";
+import type { ReactiveFramework } from "../../src/framework.ts";
 // @ts-ignore
 import * as $ from "svelte/internal/client";
 
 export const svelteFramework: ReactiveFramework = {
   name: "svelte",
+  effectCleanup: true,
   signal(initialValue) {
     const s = $.state(initialValue);
     return {
