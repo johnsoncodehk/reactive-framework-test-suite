@@ -8,7 +8,7 @@ export function expect(actual: unknown) {
       }
     },
     toEqual(expected: unknown) {
-      if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+      if (!deepEqual(actual, expected)) {
         throw new Error(
           `Expected deep equal ${JSON.stringify(expected)} but got ${JSON.stringify(actual)}`
         );
@@ -86,4 +86,17 @@ export function expect(actual: unknown) {
       },
     },
   };
+}
+
+/** Same primitives (Object.is), or arrays / plain objects with the same keys and deep-equal values. */
+function deepEqual(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true;
+  if (typeof a !== "object" || typeof b !== "object" || a === null || b === null) return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  if (Object.getPrototypeOf(a) !== Object.getPrototypeOf(b)) return false;
+  const keys = Object.keys(a);
+  if (keys.length !== Object.keys(b).length) return false;
+  return keys.every(
+    (k) => Object.hasOwn(b, k) && deepEqual((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k])
+  );
 }
