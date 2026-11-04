@@ -1,3 +1,4 @@
+import { expect } from "./assert.js";
 import type { ReactiveFramework } from "./framework.js";
 import { SkipTest, hasEffectCleanup } from "./framework.js";
 
@@ -623,5 +624,209 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
 
     if (bRuns === 1 && cRuns === 1) return "replaced";
     return `accumulates (${bRuns}, ${cRuns})`;
+  },
+
+  /**
+   *      S(a)
+   *     /    \
+   *   *C(b)   C(d)
+   *     |
+   *   *C(c)
+   *     |
+   *    E(eff) → dispose
+   *
+   * b and c are only reachable through the effect. After it is
+   * disposed, a write reaches them only under eager evaluation (see
+   * #17). Returns "not evaluated" or "evaluated".
+   */
+  "#187 unsubscribed computed after write"(fw: ReactiveFramework) {
+    const a = fw.signal("a");
+    let calls = 0;
+    const b = fw.computed(() => {
+      calls++;
+      return a.read();
+    });
+    const c = fw.computed(() => {
+      calls++;
+      return b.read();
+    });
+    const d = fw.computed(() => a.read());
+
+    let result = "";
+    const dispose = fw.effect(() => {
+      result = c.read();
+    });
+    expect(result).toBe("a");
+    expect(d.read()).toBe("a");
+
+    calls = 0;
+    dispose();
+    a.write("aa");
+    expect(d.read()).toBe("aa");
+
+    return calls === 0 ? "not evaluated" : "evaluated";
+  },
+
+  /**
+   *  S(a)  S(b)
+   *    |     |
+   *    |   C(c)  ← c reads b
+   *     \  /
+   *     C(d)     ← d reads c only when a === 0
+   *
+   * One batch makes c stale and unreachable. Lazy evaluation skips
+   * it; eager evaluation (see #17) runs it before d drops the edge.
+   * Returns "skipped" or "evaluated".
+   */
+  "#188 batch + dynamic deps: stale unreachable computed"(
+    fw: ReactiveFramework
+  ) {
+    if (!fw.batch) throw new SkipTest("no batch");
+    let cCalls = 0;
+    const a = fw.signal(0);
+    const b = fw.signal(0);
+    const c = fw.computed(() => {
+      b.read();
+      cCalls++;
+    });
+    const d = fw.computed(() => {
+      if (a.read() === 0) {
+        c.read();
+      }
+    });
+    d.read();
+    expect(cCalls).toBe(1);
+
+    fw.batch(() => {
+      b.write(1);
+      a.write(1);
+    });
+    d.read();
+
+    return cCalls === 1 ? "skipped" : "evaluated";
+  },
+
+  /**
+   *  S(a)  S(b)  S(c)
+   *    |           |
+   *    |         C(d)  ← d reads c
+   *    |          /
+   *    C(e)      ← e reads b,d when a>0; only b when a≤0
+   *
+   * Unbatched writes to a, b, c after a≤0 makes d unreachable.
+   * Whether d still runs depends on lazy vs eager evaluation (see
+   * #17). Returns "skipped" or "evaluated".
+   */
+  "#189 multi-signal change: stale unreachable computed"(
+    fw: ReactiveFramework
+  ) {
+    const a = fw.signal(1);
+    const b = fw.signal(1);
+    const c = fw.signal(1);
+
+    let dCalls = 0;
+    const d = fw.computed(() => {
+      dCalls++;
+      return c.read();
+    });
+    const e = fw.computed(() => {
+      b.read();
+      if (a.read() > 0) d.read();
+    });
+
+    e.read();
+    dCalls = 0;
+    a.write(-1);
+    b.write(-1);
+    c.write(-1);
+    e.read();
+
+    return dCalls === 0 ? "skipped" : "evaluated";
+  },
+
+  /**
+   *  S(a) ─→ C(b) ─→ C(c)
+   *           C(b) ─→ C(d)
+   *           C(c) ?─→ C(d)   (when b is truthy)
+   *
+   * a becomes null, so d skips c although c's dep b changed. A
+   * sequential dirty check never reaches c; eager evaluation (see
+   * #17) runs it. Returns "skipped" or "evaluated".
+   */
+  "#193 branch switch: stale unreachable computed"(fw: ReactiveFramework) {
+    let cCalls = 0;
+    const a = fw.signal<{ v: number } | null>({ v: 1 });
+    const b = fw.computed(() => a.read());
+    const c = fw.computed(() => {
+      cCalls++;
+      return b.read()?.v;
+    });
+    const d = fw.computed(() => (b.read() ? c.read() : 0));
+
+    expect(d.read()).toBe(1);
+    expect(cCalls).toBe(1);
+
+    a.write(null);
+    expect(d.read()).toBe(0);
+
+    return cCalls === 1 ? "skipped" : "evaluated";
+  },
+
+  /**
+   *  S(a) → C(c) → E(eff)
+   *
+   * batch { a.write(5); a.write(0) } — the source ends where it
+   * started. Value-snapshot dirty checks see no change and skip c;
+   * version-based checks (as in the TC39 polyfill's model) re-run it
+   * and the equality cut-off stops propagation. Both are valid; the
+   * final value is not a variant (see #125).
+   * Returns "skipped" or "recomputed".
+   */
+  "#132 batch revert: subscribed computed"(fw: ReactiveFramework) {
+    if (!fw.batch) throw new SkipTest("no batch");
+    const a = fw.signal(0);
+    let cCalls = 0;
+    const c = fw.computed(() => {
+      cCalls++;
+      return a.read() * 2;
+    });
+    fw.effect(() => {
+      c.read();
+    });
+    cCalls = 0;
+
+    fw.batch(() => {
+      a.write(5);
+      a.write(0);
+    });
+    expect(c.read()).toBe(0);
+
+    return cCalls === 0 ? "skipped" : "recomputed";
+  },
+
+  /**
+   *  S(a) → C(c)
+   *
+   * Same as #132 with no subscriber: c is only read directly.
+   * Returns "skipped" or "recomputed".
+   */
+  "#147 batch revert: unsubscribed computed"(fw: ReactiveFramework) {
+    if (!fw.batch) throw new SkipTest("no batch");
+    const a = fw.signal(0);
+    let cCalls = 0;
+    const c = fw.computed(() => {
+      cCalls++;
+      return a.read();
+    });
+    c.read();
+    cCalls = 0;
+
+    fw.batch(() => {
+      a.write(5);
+      a.write(0);
+    });
+    expect(c.read()).toBe(0);
+
+    return cCalls === 0 ? "skipped" : "recomputed";
   },
 };

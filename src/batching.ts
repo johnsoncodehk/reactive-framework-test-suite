@@ -507,38 +507,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *  S(a) → C(c) → E(eff)
-   *
-   * batch { a.write(5); a.write(0) } — source reverts. Computed c
-   * must NOT recompute at all (zero calls), not just produce the
-   * same value.
-   */
-  "#132 batch: computed not recomputed if dep reverts"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    let cCalls = 0;
-    const c = fw.computed(() => {
-      cCalls++;
-      return a.read() * 2;
-    });
-
-    fw.effect(() => {
-      c.read();
-    });
-    cCalls = 0;
-
-    fw.batch(() => {
-      a.write(5);
-      a.write(0);
-    });
-
-    c.read();
-    expect(cCalls).toBe(0);
-  },
-
-  /**
    *  S(a) ─→ E(eff)
    *  S(b) ─→ /
    *

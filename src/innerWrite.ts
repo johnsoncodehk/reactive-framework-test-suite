@@ -680,51 +680,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *  S(flag) → C(branch) → C(writer) ═→ S(side)
-   *                       → 999  [when flag is false]
-   *
-   * When flag switches off, writer is no longer evaluated, so its
-   * side-effect write must stop. Subsequent src changes must not
-   * update side.
-   * Framework may forbid computed side effects (also valid).
-   */
-  "#183 branch switch stops computed side effect"(fw: ReactiveFramework) {
-    const flag = fw.signal(true);
-    const src = fw.signal(0);
-    const side = fw.signal(-1);
-
-    let writer: { read: () => number };
-    try {
-      writer = fw.computed(() => {
-        const v = src.read();
-        side.write(v);
-        return v;
-      });
-      writer.read();
-    } catch {
-      return; // computed side effects forbidden — valid
-    }
-
-    const branch = fw.computed(() => (flag.read() ? writer.read() : 999));
-
-    expect(branch.read()).toBe(0);
-    expect(side.read()).toBe(0);
-
-    src.write(1);
-    branch.read();
-    expect(side.read()).toBe(1);
-
-    // deactivate writer by switching branch
-    flag.write(false);
-    expect(branch.read()).toBe(999);
-
-    // writer no longer evaluated — side effect should not fire
-    src.write(2);
-    branch.read();
-    expect(side.read()).toBe(1);
-  },
-
-  /**
    *  S(src) → C(inner) ═→ S(innerSide)
    *           C(inner) → C(outer) ═→ S(outerSide)
    *

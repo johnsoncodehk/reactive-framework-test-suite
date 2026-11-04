@@ -267,35 +267,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *  S(a) → C(c)
-   *
-   * Inside a batch, a is written to 5 then back to 0.
-   * The net change is zero, so c must not re-evaluate.
-   */
-  "#147 computed not recomputed in batch if dep reverts"(
-    fw: ReactiveFramework
-  ) {
-    if (!fw.batch) throw new SkipTest("no batch");
-    const a = fw.signal(0);
-    let cCalls = 0;
-    const c = fw.computed(() => {
-      cCalls++;
-      return a.read();
-    });
-
-    c.read();
-    cCalls = 0;
-
-    fw.batch(() => {
-      a.write(5);
-      a.write(0);
-    });
-
-    c.read();
-    expect(cCalls).toBe(0);
-  },
-
-  /**
    *  S(a) → C(b) → C(c)
    *                  |
    *                E(eff)

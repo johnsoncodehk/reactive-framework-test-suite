@@ -203,44 +203,6 @@ export const cases: Record<string, (fw: ReactiveFramework) => any> = {
   },
 
   /**
-   *  S(a) ─→ C(b) ─→ C(c)
-   *           C(b) ─→ C(d)
-   *           C(c) ?─→ C(d)   (when b is truthy)
-   *
-   * When a becomes null, b becomes null, and d skips the c branch.
-   * c must NOT re-evaluate because d no longer reaches it,
-   * even though c's dep (b) changed.
-   */
-  "#193 sequential dirty check: branch switch skips unreachable computed"(
-    fw: ReactiveFramework
-  ) {
-    // a → b, b → c, d reads c only when b is truthy.
-    // When a becomes null, b becomes null, d skips c.
-    // c should NOT re-evaluate even though its dep b changed.
-    let cCalls = 0;
-    const a = fw.signal<{ v: number } | null>({ v: 1 });
-    const b = fw.computed(() => a.read());
-    const c = fw.computed(() => {
-      cCalls++;
-      return b.read()?.v;
-    });
-    const d = fw.computed(() => {
-      if (b.read()) {
-        return c.read();
-      }
-      return 0;
-    });
-
-    d.read();
-    expect(cCalls).toBe(1);
-
-    a.write(null);
-    d.read();
-    // c should not have been re-evaluated — d skipped it
-    expect(cCalls).toBe(1);
-  },
-
-  /**
    *  S(items) ─→ C(isLoaded) ─→ C(msg)
    *                                |
    *                              E(eff)
