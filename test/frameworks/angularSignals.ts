@@ -3,11 +3,21 @@ import { signal, computed, untracked } from "@angular/core";
 import { createWatch, type Watch } from "@angular/core/primitives/signals";
 
 let queue = new Set<Watch>();
+let flushing = false;
 
+// Angular's scheduler never re-enters: a nested flush would run a watch
+// while it is still executing. Watches queued during a pass are visited
+// by that pass's Set iteration.
 function flushEffects(): void {
-  for (const watch of queue) {
-    queue.delete(watch);
-    watch.run();
+  if (flushing) return;
+  flushing = true;
+  try {
+    for (const watch of queue) {
+      queue.delete(watch);
+      watch.run();
+    }
+  } finally {
+    flushing = false;
   }
 }
 
