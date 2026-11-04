@@ -26,9 +26,23 @@ const sectionOrder = [
 ];
 
 const files = readdirSync(resultDir).filter((f) => f.endsWith(".json"));
-const sections = files.map((f) =>
-  JSON.parse(readFileSync(join(resultDir, f), "utf-8"))
-);
+const CELL = { pass: "✅", fail: "❌", skip: "⬜" };
+const caseKey = (c) => `#${c.id} ${c.title}`;
+const sections = files.map((f) => {
+  const { section, kind, cases, results } = JSON.parse(readFileSync(join(resultDir, f), "utf-8"));
+  const behavioral = kind === "behaviors";
+  const cells = {};
+  for (const [fw, byId] of Object.entries(results)) {
+    cells[fw] = {};
+    for (const c of cases) {
+      const r = byId[c.id];
+      cells[fw][caseKey(c)] =
+        r.status === "variant" ? r.variant : behavioral && r.status === "fail" ? "error" : CELL[r.status];
+    }
+  }
+  const variants = Object.fromEntries(cases.filter((c) => c.variants).map((c) => [caseKey(c), c.variants]));
+  return { section, type: behavioral ? "behavioral" : undefined, testNames: cases.map(caseKey), results: cells, variants };
+});
 
 sections.sort((a, b) => {
   const ai = sectionOrder.indexOf(a.section);
@@ -320,10 +334,10 @@ function parseSourceDocs(filePath) {
     return { sectionDoc: "", testDocs: {} };
   }
 
-  // Section-level JSDoc: the one right before `export const section`
+  // Section-level JSDoc: the one right before `export const name`
   let sectionDoc = "";
   const secMatch = content.match(
-    /\/\*\*([\s\S]*?)\*\/\s*\nexport const section/
+    /\/\*\*([\s\S]*?)\*\/\s*\nexport const name/
   );
   if (secMatch) {
     const stripped = stripJsDoc(secMatch[1]);
@@ -336,10 +350,10 @@ function parseSourceDocs(filePath) {
   // Per-test JSDoc: /** ... */ right before "#N ..."
   // Use [^*]|(\*(?!/)) to prevent matching across */ boundaries
   const testDocs = {};
-  const testRe = /\/\*\*((?:[^*]|\*(?!\/))*)\*\/\s*\n\s*"(#\d+[^"]*?)"/g;
+  const testRe = /\/\*\*((?:[^*]|\*(?!\/))*)\*\/\s*\n\s*\{\s*\n\s*id: (\d+),\s*\n\s*title: "([^"]*)"/g;
   let m;
   while ((m = testRe.exec(content)) !== null) {
-    testDocs[m[2]] = stripJsDoc(m[1]);
+    testDocs[`#${m[2]} ${m[3]}`] = stripJsDoc(m[1]);
   }
 
   return { sectionDoc, testDocs };
@@ -348,10 +362,10 @@ function parseSourceDocs(filePath) {
 // Map section names to source files
 const sectionSourceMap = {};
 for (const f of readdirSync(srcDir).filter(
-  (f) => f.endsWith(".ts") && !["assert.ts", "framework.ts", "index.ts"].includes(f)
+  (f) => f.endsWith(".ts")
 )) {
   const content = readFileSync(join(srcDir, f), "utf-8");
-  const m = content.match(/export const section = "(.+?)"/);
+  const m = content.match(/export const name = "(.+?)"/);
   if (m) sectionSourceMap[m[1]] = join(srcDir, f);
 }
 
@@ -463,8 +477,10 @@ function buildTestDetails(section) {
     let out = `\n\n<details>\n<summary>${summary}</summary>\n\n`;
     for (const t of tests) {
       const doc = docs.testDocs[t];
+      const variants = section.variants[t];
       if (doc) {
         out += `#### ${t}\n\n${formatDoc(doc)}\n\n`;
+        if (variants) out += `Variants: ${variants.map((v) => `\`${v}\``).join(", ")}\n\n`;
       } else {
         out += `- ${t}\n`;
       }
@@ -494,6 +510,13 @@ for (const section of sections) {
   readme += "\n\n";
 }
 
+const example = readFileSync(join(root, "test", "example.test.ts"), "utf-8")
+  .replaceAll("../src/node/index.ts", "reactive-framework-test-suite/node")
+  .replace("./frameworks/alienSignals.ts", "./my-framework.ts")
+  .replaceAll("alienSignalsFramework", "myFramework")
+  .replace("alien-signals passes", "my framework passes")
+  .trimEnd();
+
 readme += `## Usage
 
 ### Test your own framework
@@ -504,12 +527,13 @@ Install the package:
 npm install reactive-framework-test-suite
 \`\`\`
 
-Implement the \`ReactiveFramework\` adapter:
+Implement the \`ReactiveFramework\` adapter in its own module:
 
 \`\`\`ts
+// my-framework.ts
 import type { ReactiveFramework } from "reactive-framework-test-suite";
 
-const myFramework: ReactiveFramework = {
+export const myFramework: ReactiveFramework = {
   name: "my-framework",
   signal(initialValue) { /* ... */ },
   computed(fn) { /* ... */ },
@@ -518,37 +542,17 @@ const myFramework: ReactiveFramework = {
   // Optional:
   batch(fn) { /* ... */ },
   untracked(fn) { /* ... */ },
+  effectCleanup: true, // the function an effect returns is its cleanup
 };
 \`\`\`
 
-Wire it up with your test runner (vitest, jest, mocha, etc.):
+Run the suite from Node with \`runSuite\`. It takes the adapter's module rather than the object: the cycle cases may never terminate in a library that doesn't detect cycles, so they run in a separate process with a fixed heap, which loads the module itself. Pass \`execArgv\` if the module needs Node flags to load (a TypeScript loader before Node 22.18, \`--conditions\`).
 
 \`\`\`ts
-import { testSuite, SkipTest, setExpect } from "reactive-framework-test-suite";
-import { describe, test, expect } from "vitest";
-
-// Optional: swap the built-in expect for your runner's
-// for richer error messages and tighter integration.
-setExpect(expect);
-
-for (const { section, cases, type } of testSuite) {
-  // Behavioral cases never fail; they return a string describing
-  // the design choice your framework made (see Behavioral Differences).
-  if (type === "behavioral") continue;
-  describe(section, () => {
-    for (const [name, fn] of Object.entries(cases)) {
-      test(name, () => {
-        try {
-          myFramework.run(() => fn(myFramework));
-        } catch (e) {
-          if (e instanceof SkipTest) return; // optional API not available
-          throw e;
-        }
-      });
-    }
-  });
-}
+${example}
 \`\`\`
+
+Each record carries the case's \`section\` and \`id\`; a correctness result is \`pass\`, \`fail\` (with \`error\`) or \`skip\` (with \`reason\`), a behavior result is the \`variant\` the framework implements, or \`fail\` when it is none of the declared ones. Outside Node, \`runCase\` and \`runProbe\` run single cases from \`correctness\` and \`behaviors\` in-process; sections marked \`mayNotTerminate\` are the ones they can't bound.
 
 ### Run the cross-framework matrix locally
 
