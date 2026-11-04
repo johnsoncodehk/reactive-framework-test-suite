@@ -181,11 +181,23 @@ function buildSummaryTable() {
 
   const totalCases = sections.filter((s) => s.section !== "Behavioral Differences").reduce((a, s) => a + s.testNames.length, 0);
   const maxFwLen = Math.max(9, ...fwNames.map((n) => n.length));
+  const meta = Object.fromEntries(
+    fwNames.map((fw) => {
+      const pkg = fwPackages[fw] || fw;
+      const moduleName = pkg.startsWith("github:") ? pkg.split("/").pop() : pkg;
+      const ver = getPkgVersion(moduleName);
+      return [fw, { ver, date: getPkgDate(moduleName, ver) }];
+    })
+  );
+  const maxVerLen = Math.max(7, ...fwNames.map((fw) => meta[fw].ver.length));
+  const maxDateLen = Math.max(9, ...fwNames.map((fw) => meta[fw].date.length));
   const lines = [];
   lines.push(
-    `| ${"Framework".padEnd(maxFwLen)} | Pass rate | Coverage | Pass | Fail | Skip | Total |`
+    `| ${"Framework".padEnd(maxFwLen)} | ${"Version".padEnd(maxVerLen)} | ${"Published".padEnd(maxDateLen)} | Pass rate | Coverage | Pass | Fail | Skip | Total |`
   );
-  lines.push(`| ${"-".repeat(maxFwLen)} | --------: | -------: | ---- | ---- | ---- | ----- |`);
+  lines.push(
+    `| ${"-".repeat(maxFwLen)} | ${"-".repeat(maxVerLen)} | ${"-".repeat(maxDateLen)} | --------: | -------: | ---- | ---- | ---- | ----- |`
+  );
 
   // Pass rate = pass / (pass + fail): skips are not counted as failures.
   // Coverage = (pass + fail) / total: how much of the suite was exercised.
@@ -201,7 +213,7 @@ function buildSummaryTable() {
   for (const fw of sorted) {
     const { pass, fail, skip } = fwStats[fw];
     lines.push(
-      `| ${fw.padEnd(maxFwLen)} | ${pct(rate(fw)).padStart(9)} | ${pct(coverage(fw)).padStart(8)} | ${String(pass).padStart(4)} | ${String(fail).padStart(4)} | ${String(skip).padStart(4)} | ${String(totalCases).padStart(5)} |`
+      `| ${fw.padEnd(maxFwLen)} | ${meta[fw].ver.padEnd(maxVerLen)} | ${meta[fw].date.padEnd(maxDateLen)} | ${pct(rate(fw)).padStart(9)} | ${pct(coverage(fw)).padStart(8)} | ${String(pass).padStart(4)} | ${String(fail).padStart(4)} | ${String(skip).padStart(4)} | ${String(totalCases).padStart(5)} |`
     );
   }
 
@@ -226,10 +238,6 @@ The summary is sorted by **pass rate** (pass / (pass + fail)), then by **coverag
 
 The **Behavioral Differences** section is separate — those tests reflect design choices (e.g. \`Object.is\` vs \`===\` equality, whether effects re-run, immediate vs deferred inner writes) where different answers are all valid.
 
-## Frameworks
-
-| Framework | Package | Version | Published |
-|-----------|---------|---------|-----------|
 `;
 
 const fwPackages = {
@@ -285,16 +293,7 @@ function getPkgDate(pkg, ver) {
   }
 }
 
-for (const fw of fwNames) {
-  const pkg = fwPackages[fw] || fw;
-  const moduleName = pkg.startsWith("github:") ? pkg.split("/").pop() : pkg;
-  const ver = getPkgVersion(moduleName);
-  const date = getPkgDate(moduleName, ver);
-  readme += `| ${fw} | \`${pkg}\` | ${ver} | ${date} |\n`;
-}
-
-readme += `
-## Summary
+readme += `## Summary
 
 ${buildSummaryTable()}
 

@@ -14,47 +14,26 @@ The summary is sorted by **pass rate** (pass / (pass + fail)), then by **coverag
 
 The **Behavioral Differences** section is separate — those tests reflect design choices (e.g. `Object.is` vs `===` equality, whether effects re-run, immediate vs deferred inner writes) where different answers are all valid.
 
-## Frameworks
-
-| Framework | Package | Version | Published |
-|-----------|---------|---------|-----------|
-| alien-signals | `alien-signals` | 3.2.1 | 2026-05-14 |
-| @preact/signals-core | `@preact/signals-core` | 1.14.2 | 2026-05-11 |
-| @reactively/core | `@reactively/core` | 0.0.8 | 2023-03-20 |
-| tansu | `@amadeus-it-group/tansu` | 2.0.0 | 2024-12-04 |
-| signal-polyfill (TC39) | `signal-polyfill` | 0.2.2 | 2025-01-17 |
-| @vue/reactivity | `@vue/reactivity` | 3.5.34 | 2026-05-06 |
-| mobx | `mobx` | 6.15.3 | 2026-05-07 |
-| @reatom/core | `@reatom/core` | 1001.0.0 | 2026-05-13 |
-| svelte | `svelte` | 5.55.5 | 2026-04-23 |
-| solid-js | `solid-js` | 1.9.12 | 2026-03-24 |
-| @solidjs/signals | `@solidjs/signals` | 0.3.2 | 2025-04-29 |
-| S.js | `s-js` | 0.4.9 | 2018-07-28 |
-| pota | `pota` | 0.7.82 | 2024-02-01 |
-| @angular/core | `@angular/core` | 20.3.20 | 2026-05-06 |
-| anod | `anod` | 0.9.1 | 2026-04-27 |
-| @pravosleva/reactive-engine | `@pravosleva/reactive-engine` | 2.1.12 | 2026-10-14 |
-
 ## Summary
 
-| Framework                   | Pass rate | Coverage | Pass | Fail | Skip | Total |
-| --------------------------- | --------: | -------: | ---- | ---- | ---- | ----- |
-| alien-signals               |    100.0% |   100.0% |  161 |    0 |    0 |   161 |
-| @preact/signals-core        |     99.4% |   100.0% |  160 |    1 |    0 |   161 |
-| @vue/reactivity             |     98.8% |   100.0% |  159 |    2 |    0 |   161 |
-| tansu                       |     98.6% |    88.2% |  140 |    2 |   19 |   161 |
-| signal-polyfill (TC39)      |     97.1% |    84.5% |  132 |    4 |   25 |   161 |
-| @solidjs/signals            |     96.5% |    88.2% |  137 |    5 |   19 |   161 |
-| @pravosleva/reactive-engine |     95.7% |   100.0% |  154 |    7 |    0 |   161 |
-| @reatom/core                |     95.0% |   100.0% |  153 |    8 |    0 |   161 |
-| @reactively/core            |     94.6% |    69.6% |  106 |    6 |   49 |   161 |
-| svelte                      |     93.4% |    84.5% |  127 |    9 |   25 |   161 |
-| @angular/core               |     93.4% |    84.5% |  127 |    9 |   25 |   161 |
-| anod                        |     92.5% |   100.0% |  149 |   12 |    0 |   161 |
-| solid-js                    |     91.9% |   100.0% |  148 |   13 |    0 |   161 |
-| mobx                        |     90.1% |    88.2% |  128 |   14 |   19 |   161 |
-| pota                        |     90.1% |   100.0% |  145 |   16 |    0 |   161 |
-| S.js                        |     77.6% |   100.0% |  125 |   36 |    0 |   161 |
+| Framework                   | Version  | Published  | Pass rate | Coverage | Pass | Fail | Skip | Total |
+| --------------------------- | -------- | ---------- | --------: | -------: | ---- | ---- | ---- | ----- |
+| alien-signals               | 3.2.1    | 2026-05-14 |    100.0% |   100.0% |  161 |    0 |    0 |   161 |
+| @preact/signals-core        | 1.14.2   | 2026-05-11 |     99.4% |   100.0% |  160 |    1 |    0 |   161 |
+| @vue/reactivity             | 3.5.34   | 2026-05-06 |     98.8% |   100.0% |  159 |    2 |    0 |   161 |
+| tansu                       | 2.0.0    | 2024-12-04 |     98.6% |    88.2% |  140 |    2 |   19 |   161 |
+| signal-polyfill (TC39)      | 0.2.2    | 2025-01-17 |     97.1% |    84.5% |  132 |    4 |   25 |   161 |
+| @solidjs/signals            | 0.3.2    | 2025-04-29 |     96.5% |    88.2% |  137 |    5 |   19 |   161 |
+| @pravosleva/reactive-engine | 2.1.12   | 2026-10-14 |     95.7% |   100.0% |  154 |    7 |    0 |   161 |
+| @reatom/core                | 1001.0.0 | 2026-05-13 |     95.0% |   100.0% |  153 |    8 |    0 |   161 |
+| @reactively/core            | 0.0.8    | 2023-03-20 |     94.6% |    69.6% |  106 |    6 |   49 |   161 |
+| svelte                      | 5.55.5   | 2026-04-23 |     93.4% |    84.5% |  127 |    9 |   25 |   161 |
+| @angular/core               | 20.3.20  | 2026-05-06 |     93.4% |    84.5% |  127 |    9 |   25 |   161 |
+| anod                        | 0.9.1    | 2026-04-27 |     92.5% |   100.0% |  149 |   12 |    0 |   161 |
+| solid-js                    | 1.9.12   | 2026-03-24 |     91.9% |   100.0% |  148 |   13 |    0 |   161 |
+| mobx                        | 6.15.3   | 2026-05-07 |     90.1% |    88.2% |  128 |   14 |   19 |   161 |
+| pota                        | 0.7.82   | 2024-02-01 |     90.1% |   100.0% |  145 |   16 |    0 |   161 |
+| S.js                        | 0.4.9    | 2018-07-28 |     77.6% |   100.0% |  125 |   36 |    0 |   161 |
 
 ## Results
 
