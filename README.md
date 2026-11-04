@@ -1,8 +1,8 @@
 # Reactive Framework Test Suite
 
-Cross-library test suite for comparing reactive signal behavior across **16 frameworks** with **162 test cases**.
+Cross-library test suite for comparing reactive signal behavior across **16 frameworks** with **161 test cases**.
 
-> 2265 passed, 146 failed, 181 skipped out of 2592 total runs
+> 2251 passed, 144 failed, 181 skipped out of 2576 total runs
 
 Test cases are collected and adapted from the test suites of all participating frameworks — thanks to every project for their thorough testing work. This suite focuses on **reactive semantics** (propagation, batching, disposal, edge cases), not API completeness. Tests that require an optional capability (e.g. `batch`) are skipped (⬜) for frameworks that don't expose it, rather than marked as failures.
 
@@ -39,22 +39,22 @@ The **Behavioral Differences** section is separate — those tests reflect desig
 
 | Framework                   | Pass rate | Coverage | Pass | Fail | Skip | Total |
 | --------------------------- | --------: | -------: | ---- | ---- | ---- | ----- |
-| alien-signals               |    100.0% |   100.0% |  162 |    0 |    0 |   162 |
-| @preact/signals-core        |     99.4% |   100.0% |  161 |    1 |    0 |   162 |
-| @vue/reactivity             |     98.8% |   100.0% |  160 |    2 |    0 |   162 |
-| tansu                       |     98.6% |    88.3% |  141 |    2 |   19 |   162 |
-| signal-polyfill (TC39)      |     97.1% |    84.6% |  133 |    4 |   25 |   162 |
-| @solidjs/signals            |     96.5% |    88.3% |  138 |    5 |   19 |   162 |
-| @pravosleva/reactive-engine |     95.7% |   100.0% |  155 |    7 |    0 |   162 |
-| @reatom/core                |     95.1% |   100.0% |  154 |    8 |    0 |   162 |
-| @reactively/core            |     94.7% |    69.8% |  107 |    6 |   49 |   162 |
-| svelte                      |     93.4% |    84.6% |  128 |    9 |   25 |   162 |
-| @angular/core               |     93.4% |    84.6% |  128 |    9 |   25 |   162 |
-| anod                        |     92.6% |   100.0% |  150 |   12 |    0 |   162 |
-| solid-js                    |     91.4% |   100.0% |  148 |   14 |    0 |   162 |
-| mobx                        |     90.2% |    88.3% |  129 |   14 |   19 |   162 |
-| pota                        |     89.5% |   100.0% |  145 |   17 |    0 |   162 |
-| S.js                        |     77.8% |   100.0% |  126 |   36 |    0 |   162 |
+| alien-signals               |    100.0% |   100.0% |  161 |    0 |    0 |   161 |
+| @preact/signals-core        |     99.4% |   100.0% |  160 |    1 |    0 |   161 |
+| @vue/reactivity             |     98.8% |   100.0% |  159 |    2 |    0 |   161 |
+| tansu                       |     98.6% |    88.2% |  140 |    2 |   19 |   161 |
+| signal-polyfill (TC39)      |     97.1% |    84.5% |  132 |    4 |   25 |   161 |
+| @solidjs/signals            |     96.5% |    88.2% |  137 |    5 |   19 |   161 |
+| @pravosleva/reactive-engine |     95.7% |   100.0% |  154 |    7 |    0 |   161 |
+| @reatom/core                |     95.0% |   100.0% |  153 |    8 |    0 |   161 |
+| @reactively/core            |     94.6% |    69.6% |  106 |    6 |   49 |   161 |
+| svelte                      |     93.4% |    84.5% |  127 |    9 |   25 |   161 |
+| @angular/core               |     93.4% |    84.5% |  127 |    9 |   25 |   161 |
+| anod                        |     92.5% |   100.0% |  149 |   12 |    0 |   161 |
+| solid-js                    |     91.9% |   100.0% |  148 |   13 |    0 |   161 |
+| mobx                        |     90.1% |    88.2% |  128 |   14 |   19 |   161 |
+| pota                        |     90.1% |   100.0% |  145 |   16 |    0 |   161 |
+| S.js                        |     77.6% |   100.0% |  125 |   36 |    0 |   161 |
 
 ## Results
 
@@ -394,24 +394,24 @@ Legend:
   dispose  effect disposal call
 ```
 
-| Framework                   | #35..#36,... ×6 | #38..#39,... ×7 | #40 | #42 | #111 | #141 | #178 | #216 | #222 | #229 | #230 | #233 | #235 | #236 |
-| --------------------------- | --------------- | --------------- | --- | --- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
-| alien-signals               |               ✅ |               ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
-| @preact/signals-core        |               ✅ |               ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |
-| @reactively/core            |               ✅ |               ⬜ |   ⬜ |   ⬜ |    ⬜ |    ✅ |    ⬜ |    ✅ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |
-| tansu                       |               ✅ |               ⬜ |   ⬜ |   ✅ |    ⬜ |    ✅ |    ⬜ |    ✅ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ❌ |    ⬜ |
-| signal-polyfill (TC39)      |               ✅ |               ✅ |   ❌ |   ⬜ |    ✅ |    ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ⬜ |    ✅ |    ⬜ |    ✅ |
-| @vue/reactivity             |               ✅ |               ✅ |   ✅ |   ✅ |    ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
-| mobx                        |               ✅ |               ⬜ |   ⬜ |   ✅ |    ⬜ |    ✅ |    ⬜ |    ✅ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ❌ |    ⬜ |
-| @reatom/core                |               ✅ |               ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |
-| svelte                      |               ✅ |               ✅ |   ✅ |   ⬜ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ⬜ |    ✅ |    ⬜ |    ✅ |
-| solid-js                    |               ✅ |               ✅ |   ✅ |   ✅ |    ❌ |    ❌ |    ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |
-| @solidjs/signals            |               ✅ |               ⬜ |   ⬜ |   ✅ |    ⬜ |    ✅ |    ⬜ |    ✅ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ✅ |    ⬜ |
-| S.js                        |               ✅ |               ✅ |   ❌ |   ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |    ❌ |    ✅ |
-| pota                        |               ✅ |               ✅ |   ✅ |   ✅ |    ❌ |    ❌ |    ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |
-| @angular/core               |               ✅ |               ✅ |   ❌ |   ⬜ |    ✅ |    ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ⬜ |    ✅ |    ⬜ |    ✅ |
-| anod                        |               ✅ |               ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |    ✅ |
-| @pravosleva/reactive-engine |               ✅ |               ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |
+| Framework                   | #35..#36,... ×6 | #38..#39,... ×7 | #40 | #42 | #111 | #141 | #178 | #222 | #229 | #230 | #233 | #235 | #236 |
+| --------------------------- | --------------- | --------------- | --- | --- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
+| alien-signals               |               ✅ |               ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| @preact/signals-core        |               ✅ |               ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |
+| @reactively/core            |               ✅ |               ⬜ |   ⬜ |   ⬜ |    ⬜ |    ✅ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |
+| tansu                       |               ✅ |               ⬜ |   ⬜ |   ✅ |    ⬜ |    ✅ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ❌ |    ⬜ |
+| signal-polyfill (TC39)      |               ✅ |               ✅ |   ❌ |   ⬜ |    ✅ |    ✅ |    ❌ |    ✅ |    ✅ |    ⬜ |    ✅ |    ⬜ |    ✅ |
+| @vue/reactivity             |               ✅ |               ✅ |   ✅ |   ✅ |    ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |
+| mobx                        |               ✅ |               ⬜ |   ⬜ |   ✅ |    ⬜ |    ✅ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ❌ |    ⬜ |
+| @reatom/core                |               ✅ |               ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |
+| svelte                      |               ✅ |               ✅ |   ✅ |   ⬜ |    ❌ |    ✅ |    ✅ |    ✅ |    ❌ |    ⬜ |    ✅ |    ⬜ |    ✅ |
+| solid-js                    |               ✅ |               ✅ |   ✅ |   ✅ |    ❌ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |
+| @solidjs/signals            |               ✅ |               ⬜ |   ⬜ |   ✅ |    ⬜ |    ✅ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ⬜ |    ✅ |    ⬜ |
+| S.js                        |               ✅ |               ✅ |   ❌ |   ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |    ❌ |    ✅ |
+| pota                        |               ✅ |               ✅ |   ✅ |   ✅ |    ❌ |    ❌ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ✅ |
+| @angular/core               |               ✅ |               ✅ |   ❌ |   ⬜ |    ✅ |    ✅ |    ❌ |    ✅ |    ✅ |    ⬜ |    ✅ |    ⬜ |    ✅ |
+| anod                        |               ✅ |               ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |    ❌ |    ✅ |
+| @pravosleva/reactive-engine |               ✅ |               ✅ |   ✅ |   ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ✅ |    ❌ |
 
 <details>
 <summary>Tests with failures or skips</summary>
@@ -487,17 +487,6 @@ read b. After disposal, neither a nor b changes trigger re-run.
 
 Inner effect's cleanup reads b. When outer disposes inner,
 b must NOT become a dependency of the outer effect.
-
-#### #216 effects fire in creation order on shared signal
-
-```
- S(a) ← E(eff1)
-      ← E(eff2)
-      ← E(eff3)
-```
-
-Three effects subscribe to the same signal. On signal change
-they must fire in subscription (creation) order.
 
 #### #222 effect created inside cleanup tracks its own deps
 
@@ -1024,14 +1013,16 @@ Effect fires only once when the outermost batch ends.
 Signal reads inside a batch reflect the latest written value
 immediately (write-then-read consistency within the batch).
 
-#### #69 pending effects run even if batch callback throws
+#### #69 throwing batch leaves a consistent state
 
 ```
  S(a) → E(eff)
 ```
 
-Batch callback throws after writing. Pending effects must still
-run with the updated value despite the exception.
+Batch callback throws after writing. The framework may commit the
+write (effects then run with it) or roll it back (nothing runs).
+Either way the state must be consistent and later writes must
+still propagate.
 
 #### #70 effect first run is immediate even inside batch
 
@@ -1580,24 +1571,24 @@ Legend:
   ─→       dependency edge
 ```
 
-| Framework                   | #17   | #15                | #146             | #29,#167  | #30        | #176         | #173       | #174       | #88              | #106        | #86,#107      | #49               | #62                | #175               | #246              | #244       | #172         | #209       | #210               | #187          | #188      | #189,#193 | #132,#147  | #241            |
-| --------------------------- | ----- | ------------------ | ---------------- | --------- | ---------- | ------------ | ---------- | ---------- | ---------------- | ----------- | ------------- | ----------------- | ------------------ | ------------------ | ----------------- | ---------- | ------------ | ---------- | ------------------ | ------------- | --------- | --------- | ---------- | --------------- |
-| alien-signals               | lazy  | no subscription    | single recompute | ===       | skips      | returns void | post-write | post-write | keeps subscribed | halts flush | returns stale | runs 1x per write | no throw           | unbatched (2 runs) | children survive  | LIFO       | re-evaluates | cascades   | replaced           | not evaluated | skipped   | skipped   | skipped    | deepest first   |
-| @preact/signals-core        | lazy  | no subscription    | single recompute | ===       | skips      | returns void | post-write | post-write | unsubscribes     | continues   | caches error  | runs 2x per write | cycle detected     | batched            | children survive  | no cascade | re-evaluates | no cascade | accumulates (2, 2) | not evaluated | skipped   | skipped   | skipped    | no cascade      |
-| @reactively/core            | lazy  | no subscription    | single recompute | ===       | skips      | ⬜            | post-write | post-write | keeps subscribed | halts flush | re-evaluates  | error             | no throw           | batched            | disposes children | ⬜          | caches       | no cascade | accumulates (2, 2) | not evaluated | ⬜         | skipped   | ⬜          | ⬜               |
-| tansu                       | lazy  | no subscription    | single recompute | Object.is | propagates | returns void | post-write | post-write | keeps subscribed | continues   | caches error  | runs 2x per write | manual bail (200+) | batched            | children survive  | ⬜          | throws       | no cascade | accumulates (2, 2) | not evaluated | skipped   | skipped   | skipped    | ⬜               |
-| signal-polyfill (TC39)      | lazy  | no subscription    | single recompute | Object.is | skips      | ⬜            | post-write | post-write | keeps subscribed | continues   | caches error  | error             | no throw           | unbatched (2 runs) | children survive  | no cascade | caches       | no cascade | accumulates (2, 2) | not evaluated | ⬜         | skipped   | ⬜          | no cascade      |
-| @vue/reactivity             | lazy  | no subscription    | single recompute | Object.is | skips      | returns void | post-write | post-write | keeps subscribed | continues   | returns stale | runs 1x per write | no throw           | unbatched (2 runs) | children survive  | no cascade | re-evaluates | no cascade | accumulates (2, 2) | not evaluated | skipped   | skipped   | recomputed | no cascade      |
-| mobx                        | lazy  | no subscription    | single recompute | ===       | propagates | returns void | post-write | post-write | keeps subscribed | continues   | re-evaluates  | runs 2x per write | no throw           | batched            | children survive  | ⬜          | re-evaluates | no cascade | accumulates (2, 2) | not evaluated | skipped   | skipped   | recomputed | ⬜               |
-| @reatom/core                | lazy  | no subscription    | single recompute | Object.is | skips      | returns void | post-write | post-write | unsubscribes     | continues   | caches error  | runs 2x per write | cycle detected     | batched            | disposes children | FIFO       | throws       | cascades   | replaced           | not evaluated | skipped   | skipped   | skipped    | deepest first   |
-| svelte                      | lazy  | no subscription    | single recompute | ===       | skips      | ⬜            | post-write | throws     | unsubscribes     | halts flush | re-evaluates  | runs 2x per write | cycle detected     | batched            | children survive  | no cascade | throws       | no cascade | accumulates (2, 2) | not evaluated | ⬜         | skipped   | ⬜          | no cascade      |
-| solid-js                    | eager | subscribes eagerly | 2 recomputes     | ===       | skips      | returns void | post-write | post-write | unsubscribes     | halts flush | error         | runs 2x per write | manual bail (200+) | batched            | children survive  | LIFO       | throws       | cascades   | replaced           | evaluated     | evaluated | evaluated | recomputed | deepest first   |
-| @solidjs/signals            | lazy  | no subscription    | single recompute | ===       | skips      | returns void | post-write | post-write | keeps subscribed | halts flush | caches error  | error             | no throw           | batched            | children survive  | ⬜          | caches       | cascades   | replaced           | not evaluated | skipped   | skipped   | recomputed | ⬜               |
-| S.js                        | eager | subscribes eagerly | 2 recomputes     | ===       | propagates | returns void | post-write | throws     | keeps subscribed | halts flush | error         | runs 2x per write | manual bail (200+) | batched            | children survive  | FIFO       | throws       | cascades   | replaced           | evaluated     | evaluated | evaluated | error      | outermost first |
-| pota                        | lazy  | no subscription    | 2 recomputes     | ===       | skips      | returns void | post-write | post-write | keeps subscribed | halts flush | re-evaluates  | runs 2x per write | manual bail (200+) | batched            | disposes children | LIFO       | throws       | cascades   | replaced           | evaluated     | evaluated | evaluated | recomputed | deepest first   |
-| @angular/core               | lazy  | no subscription    | single recompute | Object.is | skips      | ⬜            | post-write | post-write | keeps subscribed | halts flush | caches error  | runs 2x per write | manual bail (200+) | batched            | children survive  | no cascade | throws       | no cascade | accumulates (2, 2) | not evaluated | ⬜         | skipped   | ⬜          | no cascade      |
-| anod                        | eager | no subscription    | single recompute | ===       | skips      | returns void | post-write | post-write | unsubscribes     | continues   | caches error  | runs 2x per write | manual bail (200+) | batched            | children survive  | LIFO       | re-evaluates | cascades   | replaced           | not evaluated | skipped   | skipped   | error      | outermost first |
-| @pravosleva/reactive-engine | lazy  | no subscription    | single recompute | Object.is | propagates | returns void | post-write | post-write | keeps subscribed | halts flush | re-evaluates  | runs 1x per write | no throw           | unbatched (2 runs) | children survive  | FIFO       | caches       | cascades   | replaced           | not evaluated | skipped   | skipped   | skipped    | deepest first   |
+| Framework                   | #17   | #15                | #146             | #29,#167  | #30        | #176         | #173       | #174       | #88              | #106        | #86,#107      | #49               | #62                | #175               | #246              | #244       | #172         | #209       | #210               | #187          | #188      | #189,#193 | #132,#147  | #241            | #216                  |
+| --------------------------- | ----- | ------------------ | ---------------- | --------- | ---------- | ------------ | ---------- | ---------- | ---------------- | ----------- | ------------- | ----------------- | ------------------ | ------------------ | ----------------- | ---------- | ------------ | ---------- | ------------------ | ------------- | --------- | --------- | ---------- | --------------- | --------------------- |
+| alien-signals               | lazy  | no subscription    | single recompute | ===       | skips      | returns void | post-write | post-write | keeps subscribed | halts flush | returns stale | runs 1x per write | no throw           | unbatched (2 runs) | children survive  | LIFO       | re-evaluates | cascades   | replaced           | not evaluated | skipped   | skipped   | skipped    | deepest first   | creation order        |
+| @preact/signals-core        | lazy  | no subscription    | single recompute | ===       | skips      | returns void | post-write | post-write | unsubscribes     | continues   | caches error  | runs 2x per write | cycle detected     | batched            | children survive  | no cascade | re-evaluates | no cascade | accumulates (2, 2) | not evaluated | skipped   | skipped   | skipped    | no cascade      | creation order        |
+| @reactively/core            | lazy  | no subscription    | single recompute | ===       | skips      | ⬜            | post-write | post-write | keeps subscribed | halts flush | re-evaluates  | error             | no throw           | batched            | disposes children | ⬜          | caches       | no cascade | accumulates (2, 2) | not evaluated | ⬜         | skipped   | ⬜          | ⬜               | creation order        |
+| tansu                       | lazy  | no subscription    | single recompute | Object.is | propagates | returns void | post-write | post-write | keeps subscribed | continues   | caches error  | runs 2x per write | manual bail (200+) | batched            | children survive  | ⬜          | throws       | no cascade | accumulates (2, 2) | not evaluated | skipped   | skipped   | skipped    | ⬜               | creation order        |
+| signal-polyfill (TC39)      | lazy  | no subscription    | single recompute | Object.is | skips      | ⬜            | post-write | post-write | keeps subscribed | continues   | caches error  | error             | no throw           | unbatched (2 runs) | children survive  | no cascade | caches       | no cascade | accumulates (2, 2) | not evaluated | ⬜         | skipped   | ⬜          | no cascade      | creation order        |
+| @vue/reactivity             | lazy  | no subscription    | single recompute | Object.is | skips      | returns void | post-write | post-write | keeps subscribed | continues   | returns stale | runs 1x per write | no throw           | unbatched (2 runs) | children survive  | no cascade | re-evaluates | no cascade | accumulates (2, 2) | not evaluated | skipped   | skipped   | recomputed | no cascade      | creation order        |
+| mobx                        | lazy  | no subscription    | single recompute | ===       | propagates | returns void | post-write | post-write | keeps subscribed | continues   | re-evaluates  | runs 2x per write | no throw           | batched            | children survive  | ⬜          | re-evaluates | no cascade | accumulates (2, 2) | not evaluated | skipped   | skipped   | recomputed | ⬜               | creation order        |
+| @reatom/core                | lazy  | no subscription    | single recompute | Object.is | skips      | returns void | post-write | post-write | unsubscribes     | continues   | caches error  | runs 2x per write | cycle detected     | batched            | disposes children | FIFO       | throws       | cascades   | replaced           | not evaluated | skipped   | skipped   | skipped    | deepest first   | creation order        |
+| svelte                      | lazy  | no subscription    | single recompute | ===       | skips      | ⬜            | post-write | throws     | unsubscribes     | halts flush | re-evaluates  | runs 2x per write | cycle detected     | batched            | children survive  | no cascade | throws       | no cascade | accumulates (2, 2) | not evaluated | ⬜         | skipped   | ⬜          | no cascade      | creation order        |
+| solid-js                    | eager | subscribes eagerly | 2 recomputes     | ===       | skips      | returns void | post-write | post-write | unsubscribes     | halts flush | error         | runs 2x per write | manual bail (200+) | batched            | children survive  | LIFO       | throws       | cascades   | replaced           | evaluated     | evaluated | evaluated | recomputed | deepest first   | varies (1,2,3; 2,1,3) |
+| @solidjs/signals            | lazy  | no subscription    | single recompute | ===       | skips      | returns void | post-write | post-write | keeps subscribed | halts flush | caches error  | error             | no throw           | batched            | children survive  | ⬜          | caches       | cascades   | replaced           | not evaluated | skipped   | skipped   | recomputed | ⬜               | creation order        |
+| S.js                        | eager | subscribes eagerly | 2 recomputes     | ===       | propagates | returns void | post-write | throws     | keeps subscribed | halts flush | error         | runs 2x per write | manual bail (200+) | batched            | children survive  | FIFO       | throws       | cascades   | replaced           | evaluated     | evaluated | evaluated | error      | outermost first | creation order        |
+| pota                        | lazy  | no subscription    | 2 recomputes     | ===       | skips      | returns void | post-write | post-write | keeps subscribed | halts flush | re-evaluates  | runs 2x per write | manual bail (200+) | batched            | disposes children | LIFO       | throws       | cascades   | replaced           | evaluated     | evaluated | evaluated | recomputed | deepest first   | varies (1,2,3; 2,1,3) |
+| @angular/core               | lazy  | no subscription    | single recompute | Object.is | skips      | ⬜            | post-write | post-write | keeps subscribed | halts flush | caches error  | runs 2x per write | manual bail (200+) | batched            | children survive  | no cascade | throws       | no cascade | accumulates (2, 2) | not evaluated | ⬜         | skipped   | ⬜          | no cascade      | creation order        |
+| anod                        | eager | no subscription    | single recompute | ===       | skips      | returns void | post-write | post-write | unsubscribes     | continues   | caches error  | runs 2x per write | manual bail (200+) | batched            | children survive  | LIFO       | re-evaluates | cascades   | replaced           | not evaluated | skipped   | skipped   | error      | outermost first | creation order        |
+| @pravosleva/reactive-engine | lazy  | no subscription    | single recompute | Object.is | propagates | returns void | post-write | post-write | keeps subscribed | halts flush | re-evaluates  | runs 1x per write | no throw           | unbatched (2 runs) | children survive  | FIFO       | caches       | cascades   | replaced           | not evaluated | skipped   | skipped   | skipped    | deepest first   | creation order        |
 
 <details>
 <summary>Test descriptions</summary>
@@ -1936,6 +1927,18 @@ may tear down children first (LIFO) or the owner first; flat
 effect models don't cascade at all.
 Returns "deepest first", "outermost first", "no cascade" or
 "partial cascade".
+
+#### #216 sibling effect order on shared signal
+
+```
+ S(a) ← E(eff1)
+      ← E(eff2)
+      ← E(eff3)
+```
+
+Order in which independent sibling effects run on two successive
+writes. No library contract fixes it.
+Returns "creation order" or "varies (<first>; <second>)".
 
 
 </details>
