@@ -638,6 +638,9 @@ export const cases: TestCase[] = [
    * E1's body opens a batch and writes b twice. E2 (observer of b)
    * must run exactly once per E1 run, seeing only the final batched
    * value of b — not each intermediate write.
+   *
+   * E1 reads only a. Reading b there would make E1 depend on its own
+   * write, which is the effect cycle of #61, not batching.
    */
   {
     id: 235,
@@ -650,10 +653,10 @@ export const cases: TestCase[] = [
       let observerLast = -1;
 
       fw.effect(() => {
-        a.read();
+        const base = a.read() * 11;
         fw.batch!(() => {
-          b.write(b.read() + 10);
-          b.write(b.read() + 1);
+          b.write(base + 10);
+          b.write(base + 11);
         });
       });
       fw.effect(() => {
